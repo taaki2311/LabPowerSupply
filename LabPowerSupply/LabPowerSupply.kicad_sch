@@ -4064,11 +4064,6 @@
     )
   )
 
-  (hierarchical_label "AC Power" (shape input) (at 16.51 34.29 0)
-    (effects (font (size 1.27 1.27)) (justify left))
-    (uuid afff83fe-6407-4c60-84c4-b6599eb4ae60)
-  )
-
   (symbol (lib_id "power:+3V3") (at 116.84 54.61 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 01e126dc-6656-45cc-bfa4-8a2312a55c64)
@@ -6146,21 +6141,8 @@
     (pin "1" (uuid c91d882a-1344-4291-a344-a7087dde6838))
   )
 
-  (sheet (at 12.7 12.7) (size 96.52 45.72) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid) (color 0 0 0 0))
-    (fill (color 0 0 0 0.0000))
-    (uuid a7d0e103-1391-4f13-b0bc-d947ebd08577)
-    (property "Sheet name" "TransformerBR" (id 0) (at 12.7 11.9884 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom))
-    )
-    (property "Sheet file" "TransformerBR.kicad_sch" (id 1) (at 12.7 59.0046 0)
-      (effects (font (size 1.27 1.27)) (justify left top))
-    )
-  )
-
   (sheet_instances
     (path "/" (page "1"))
-    (path "/a7d0e103-1391-4f13-b0bc-d947ebd08577" (page "2"))
   )
 
   (symbol_instances
