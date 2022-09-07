@@ -1,0 +1,128 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#SamacSys ECAD Model NE555DR
+#/6648/2/2.37/8/4/Integrated Circuit
+DEF NE555DR IC 0 30 Y Y 1 F N
+F0 "IC" 1050 600 50 H V L CNN
+F1 "NE555DR" 1050 500 50 H V L CNN
+F2 "SOIC127P600X175-8N" 1050 400 50 H I L CNN
+F3 "http://www.ti.com/lit/ds/symlink/ne555.pdf" 1050 300 50 H I L CNN
+F4 "Single Precision Timer" 1050 200 50 H I L CNN "Description"
+F5 "1.75" 1050 100 50 H I L CNN "Height"
+F6 "Texas Instruments" 1050 0 50 H I L CNN "Manufacturer_Name"
+F7 "NE555DR" 1050 -100 50 H I L CNN "Manufacturer_Part_Number"
+F8 "595-NE555DR" 1050 -200 50 H I L CNN "Mouser Part Number"
+F9 "https://www.mouser.com/Search/Refine.aspx?Keyword=595-NE555DR" 1050 -300 50 H I L CNN "Mouser Price/Stock"
+F10 "1218414" 1050 -400 50 H I L CNN "RS Part Number"
+F11 "http//uk.rs-online.com/web/p/products/1218414" 1050 -500 50 H I L CNN "RS Price/Stock"
+DRAW
+X GND 1 600 -1000 200 U 50 50 0 0 B
+X TRIG 2 0 -400 200 R 50 50 0 0 B
+X OUT 3 1200 -200 200 L 50 50 0 0 B
+X ~RESET 4 0 0 200 R 50 50 0 0 B
+X CONT 5 500 600 200 D 50 50 0 0 B
+X THRES 6 0 -300 200 R 50 50 0 0 B
+X DISCH 7 0 -100 200 R 50 50 0 0 B
+X VCC 8 700 600 200 D 50 50 0 0 B
+P 5 0 1 6 200 400 1000 400 1000 -800 200 -800 200 400 N
+ENDDRAW
+ENDDEF
+#
+#SamacSys ECAD Model RS207M
+#/840478/937794/2.49/4/4/Bridge Rectifier
+DEF RS207M BR 0 30 Y Y 1 F N
+F0 "BR" 750 300 50 H V L CNN
+F1 "RS207M" 750 200 50 H V L CNN
+F2 "RS207M" 750 100 50 H I L CNN
+F3 "http://www.rectron.com/data_sheets/rs201m-rs207m.pdf" 750 0 50 H I L CNN
+F4 "Bridge Rectifiers Lead Frame 2A 1000V" 750 -100 50 H I L CNN "Description"
+F5 "11" 750 -200 50 H I L CNN "Height"
+F6 "583-RS207M" 750 -300 50 H I L CNN "Mouser Part Number"
+F7 "https://www.mouser.co.uk/ProductDetail/Rectron/RS207M?qs=0QEfxlTaxasFcTlzGnM5iQ%3D%3D" 750 -400 50 H I L CNN "Mouser Price/Stock"
+F8 "Rectron" 750 -500 50 H I L CNN "Manufacturer_Name"
+F9 "RS207M" 750 -600 50 H I L CNN "Manufacturer_Part_Number"
+DRAW
+X + 1 0 0 200 R 50 50 0 0 P
+X ~_1 2 0 -100 200 R 50 50 0 0 P
+X ~_2 3 0 -200 200 R 50 50 0 0 P
+X - 4 0 -300 200 R 50 50 0 0 P
+P 5 0 1 6 200 100 700 100 700 -400 200 -400 200 100 N
+ENDDRAW
+ENDDEF
+#
+#SamacSys ECAD Model FS24-800-C2
+#/1256051/937794/2.49/8/3/Transformer
+DEF FS24-800-C2 T 0 30 Y Y 1 F N
+F0 "T" 1150 300 50 H V L CNN
+F1 "FS24-800-C2" 1150 200 50 H V L CNN
+F2 "FS24800C2" 1150 100 50 H I L CNN
+F3 "https://componentsearchengine.com/Datasheets/1/FS24-800-C2.pdf" 1150 0 50 H I L CNN
+F4 "Power Transformers POWER XFMR 24 Vct @ 800 mA UL/cUL - Class 2/3, TUV, 115/230V SPLIT PACK PCB MOUNT / FS24-800-C2" 1150 -100 50 H I L CNN "Description"
+F5 "38.5064" 1150 -200 50 H I L CNN "Height"
+F6 "553-FS24-800-C2" 1150 -300 50 H I L CNN "Mouser Part Number"
+F7 "https://www.mouser.com/Search/Refine.aspx?Keyword=553-FS24-800-C2" 1150 -400 50 H I L CNN "Mouser Price/Stock"
+F8 "Triad Magnetics" 1150 -500 50 H I L CNN "Manufacturer_Name"
+F9 "FS24-800-C2" 1150 -600 50 H I L CNN "Manufacturer_Part_Number"
+DRAW
+X PRI__1 1 0 0 200 R 50 50 0 0 P
+X PRI__2 2 0 -100 200 R 50 50 0 0 P
+X PRI__3 3 0 -200 200 R 50 50 0 0 P
+X PRI__4 4 0 -300 200 R 50 50 0 0 P
+X SEC__1 5 1300 0 200 L 50 50 0 0 P
+X SEC__2 6 1300 -100 200 L 50 50 0 0 P
+X SEC__3 7 1300 -200 200 L 50 50 0 0 P
+X SEC__4 8 1300 -300 200 L 50 50 0 0 P
+P 5 0 1 6 200 100 1100 100 1100 -400 200 -400 200 100 N
+ENDDRAW
+ENDDEF
+#
+#SamacSys ECAD Model L6902D
+#/179414/937794/2.49/8/3/Integrated Circuit
+DEF L6902D IC 0 30 Y Y 1 F N
+F0 "IC" 950 300 50 H V L CNN
+F1 "L6902D" 950 200 50 H V L CNN
+F2 "SOIC127P600X175-8N" 950 100 50 H I L CNN
+F3 "https://componentsearchengine.com/Datasheets/1/L6902D.pdf" 950 0 50 H I L CNN
+F4 "L6902D, Switching Regulator, Buck Controller, 1A, Adjustable, 1.235  34 V, 275 kHz, 8-Pin SO" 950 -100 50 H I L CNN "Description"
+F5 "1.75" 950 -200 50 H I L CNN "Height"
+F6 "511-L6902D" 950 -300 50 H I L CNN "Mouser Part Number"
+F7 "https://www.mouser.com/Search/Refine.aspx?Keyword=511-L6902D" 950 -400 50 H I L CNN "Mouser Price/Stock"
+F8 "STMicroelectronics" 950 -500 50 H I L CNN "Manufacturer_Name"
+F9 "L6902D" 950 -600 50 H I L CNN "Manufacturer_Part_Number"
+DRAW
+X OUT 1 0 0 200 R 50 50 0 0 P
+X CS+ 2 0 -100 200 R 50 50 0 0 P
+X CS- 3 0 -200 200 R 50 50 0 0 P
+X COMP 4 0 -300 200 R 50 50 0 0 P
+X VCC 8 1100 0 200 L 50 50 0 0 P
+X GND 7 1100 -100 200 L 50 50 0 0 P
+X VREF 6 1100 -200 200 L 50 50 0 0 P
+X FB 5 1100 -300 200 L 50 50 0 0 P
+P 5 0 1 6 200 100 900 100 900 -400 200 -400 200 100 N
+ENDDRAW
+ENDDEF
+#
+#SamacSys ECAD Model LT3083ET#PBF
+#/553874/937794/2.49/5/4/Integrated Circuit
+DEF LT3083ET#PBF IC 0 30 Y Y 1 F N
+F0 "IC" 1150 300 50 H V L CNN
+F1 "LT3083ET#PBF" 1150 200 50 H V L CNN
+F2 "TO170P457X1022X2306-5P" 1150 100 50 H I L CNN
+F3 "http://www.linear.com/docs/30239" 1150 0 50 H I L CNN
+F4 "IC REG LDO ADJ 3A TO220-5" 1150 -100 50 H I L CNN "Description"
+F5 "4.572" 1150 -200 50 H I L CNN "Height"
+F6 "584-LT3083ET#PBF" 1150 -300 50 H I L CNN "Mouser Part Number"
+F7 "https://www.mouser.co.uk/ProductDetail/Analog-Devices/LT3083ETPBF?qs=hVkxg5c3xu%252BEQibxnmC0QQ%3D%3D" 1150 -400 50 H I L CNN "Mouser Price/Stock"
+F8 "Analog Devices" 1150 -500 50 H I L CNN "Manufacturer_Name"
+F9 "LT3083ET#PBF" 1150 -600 50 H I L CNN "Manufacturer_Part_Number"
+DRAW
+X NC 1 0 0 200 R 50 50 0 0 N
+X SET 2 0 -100 200 R 50 50 0 0 P
+X OUT 3 0 -200 200 R 50 50 0 0 P
+X VCONTROL 4 1300 0 200 L 50 50 0 0 P
+X IN 5 1300 -100 200 L 50 50 0 0 P
+P 5 0 1 6 200 100 1100 100 1100 -300 200 -300 200 100 N
+ENDDRAW
+ENDDEF
+#
+#End Library
