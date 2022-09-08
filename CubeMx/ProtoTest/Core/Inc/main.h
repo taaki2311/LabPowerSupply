@@ -57,14 +57,13 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define USB_Interrupt_GPIO_Pin GPIO_PIN_0
-#define USB_Interrupt_GPIO_GPIO_Port GPIOC
-#define USB_Interrupt_EXTI_Pin GPIO_PIN_1
-#define USB_Interrupt_EXTI_GPIO_Port GPIOC
+#define Channel_Shutdown_Pin GPIO_PIN_6
+#define Channel_Shutdown_GPIO_Port GPIOA
 #define Status_LED_Pin GPIO_PIN_5
 #define Status_LED_GPIO_Port GPIOC
 #define Rot_1_CLK_Pin GPIO_PIN_0
 #define Rot_1_CLK_GPIO_Port GPIOB
+#define Rot_1_CLK_EXTI_IRQn EXTI0_IRQn
 #define Rot_1_DT_Pin GPIO_PIN_1
 #define Rot_1_DT_GPIO_Port GPIOB
 #define Rot_1_SW_Pin GPIO_PIN_2

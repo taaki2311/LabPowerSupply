@@ -32,8 +32,12 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define SLAVE_ADDRESS_LCD 0x4E // change this according to ur setup
 
+/* LCD Section Begin ---------------------------------------------------------*/
+#define SLAVE_ADDRESS_LCD 0x4E // change this according to your setup
+
+//Char 0 = Right Arrow
+//Char 1 = Vertical Line
 const uint8_t customChar[64] = {
 	0x08,0x04,0x02,0x1F,0x02,0x04,0x08,0x00, //Custom Char 0
 	0x04,0x04,0x04,0x4,0x04,0x04,0x04,0x04,  //Custom Char 1
@@ -44,6 +48,8 @@ const uint8_t customChar[64] = {
 	0x00,0x00,0x00,0x0,0x00,0x00,0x00,0x00,  //Custom Char 6
 	0x00,0x00,0x00,0x0,0x00,0x00,0x00,0x00   //Custom Char 7
 };
+/* LCD Section End -----------------------------------------------------------*/
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -53,6 +59,7 @@ const uint8_t customChar[64] = {
 
 /* Private variables ---------------------------------------------------------*/
  ADC_HandleTypeDef hadc;
+DMA_HandleTypeDef hdma_adc;
 
 DAC_HandleTypeDef hdac;
 
@@ -63,6 +70,14 @@ TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
+
+/* USB Section Begin ---------------------------------------------------------*/
+EXTI_HandleTypeDef hexti1;
+
+uint8_t usbbuffer[128];//Usb buffer
+/* USB Section End -----------------------------------------------------------*/
+
+/* Keypad Section Begin ------------------------------------------------------*/
 int rowpin = -1;
 int colpin = -1;
 int kpedge = 1; //0== falling edge 1== rising edge
@@ -73,11 +88,26 @@ int keypaditerator = 4;
 uint8_t keypaddecimal = 0;
 enum keypadenum{WAIT, V1, A1, V2, A2};
 enum keypadenum kpenum = WAIT;
+/* Keypad Section End --------------------------------------------------------*/
 
+//Channel numbers
 float voltnum1 = 0.0;
 float ampnum1 = 0.0;
 float voltnum2 = 0.0;
 float ampnum2 = 0.0;
+
+uint8_t first_shot = 1;
+
+//Array for the adc values and vars to hold them
+uint16_t adcvalues[5];
+uint16_t adc_current = 0;
+uint16_t adc_linear = 0;
+uint16_t adc_opamp = 0;
+uint16_t adc_switching = 0;
+uint16_t adc_vref = 0;
+uint16_t* vrefptr = ((uint16_t*)VREFINT_CAL_ADDR_CMSIS);
+
+uint32_t v1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -86,9 +116,20 @@ static void MX_GPIO_Init(void);
 static void MX_ADC_Init(void);
 static void MX_DAC_Init(void);
 static void MX_I2C1_Init(void);
-static void MX_USART1_UART_Init(void);
+static void MX_DMA_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
+
+void ourInit(void);//Runs several Inits
+
+/* USB Section Begin ---------------------------------------------------------*/
+void USB_EXTIinit(void);
+void USB_Interrupt_Callback(void);
+void EXTI1_IRQHandler(void);
+/* USB Section End -----------------------------------------------------------*/
+
+/* LCD Section Begin ---------------------------------------------------------*/
 void lcd_init (void);   // initialize lcd
 void lcd_send_cmd (char cmd);  // send command to the lcd
 void lcd_send_data (char data);  // send data to the lcd
@@ -100,12 +141,17 @@ void lcd_createChar(void);
 void lcd_psu_init(void);
 void lcd_update_voltage(uint8_t channel, float num);
 void lcd_update_amperage(uint8_t channel, float num);
+/* LCD Section End -----------------------------------------------------------*/
 
+/* Keypad Section Begin ------------------------------------------------------*/
 void updatekeypad(char num);
 void clearkeypad(void);
 float translatekeypad(void);
 uint8_t checkkeypad(uint8_t which);
 void keypadsm(char num);
+/* Keypad Section End --------------------------------------------------------*/
+
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -145,34 +191,11 @@ int main(void)
   MX_ADC_Init();
   MX_DAC_Init();
   MX_I2C1_Init();
-  MX_USART1_UART_Init();
+  MX_DMA_Init();
   MX_TIM2_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-	//Make columns output 0 by default
-	HAL_GPIO_WritePin(Col_1_GPIO_Port, Col_1_Pin|Col_2_Pin|Col_3_Pin|Col_4_Pin, GPIO_PIN_RESET);
-	
-	HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_SET);
-	HAL_Delay(1000);
-	HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_RESET);
-	
-	lcd_psu_init();
-	
-	HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_SET);
-	HAL_Delay(1000);
-	HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_RESET);
-	
-	//lcd_update_voltage(1, 12.000);
-	//lcd_update_voltage(2, 10.5890);
-	//lcd_update_voltage(3, 6.123);
-	//lcd_update_voltage(4, 8.1342355);
-	
-	//lcd_update_amperage(1, 0.1234);
-	//lcd_update_amperage(2, 0.3239);
-	//lcd_update_amperage(3, 0.484534);
-	//lcd_update_amperage(4, 0.5000);
-	
-	//lcd_clear();
-	//lcd_put_cur(0,0);
+	ourInit();
 	
   /* USER CODE END 2 */
 
@@ -183,6 +206,45 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+		
+		//Control channel here
+		if(voltnum1 < 0.01){
+			HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_RESET);
+		}
+		
+		uint16_t vrefvalue = (uint16_t)*vrefptr;
+		float vddcalc = (float)3.0 * ((float)vrefvalue / (float)adc_vref);
+		float cur_num = (((float)3.0 * (float)adc_current * (float)vrefvalue)/((float)adc_vref * (float)4095) / (float)20) / (float)0.3;
+		//float cur_num = (((float)vddcalc * (float)adc_current * (float)4095) / (float)20) / (float)0.3;
+		lcd_update_amperage(2,cur_num);
+		float lin_num = ((float)3.0 * ((float)adc_linear * (float)4.0) * (float)vrefvalue)/((float)adc_vref * (float)4095);
+		//float lin_num = ((float)vddcalc * (float)adc_linear * (float)4095) * (float)4;
+		lcd_update_voltage(2,lin_num);
+		
+		if(first_shot){
+			v1 = (uint32_t)((( (((float)voltnum1) / (float)5.0) + ((float)0.33 / (float)5.0)) * (float)4095) / (float)vddcalc);
+			HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+			first_shot = 0;
+		}
+		else{
+			//Try really hard to get the voltage right
+			if(lin_num > voltnum1){
+				v1--;
+				HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+			}
+			else if(lin_num < voltnum1){
+				v1++;
+				HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+			}
+		}
+		
+		if(voltnum1 >= 0.01){
+			HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_SET);
+		}
+		
+		HAL_Delay(500);
   }
   /* USER CODE END 3 */
 }
@@ -210,7 +272,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL12;
-  RCC_OscInitStruct.PLL.PLLDIV = RCC_PLL_DIV2;
+  RCC_OscInitStruct.PLL.PLLDIV = RCC_PLL_DIV3;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -220,12 +282,12 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     Error_Handler();
   }
@@ -252,20 +314,20 @@ static void MX_ADC_Init(void)
   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
   */
   hadc.Instance = ADC1;
-  hadc.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV4;
   hadc.Init.Resolution = ADC_RESOLUTION_12B;
   hadc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc.Init.ScanConvMode = ADC_SCAN_ENABLE;
   hadc.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   hadc.Init.LowPowerAutoWait = ADC_AUTOWAIT_DISABLE;
   hadc.Init.LowPowerAutoPowerOff = ADC_AUTOPOWEROFF_DISABLE;
   hadc.Init.ChannelsBank = ADC_CHANNELS_BANK_A;
-  hadc.Init.ContinuousConvMode = DISABLE;
-  hadc.Init.NbrOfConversion = 1;
+  hadc.Init.ContinuousConvMode = ENABLE;
+  hadc.Init.NbrOfConversion = 5;
   hadc.Init.DiscontinuousConvMode = DISABLE;
   hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc.Init.DMAContinuousRequests = DISABLE;
+  hadc.Init.DMAContinuousRequests = ENABLE;
   if (HAL_ADC_Init(&hadc) != HAL_OK)
   {
     Error_Handler();
@@ -275,7 +337,43 @@ static void MX_ADC_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_4CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_192CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Rank = ADC_REGULAR_RANK_3;
+  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = ADC_REGULAR_RANK_4;
+  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_VREFINT;
+  sConfig.Rank = ADC_REGULAR_RANK_5;
   if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -446,6 +544,22 @@ static void MX_USART1_UART_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -456,28 +570,32 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, USB_Interrupt_GPIO_Pin|Status_LED_Pin|Col_1_Pin|Col_2_Pin
-                          |Col_3_Pin|Col_4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : USB_Interrupt_GPIO_Pin Status_LED_Pin Col_1_Pin Col_2_Pin
-                           Col_3_Pin Col_4_Pin */
-  GPIO_InitStruct.Pin = USB_Interrupt_GPIO_Pin|Status_LED_Pin|Col_1_Pin|Col_2_Pin
-                          |Col_3_Pin|Col_4_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, Status_LED_Pin|Col_1_Pin|Col_2_Pin|Col_3_Pin
+                          |Col_4_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : Channel_Shutdown_Pin */
+  GPIO_InitStruct.Pin = Channel_Shutdown_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(Channel_Shutdown_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Status_LED_Pin Col_1_Pin Col_2_Pin Col_3_Pin
+                           Col_4_Pin */
+  GPIO_InitStruct.Pin = Status_LED_Pin|Col_1_Pin|Col_2_Pin|Col_3_Pin
+                          |Col_4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : USB_Interrupt_EXTI_Pin */
-  GPIO_InitStruct.Pin = USB_Interrupt_EXTI_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(USB_Interrupt_EXTI_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : Rot_1_CLK_Pin Rot_1_SW_Pin Rot_2_CLK_Pin ROT_2_SW_Pin */
   GPIO_InitStruct.Pin = Rot_1_CLK_Pin|Rot_1_SW_Pin|Rot_2_CLK_Pin|ROT_2_SW_Pin;
@@ -500,12 +618,73 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
 
 /* USER CODE BEGIN 4 */
+
+void ourInit(void){
+	/*
+	 * The HAL library is dumb and tries to init the adc before the DMA which does not work
+	 * if the ADC is using the DMA. This init code is placed in space reserved for CubeMx so
+	 * manually reordering it will be overwritten every time we regenerate code.
+	 */
+	HAL_ADC_DeInit(&hadc);
+	HAL_DMA_DeInit(&hdma_adc);
+	MX_DMA_Init();
+	MX_ADC_Init();
+	
+	//Actually our init now
+	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&adcvalues, 5);// start the adc in dma mode
+	HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
+	USB_EXTIinit();
+	//Ensure keypad columns output 0 by default
+	HAL_GPIO_WritePin(Col_1_GPIO_Port, Col_1_Pin|Col_2_Pin|Col_3_Pin|Col_4_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_RESET);
+	
+	//LCD Init
+	lcd_psu_init();
+}
+
+/* USB Section Begin ---------------------------------------------------------*/
+void USB_EXTIinit(void)
+{
+  EXTI_ConfigTypeDef ExtiConfig;
+  
+  ExtiConfig.Line = EXTI_LINE_1;
+  ExtiConfig.Mode = EXTI_MODE_INTERRUPT;
+  ExtiConfig.Trigger = EXTI_TRIGGER_RISING;
+  HAL_EXTI_SetConfigLine(&hexti1, &ExtiConfig);
+	
+	/* The function below appears to be superfluous since we simply call our now
+	 * "fake" callback function inside the EXTI IRQHandler that is recognised by
+	 * the HAL library without needing this.
+	 */
+	//HAL_EXTI_RegisterCallback(&hexti1, HAL_EXTI_COMMON_CB_ID, &EXTI1_IRQHandler);
+	
+	HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+}
+
+void EXTI1_IRQHandler(void)
+{
+	__HAL_GPIO_EXTI_CLEAR_IT(EXTI1_IRQn);
+	USB_Interrupt_Callback();
+}
+/* USB Section End -----------------------------------------------------------*/
+
+/* LCD Section Begin ---------------------------------------------------------*/
+/*
+ * The code for every function here except for lcd_createChar was taken from
+ * https://controllerstech.com/lcd-20x4-using-i2c-with-stm32/
+ * The remaining function was taken from
+ * https://circuitdigest.com/microcontroller-projects/custom-characters-on-lcd-using-pic16f877a
+ */
 void lcd_send_cmd (char cmd)
 {
   char data_u, data_l;
@@ -615,7 +794,6 @@ void lcd_send_string (char *str)
 }
 void lcd_createChar(void)
 {
-	//Taken from some website
 //*** Load custom char into the CGROM***//////
   lcd_send_cmd(0x40);   // Set CGRAM Address
 	HAL_Delay(1);
@@ -637,9 +815,9 @@ void lcd_psu_init(void){
 	
 	lcd_put_cur(0, 0);
   lcd_send_string("V1:0.00V ");
-	lcd_send_data((uint8_t)1);
+	lcd_send_data((uint8_t)1);//Custom Char 1
 	lcd_send_string("V1");
-	lcd_send_data((uint8_t)0);
+	lcd_send_data((uint8_t)0);//Custom Char 0
 	lcd_send_string(":0.00V");
 	
 	lcd_put_cur(1, 0);
@@ -663,7 +841,9 @@ void lcd_psu_init(void){
 	lcd_send_data((uint8_t)0);
 	lcd_send_string(":0.00A");
 }
+/* LCD Section End -----------------------------------------------------------*/
 
+/* Keypad Section Begin ------------------------------------------------------*/
 void lcd_update_voltage(uint8_t channel, float num){
 	char kpbuff[8];
 	snprintf(kpbuff, 6, "%.2f", num);
@@ -745,6 +925,15 @@ void lcd_update_amperage(uint8_t channel, float num){
 	}
 }
 
+/*
+ * This function shifts character into and out of a 5 element array from the right.
+ * This allows us to think about the number stored in the array as a normal number
+ * that is read from left to right. 
+ * Passing a 'z' to this function will delete the last character.
+ * Passing a '.' to this function will shift in a '.' if there is not already one in the array.
+ * Passing a number ('1' not 1) to this function will shift in that number but will only
+ * allow up to 2 numbers before a decimal and up to 2 numbers after a decimal.
+ */
 void updatekeypad(char num){
 	if(num == 'z'){
 		if(keypaditerator < keypadlength-1){
@@ -778,7 +967,7 @@ void updatekeypad(char num){
 	else if(num >= '0' && num <= '9'){
 		//Allow entries if only up to one number has been entered
 		if(keypaditerator > 2){
-			//shift in new entry if array isnt full
+			//shift in new entry
 			for(int i = 1; i < keypadlength; i++){
 				keypadarr[i-1] = keypadarr[i];
 			}
@@ -792,7 +981,7 @@ void updatekeypad(char num){
 		}
 		//Allow numbers after decimal place
 		else if(keypaditerator > 0 && keypaddecimal == 1){
-			//shift in new entry if array isnt full
+			//shift in new entry
 			for(int i = 1; i < keypadlength; i++){
 				keypadarr[i-1] = keypadarr[i];
 			}
@@ -802,7 +991,7 @@ void updatekeypad(char num){
 		}
 		//Allow second decimal place when num > 10
 		else if(keypaditerator >= 0 && keypaddecimal == 1 && translatekeypad() >= 10.0){
-			//shift in new entry if array isnt full
+			//shift in new entry
 			for(int i = 1; i < keypadlength; i++){
 				keypadarr[i-1] = keypadarr[i];
 			}
@@ -933,6 +1122,7 @@ void keypadsm(char num){
 			clearkeypad();
 			LCD_CursorBlinkOnOff(0,0);
 			lcd_update_voltage(1, voltnum1);
+			first_shot = 1;
 		}
 		else if(num == 'B'){
 			kpenum = WAIT;
@@ -1017,6 +1207,7 @@ void keypadsm(char num){
 			clearkeypad();
 			LCD_CursorBlinkOnOff(0,0);
 			lcd_update_voltage(3, voltnum2);
+			first_shot = 1;
 		}
 		else if(num == 'B'){
 			kpenum = WAIT;
@@ -1101,12 +1292,16 @@ void keypadsm(char num){
 		}
 	}
 }
+/* Keypad Section End --------------------------------------------------------*/
 
+/* Interrupt Callback Section Begin ------------------------------------------*/
+static void USB_Interrupt_Callback(void){
+	//HAL_GPIO_TogglePin(Status_LED_GPIO_Port, Status_LED_Pin);
+}
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		//Row 1
 	if(GPIO_Pin == Row_1_Pin){
-		HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_SET);
 		//Falling edge
 		if(HAL_GPIO_ReadPin(Row_1_GPIO_Port, Row_1_Pin) == 0){
 			//Make sure we didn't interrupt on falling edge already
@@ -1129,11 +1324,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 				colpin = -1;
 			}
 		}
-		HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_RESET);
 	}
 	//Row2
 	else if(GPIO_Pin == Row_2_Pin){
-		HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_SET);
 		//Falling edge
 		if(HAL_GPIO_ReadPin(Row_1_GPIO_Port, Row_2_Pin) == 0){
 			//Make sure we didn't interrupt on falling edge already
@@ -1156,11 +1349,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 				colpin = -1;
 			}
 		}
-		HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_RESET);
 	}
 	//Row3
 	else if(GPIO_Pin == Row_3_Pin){
-		HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_SET);
 		//Falling edge
 		if(HAL_GPIO_ReadPin(Row_1_GPIO_Port, Row_3_Pin) == 0){
 			//Make sure we didn't interrupt on falling edge already
@@ -1183,11 +1374,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 				colpin = -1;
 			}
 		}
-		HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_RESET);
 	}
 	//Row4
 	else if(GPIO_Pin == Row_4_Pin){
-		HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_SET);
 		//Falling edge
 		if(HAL_GPIO_ReadPin(Row_1_GPIO_Port, Row_4_Pin) == 0){
 			//Make sure we didn't interrupt on falling edge already
@@ -1210,7 +1399,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 				colpin = -1;
 			}
 		}
-		HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_RESET);
 	}
 }
 	
@@ -1396,6 +1584,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	//Set all columns back to 0
 	HAL_GPIO_WritePin(Col_1_GPIO_Port, Col_1_Pin|Col_2_Pin|Col_3_Pin|Col_4_Pin, GPIO_PIN_RESET);
 }
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+  adc_current = adcvalues[0];
+	adc_linear = adcvalues[1];
+	adc_opamp = adcvalues[2];
+	adc_switching = adcvalues[3];
+	adc_vref = adcvalues[4];
+}
+/* Interrupt Callback Section End --------------------------------------------*/
+
 /* USER CODE END 4 */
 
 /**
