@@ -320,6 +320,78 @@
     [
       "381719cc-cb8a-4b07-b6f5-50f85fb81cea",
       ""
+    ],
+    [
+      "ef56c2f4-81ed-47a6-b578-6ecba0b11b35",
+      "Channel Power Supply 2"
+    ],
+    [
+      "ec5f87ba-0df6-4f82-8dbe-a19fd5b0d25e",
+      "Bridge Rectifier"
+    ],
+    [
+      "5c353a14-3b88-4b93-a78d-82d7af554850",
+      "Charge Pump"
+    ],
+    [
+      "4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7",
+      "Switching Voltage Regulator"
+    ],
+    [
+      "7e152100-3451-4635-9914-2a0b75d7b7b6",
+      "Differential Op-Amp Circuit"
+    ],
+    [
+      "1f8c5f30-7c48-4f7f-ae89-842563537cb2",
+      "Linear Voltage Regulator "
+    ],
+    [
+      "877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf",
+      "Current Sense "
+    ],
+    [
+      "77fcffa2-9d70-4da1-b633-0d00734b5fc1",
+      "Channel 1 Power Rails"
+    ],
+    [
+      "90c8dfbf-ef8f-4560-91d8-67d2c0d7c6ea",
+      "Channel 2 3.3 Volt Rail"
+    ],
+    [
+      "4ee6b9f6-e94e-4759-ba78-1a48eb4a1f7a",
+      "Main Power Switch"
+    ],
+    [
+      "20ff20ac-1c34-4936-9191-63e4ae5c0946",
+      "Front Panel"
+    ],
+    [
+      "0c3af00c-caea-46d1-9953-712c4efb6180",
+      "Channel Power Supply 1"
+    ],
+    [
+      "ec5f87ba-0df6-4f82-8dbe-a19fd5b0d25e",
+      "Bridge Rectifier"
+    ],
+    [
+      "5c353a14-3b88-4b93-a78d-82d7af554850",
+      "Charge Pump"
+    ],
+    [
+      "4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7",
+      "Switching Voltage Regulator"
+    ],
+    [
+      "7e152100-3451-4635-9914-2a0b75d7b7b6",
+      "Differential Op-Amp Circuit"
+    ],
+    [
+      "1f8c5f30-7c48-4f7f-ae89-842563537cb2",
+      "Linear Voltage Regulator "
+    ],
+    [
+      "877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf",
+      "Current Sense "
     ]
   ],
   "text_variables": {}
