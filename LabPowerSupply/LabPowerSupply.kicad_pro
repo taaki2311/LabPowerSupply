@@ -350,10 +350,6 @@
       "Current Sense "
     ],
     [
-      "7a855247-c7b6-4710-be61-bc2e33582f3a",
-      "Crystal Oscillator"
-    ],
-    [
       "77fcffa2-9d70-4da1-b633-0d00734b5fc1",
       "Channel 1 Power Rails"
     ],
@@ -378,24 +374,12 @@
       "Bridge Rectifier"
     ],
     [
-      "936b685d-7e39-4c6e-a9f7-d820e6e38861",
-      "Microcontrollers"
-    ],
-    [
       "5c353a14-3b88-4b93-a78d-82d7af554850",
       "Charge Pump"
     ],
     [
-      "fbb97e8b-b555-431f-a578-0713283d8940",
-      "Primary Controller"
-    ],
-    [
       "4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7",
       "Switching Voltage Regulator"
-    ],
-    [
-      "63c49f72-5162-4f5b-8991-d3cd7d09e65a",
-      "Secondary Controller"
     ],
     [
       "7e152100-3451-4635-9914-2a0b75d7b7b6",
@@ -408,6 +392,18 @@
     [
       "877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf",
       "Current Sense "
+    ],
+    [
+      "67b0d6de-a54b-4bd2-af78-b383bfe8d0e6",
+      "Secondary Controller"
+    ],
+    [
+      "08fd45d5-b4ab-46e8-a348-5c4ac8e52155",
+      "Primary Controller"
+    ],
+    [
+      "7a855247-c7b6-4710-be61-bc2e33582f3a",
+      "Crystal Oscillator"
     ]
   ],
   "text_variables": {}
