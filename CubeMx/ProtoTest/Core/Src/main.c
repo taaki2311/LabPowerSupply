@@ -220,6 +220,7 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 	ourInit();
+	//TODO: Actually control the switching regulator
 	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, 0);
 	
   /* USER CODE END 2 */
@@ -233,7 +234,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 		
 		//Control channel here
-		if(voltnum1 < 0.01){
+		if(voltnum1 == 0.00){
 			HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_RESET);
 		}
@@ -245,6 +246,8 @@ int main(void)
 		lin_num = ((float)3.0 * ((float)adc_linear * (float)4.0) * (float)vrefvalue)/((float)adc_vref * (float)4095);
 		//float lin_num = ((float)vddcalc * (float)adc_linear * (float)4095) * (float)4;
 		swi_num = ((float)3.0 * ((float)adc_switching * (float)5.0) * (float)vrefvalue)/((float)adc_vref * (float)4095);
+		
+		
 		
 		if(first_shot){
 			v1 = (uint16_t)((( (((float)voltnum1) / (float)5.0) + ((float)0.33 / (float)5.0)) * (float)4095) / (float)vddcalc);
@@ -291,7 +294,7 @@ int main(void)
 		}
 
 		
-		if(voltnum1 >= 0.01){
+		if(voltnum1 > 0.00){
 			HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
 			HAL_GPIO_WritePin(Status_LED_GPIO_Port, Status_LED_Pin, GPIO_PIN_SET);
 		}
@@ -1176,9 +1179,6 @@ void updatekeypad(char num){
 			}
 			keypadarr[0] = num;
 			keypaditerator++;
-			lcd_send_cmd(0x10);
-			lcd_send_string(" ");
-			lcd_send_cmd(0x10);
 		}
 	}
 	else if(num == '.'){
@@ -1190,7 +1190,6 @@ void updatekeypad(char num){
 			keypadarr[keypadlength-1] = num;
 			keypaddecimal = 1;
 			keypaditerator--;
-			lcd_send_string(".");
 		}
 	}
 	else if(num >= '0' && num <= '9'){
@@ -1202,10 +1201,17 @@ void updatekeypad(char num){
 			}
 			keypadarr[keypadlength-1] = num;
 			keypaditerator--;
-			lcd_send_data(num);
+		}
+		else if(keypaditerator <= 1 && keypaddecimal == 1 && keypadarr[1] == 'z' && keypadarr[2] != '.'){
+			//shift in new entry
+			for(int i = 1; i < keypadlength; i++){
+				keypadarr[i-1] = keypadarr[i];
+			}
+			keypadarr[keypadlength-1] = num;
+			keypaditerator--;
 		}
 		//Disallow third decimal place
-		else if(keypaditerator <= 1 && keypaddecimal == 1 && translatekeypad() < 1.00){
+		else if(keypaditerator <= 1 && keypaddecimal == 1 && keypadarr[1] == 'z'){
 			//Do nothing
 		}
 		//Allow numbers after decimal place
@@ -1216,7 +1222,6 @@ void updatekeypad(char num){
 			}
 			keypadarr[keypadlength-1] = num;
 			keypaditerator--;
-			lcd_send_data(num);
 		}
 		//Allow second decimal place when num > 10
 		else if(keypaditerator >= 0 && keypaddecimal == 1 && translatekeypad() >= 10.0){
@@ -1226,7 +1231,6 @@ void updatekeypad(char num){
 			}
 			keypadarr[keypadlength-1] = num;
 			keypaditerator--;
-			lcd_send_data(num);
 		}
 	}
 }
