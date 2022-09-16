@@ -125,4 +125,29 @@ P 5 0 1 6 200 100 1100 100 1100 -300 200 -300 200 100 N
 ENDDRAW
 ENDDEF
 #
+#SamacSys ECAD Model PJA3404_R1_00001
+#/15105776/937794/2.49/3/3/Integrated Circuit
+DEF PJA3404_R1_00001 IC 0 30 Y Y 1 F N
+F0 "IC" 650 300 50 H V L CNN
+F1 "PJA3404_R1_00001" 650 200 50 H V L CNN
+F2 "SOT95P240X110-3N" 650 100 50 H I L CNN
+F3 "https://www.mouser.fr/datasheet/2/1057/PJA3404-1867365.pdf" 650 0 50 H I L CNN
+F4 "MOSFET /A04/TR/7\"/HF/3K/SOT-23/MOS/SOT/NFET-30TMN/NF30T-QI10/PJ///" 650 -100 50 H I L CNN "Description"
+F5 "1.1" 650 -200 50 H I L CNN "Height"
+F6 "PANJIT" 650 -300 50 H I L CNN "Manufacturer_Name"
+F7 "PJA3404_R1_00001" 650 -400 50 H I L CNN "Manufacturer_Part_Number"
+F8 "241-PJA3404_R1_00001" 650 -500 50 H I L CNN "Mouser Part Number"
+F9 "https://www.mouser.co.uk/ProductDetail/Panjit/PJA3404_R1_00001?qs=sPbYRqrBIVkiUO9ZInE3tw%3D%3D" 650 -600 50 H I L CNN "Mouser Price/Stock"
+F10 "" 650 -700 50 H I L CNN "Arrow Part Number"
+F11 "" 650 -800 50 H I L CNN "Arrow Price/Stock"
+F12 "" 650 -900 50 H I L CNN "Mouser Testing Part Number"
+F13 "" 650 -1000 50 H I L CNN "Mouser Testing Price/Stock"
+DRAW
+X G 1 0 0 200 R 50 50 0 0 P
+X S 2 0 -100 200 R 50 50 0 0 P
+X D 3 800 0 200 L 50 50 0 0 P
+P 5 0 1 6 200 100 600 100 600 -200 200 -200 200 100 N
+ENDDRAW
+ENDDEF
+#
 #End Library

@@ -30,4 +30,10 @@ K
 F http://www.linear.com/docs/30239
 $ENDCMP
 #
+$CMP PJA3404_R1_00001
+D MOSFET /A04/TR/7"/HF/3K/SOT-23/MOS/SOT/NFET-30TMN/NF30T-QI10/PJ///
+K
+F https://www.mouser.fr/datasheet/2/1057/PJA3404-1867365.pdf
+$ENDCMP
+#
 #End Doc Library
