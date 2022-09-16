@@ -91,7 +91,7 @@ uint8_t keypadlength = 5;
 char keypadarr[5] = {'z','z','z','z','z'};//z is null
 int keypaditerator = 4;
 uint8_t keypaddecimal = 0;
-enum keypadenum{WAIT, V1, A1, V2, A2};
+enum keypadenum {WAIT, V1, A1, V2, A2};
 enum keypadenum kpenum = WAIT;
 /* Keypad Section End --------------------------------------------------------*/
 
@@ -123,7 +123,6 @@ float swi_num;
 
 // The value for the Intgral part of the PID controller
 float error = 0;
-float proportional = 0;
 float derivative = 0;
 float integral = 0;
 float error_previous = 0;
@@ -254,7 +253,7 @@ int main(void)
 			HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 			correctedvoltnum1 = voltnum1;
 			integral = 0;
-			proportional = 0;
+			error = 0;
 			derivative = 0;
 			first_shot = 0;
 		}
@@ -277,7 +276,6 @@ int main(void)
 		
 		else {
 			error = lin_num - voltnum1;
-			proportional = error;
 			integral += error;
 			derivative = error - error_previous;
 			error_previous = error;
