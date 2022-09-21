@@ -466,7 +466,7 @@
   (symbol (lib_id "Amplifier_Current:INA180A1") (at 134.62 95.25 90) (mirror x) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid ad5d9838-b611-434b-a2e7-188d7ef8b357)
-    (property "Reference" "U7" (id 0) (at 146.05 86.1312 90))
+    (property "Reference" "U6" (id 0) (at 146.05 86.1312 90))
     (property "Value" "INA180A1" (id 1) (at 146.05 88.6712 90))
     (property "Footprint" "Package_TO_SOT_SMD:SOT-23-5" (id 2) (at 133.35 96.52 0)
       (effects (font (size 1.27 1.27)) hide)
