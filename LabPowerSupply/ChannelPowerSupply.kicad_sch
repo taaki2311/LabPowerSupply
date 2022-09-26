@@ -372,7 +372,7 @@
       (effects (font (size 1.27 1.27)) (justify left))
       (uuid 48a441f3-6c0f-46ab-aeb9-be4b72335012)
     )
-    (pin "Charge" bidirectional (at 195.58 88.9 0)
+    (pin "Charge" output (at 195.58 88.9 0)
       (effects (font (size 1.27 1.27)) (justify right))
       (uuid eb634c97-9ebe-43a8-a5f2-cd169e8093b1)
     )
