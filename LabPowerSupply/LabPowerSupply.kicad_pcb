@@ -382,7 +382,7 @@
 
   (footprint "Fuse:Fuseholder_Littelfuse_100_series_5x20mm" (layer "F.Cu")
     (tedit 61100F59) (tstamp 025c3c1c-4013-416c-adca-24324282444f)
-    (at 358.05 -40.64)
+    (at 253.91 33.02)
     (descr "Littelfuse clips, https://www.littelfuse.com/~/media/electronics/datasheets/fuse_clips/littelfuse_fuse_clip_100_445_030_520_datasheet.pdf.pdf")
     (tags "Fuseholder clips")
     (property "Sheetfile" "CurrentSense.kicad_sch")
@@ -1032,22 +1032,22 @@
 
   (footprint "Connector_Wire:SolderWire-2sqmm_1x02_P7.8mm_D2mm_OD3.9mm" (layer "F.Cu")
     (tedit 5EB70B45) (tstamp 0c6ca1de-2126-4d56-9d0f-1b13a49ad953)
-    (at 386.08 -44.54 -90)
+    (at 268.06 22.86 180)
     (descr "Soldered wire connection, for 2 times 2 mm² wires, reinforced insulation, conductor diameter 2mm, outer diameter 3.9mm, size source Multi-Contact FLEXI-xV 2.0 (https://ec.staubli.com/AcroFiles/Catalogues/TM_Cab-Main-11014119_(en)_hi.pdf), bend radius 3 times outer diameter, generated with kicad-footprint-generator")
     (tags "connector wire 2sqmm")
     (property "Sheetfile" "CurrentSense.kicad_sch")
     (property "Sheetname" "Current Sense ")
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf/b3161413-4cc5-49b4-9af3-c170d027655f")
     (attr exclude_from_pos_files)
-    (fp_text reference "Output1" (at 3.9 -3.15 90) (layer "F.SilkS")
+    (fp_text reference "Output1" (at 3.9 -3.15) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 0e3d6edc-61f5-42cb-a642-57c82c8a0679)
     )
-    (fp_text value "Conn_01x02" (at 3.9 3.15 90) (layer "F.Fab")
+    (fp_text value "Conn_01x02" (at 3.9 3.15) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp f4ad54ea-edc1-472b-b998-d46721a37ad9)
     )
-    (fp_text user "${REFERENCE}" (at 3.9 0) (layer "F.Fab")
+    (fp_text user "${REFERENCE}" (at 3.9 0 90) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 224169f1-1e65-4ffb-8338-94880929eaaf)
     )
@@ -1061,9 +1061,9 @@
     (fp_line (start 2.7 2.45) (end 2.7 -2.45) (layer "F.CrtYd") (width 0.05) (tstamp afc4ed8c-923a-4da3-97d3-d61619019e67))
     (fp_circle (center 0 0) (end 1.95 0) (layer "F.Fab") (width 0.1) (fill none) (tstamp 0ad93145-b47a-4494-8309-867022a65a40))
     (fp_circle (center 7.8 0) (end 9.75 0) (layer "F.Fab") (width 0.1) (fill none) (tstamp 440a8fd1-08f9-4a8b-ac5c-6eee2a8e7252))
-    (pad "1" thru_hole roundrect (at 0 0 270) (size 3.9 3.9) (drill 2.5) (layers *.Cu *.Mask) (roundrect_rratio 0.064103)
+    (pad "1" thru_hole roundrect (at 0 0 180) (size 3.9 3.9) (drill 2.5) (layers *.Cu *.Mask) (roundrect_rratio 0.064103)
       (net 181 "Net-(F_CS1-Pad2)") (pinfunction "Pin_1") (pintype "passive") (tstamp 4ec6bbc6-736b-401b-8d36-9a4d11729d03))
-    (pad "2" thru_hole circle (at 7.8 0 270) (size 3.9 3.9) (drill 2.5) (layers *.Cu *.Mask)
+    (pad "2" thru_hole circle (at 7.8 0 180) (size 3.9 3.9) (drill 2.5) (layers *.Cu *.Mask)
       (net 13 "GND1") (pinfunction "Pin_2") (pintype "passive") (tstamp 476f2019-af14-49b3-9a4b-3fefb9477c0c))
     (model "${KICAD6_3DMODEL_DIR}/Connector_Wire.3dshapes/SolderWire-2sqmm_1x02_P7.8mm_D2mm_OD3.9mm.wrl"
       (offset (xyz 0 0 0))
@@ -1205,7 +1205,7 @@
 
   (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal" (layer "F.Cu")
     (tedit 5AE50CD5) (tstamp 11d5aca1-35f0-498d-9328-88edea3d0386)
-    (at 124.46 99.06 90)
+    (at 129.54 119.38 90)
     (descr "Diode, DO-41_SOD81 series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf")
     (tags "Diode DO-41_SOD81 series Axial Horizontal pin pitch 10.16mm  length 5.2mm diameter 2.7mm")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -1267,7 +1267,7 @@
 
   (footprint "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm" (layer "F.Cu")
     (tedit 5AE50EF1) (tstamp 12b69387-c57a-4fdc-8e35-edd9fcfd2339)
-    (at 132.08 98.887677 90)
+    (at 139.7 121.92 90)
     (descr "CP, Radial series, Radial, pin pitch=5.00mm, , diameter=10mm, Electrolytic Capacitor")
     (tags "CP Radial series Radial pin pitch 5.00mm  diameter 10mm Electrolytic Capacitor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -1633,22 +1633,22 @@
 
   (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu")
     (tedit 5F68FEEE) (tstamp 185a4217-1806-4b48-ad93-e3baaa2c4cfd)
-    (at 237.15 42.33)
+    (at 236.22 25.4 -90)
     (descr "Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "resistor")
     (property "Sheetfile" "CurrentSense.kicad_sch")
     (property "Sheetname" "Current Sense ")
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf/8df2c858-0b30-453b-9770-4c5e8393702b")
     (attr smd)
-    (fp_text reference "R2_CS1" (at 0 -1.43) (layer "F.SilkS")
+    (fp_text reference "R2_CS1" (at 0 -1.43 90) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 57a8c5cb-9384-43f3-a8bb-7f9c44e96dba)
     )
-    (fp_text value "3k" (at 0 1.43) (layer "F.Fab")
+    (fp_text value "3k" (at 0 1.43 90) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp df2cb113-b97a-401a-b3d1-2b86197f0fbe)
     )
-    (fp_text user "${REFERENCE}" (at 0 0) (layer "F.Fab")
+    (fp_text user "${REFERENCE}" (at 0 0 90) (layer "F.Fab")
       (effects (font (size 0.4 0.4) (thickness 0.06)))
       (tstamp 6b64482f-1d28-40a9-bd66-11528d4c93d8)
     )
@@ -1662,9 +1662,9 @@
     (fp_line (start -0.8 0.4125) (end -0.8 -0.4125) (layer "F.Fab") (width 0.1) (tstamp 26e5081e-e8cb-4020-a8bf-f57e9547e94e))
     (fp_line (start 0.8 0.4125) (end -0.8 0.4125) (layer "F.Fab") (width 0.1) (tstamp 52f688da-92fd-4d5f-825d-25105785cebe))
     (fp_line (start -0.8 -0.4125) (end 0.8 -0.4125) (layer "F.Fab") (width 0.1) (tstamp 8d00b581-ff1f-4274-816b-bc45d0315dfc))
-    (pad "1" smd roundrect (at -0.825 0) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
+    (pad "1" smd roundrect (at -0.825 0 270) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
       (net 95 "/Channel Power Supply 1/Current Sense /Output") (pintype "passive") (tstamp 48270894-1fc1-41b7-a242-934d31b4ca2b))
-    (pad "2" smd roundrect (at 0.825 0) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
+    (pad "2" smd roundrect (at 0.825 0 270) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
       (net 109 "/Channel Power Supply 1/ADC 4") (pintype "passive") (tstamp e2984a3a-145e-4afd-9513-43016fbcad3e))
     (model "${KICAD6_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0603_1608Metric.wrl"
       (offset (xyz 0 0 0))
@@ -1717,7 +1717,7 @@
 
   (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal" (layer "F.Cu")
     (tedit 5AE50CD5) (tstamp 1ae7225b-bef0-410e-ae20-96652261b852)
-    (at 128.27 88.9)
+    (at 134.62 109.22)
     (descr "Diode, DO-41_SOD81 series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf")
     (tags "Diode DO-41_SOD81 series Axial Horizontal pin pitch 10.16mm  length 5.2mm diameter 2.7mm")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -2725,7 +2725,7 @@
 
   (footprint "Capacitor_THT:C_Disc_D6.0mm_W2.5mm_P5.00mm" (layer "F.Cu")
     (tedit 5AE50EF0) (tstamp 250619b9-d1ab-436d-8d7b-5a4ecc26f6b6)
-    (at 133.35 26.842323)
+    (at 127 54.782323)
     (descr "C, Disc series, Radial, pin pitch=5.00mm, , diameter*width=6*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
     (tags "C Disc series Radial pin pitch 5.00mm  diameter 6mm width 2.5mm Capacitor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -2878,7 +2878,7 @@
 
   (footprint "Fuse:Fuseholder_Littelfuse_100_series_5x20mm" (layer "F.Cu")
     (tedit 61100F59) (tstamp 290ca3d2-ee0c-4420-8a22-432748e7d4ba)
-    (at 355.51 -12.7)
+    (at 256.45 104.14)
     (descr "Littelfuse clips, https://www.littelfuse.com/~/media/electronics/datasheets/fuse_clips/littelfuse_fuse_clip_100_445_030_520_datasheet.pdf.pdf")
     (tags "Fuseholder clips")
     (property "Sheetfile" "CurrentSense.kicad_sch")
@@ -3215,7 +3215,7 @@
 
   (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal" (layer "F.Cu")
     (tedit 5AE50CD5) (tstamp 35934f30-cf21-4399-91f9-8fd779cf0641)
-    (at 140.97 26.842323)
+    (at 142.24 54.782323)
     (descr "Diode, DO-41_SOD81 series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf")
     (tags "Diode DO-41_SOD81 series Axial Horizontal pin pitch 10.16mm  length 5.2mm diameter 2.7mm")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -5278,7 +5278,7 @@
 
   (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu")
     (tedit 5F68FEEE) (tstamp 66d6f617-0ab3-45f2-b1c0-82d8211f73f6)
-    (at 154.94 26.842323)
+    (at 157.48 54.782323)
     (descr "Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "resistor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -5510,22 +5510,22 @@
 
   (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu")
     (tedit 5F68FEEE) (tstamp 6d44c937-f82c-401d-afd7-523e9a0dbd95)
-    (at 242.76 98.4)
+    (at 238.76 96.52 -90)
     (descr "Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "resistor")
     (property "Sheetfile" "CurrentSense.kicad_sch")
     (property "Sheetname" "Current Sense ")
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf/fab63de1-1f7f-4a6a-80ea-2311fc618d34")
     (attr smd)
-    (fp_text reference "R3_CS2" (at 0 -1.43) (layer "F.SilkS")
+    (fp_text reference "R3_CS2" (at 0 -1.43 90) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 56d502b9-f2f5-4f4c-ab97-6c37b5c1d249)
     )
-    (fp_text value "1k" (at 0 1.43) (layer "F.Fab")
+    (fp_text value "1k" (at 0 1.43 90) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp b5a27787-c8d0-40e8-979a-f0ae631f9333)
     )
-    (fp_text user "${REFERENCE}" (at 0 0) (layer "F.Fab")
+    (fp_text user "${REFERENCE}" (at 0 0 90) (layer "F.Fab")
       (effects (font (size 0.4 0.4) (thickness 0.06)))
       (tstamp 4b573aa4-346c-426e-9953-41c8a5264940)
     )
@@ -5539,9 +5539,9 @@
     (fp_line (start -0.8 -0.4125) (end 0.8 -0.4125) (layer "F.Fab") (width 0.1) (tstamp 57f0815a-04c0-47ca-a4c4-13c723f0b108))
     (fp_line (start 0.8 0.4125) (end -0.8 0.4125) (layer "F.Fab") (width 0.1) (tstamp 8cfcfff9-c0bb-4a5b-a2a0-3d6a3eca8bd5))
     (fp_line (start 0.8 -0.4125) (end 0.8 0.4125) (layer "F.Fab") (width 0.1) (tstamp d8969149-0bb3-4957-a92b-162d925da54a))
-    (pad "1" smd roundrect (at -0.825 0) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
+    (pad "1" smd roundrect (at -0.825 0 270) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
       (net 106 "/Channel Power Supply 2/ADC 4") (pintype "passive") (tstamp 8d3efff2-3f13-4488-8017-b2f8a1e42fa9))
-    (pad "2" smd roundrect (at 0.825 0) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
+    (pad "2" smd roundrect (at 0.825 0 270) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
       (net 8 "GND2") (pintype "passive") (tstamp 26525375-c924-42f1-91d4-09436138f167))
     (model "${KICAD6_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0603_1608Metric.wrl"
       (offset (xyz 0 0 0))
@@ -6752,7 +6752,7 @@
 
   (footprint "Capacitor_THT:C_Disc_D6.0mm_W2.5mm_P5.00mm" (layer "F.Cu")
     (tedit 5AE50EF0) (tstamp 8083739f-2c5e-44e2-979c-0b19136c95e2)
-    (at 151.13 30.652323 -90)
+    (at 154.94 60.96 -90)
     (descr "C, Disc series, Radial, pin pitch=5.00mm, , diameter*width=6*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
     (tags "C Disc series Radial pin pitch 5.00mm  diameter 6mm width 2.5mm Capacitor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -7139,22 +7139,22 @@
 
   (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu")
     (tedit 5F68FEEE) (tstamp 87e2ec86-adc6-4f3f-ac6f-1b324859c9c8)
-    (at 237.15 98.21)
+    (at 238.76 91.44 -90)
     (descr "Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "resistor")
     (property "Sheetfile" "CurrentSense.kicad_sch")
     (property "Sheetname" "Current Sense ")
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf/8df2c858-0b30-453b-9770-4c5e8393702b")
     (attr smd)
-    (fp_text reference "R2_CS2" (at 0 -1.43) (layer "F.SilkS")
+    (fp_text reference "R2_CS2" (at 0 -1.43 90) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp db50b412-e60e-4863-bb19-3dde8b5ec167)
     )
-    (fp_text value "3k" (at 0 1.43) (layer "F.Fab")
+    (fp_text value "3k" (at 0 1.43 90) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 0720461c-299d-4bb7-989d-154d9659e9e8)
     )
-    (fp_text user "${REFERENCE}" (at 0 0) (layer "F.Fab")
+    (fp_text user "${REFERENCE}" (at 0 0 90) (layer "F.Fab")
       (effects (font (size 0.4 0.4) (thickness 0.06)))
       (tstamp 68482ec9-0f6b-4f20-939f-192de417ebc3)
     )
@@ -7168,9 +7168,9 @@
     (fp_line (start 0.8 0.4125) (end -0.8 0.4125) (layer "F.Fab") (width 0.1) (tstamp 8b4f3ce8-1650-4421-9e4c-a79f980611db))
     (fp_line (start -0.8 -0.4125) (end 0.8 -0.4125) (layer "F.Fab") (width 0.1) (tstamp ca1e176e-4230-4412-b714-89712f843e00))
     (fp_line (start -0.8 0.4125) (end -0.8 -0.4125) (layer "F.Fab") (width 0.1) (tstamp f8c428a6-8ea6-454d-9efb-e5c100c981d8))
-    (pad "1" smd roundrect (at -0.825 0) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
+    (pad "1" smd roundrect (at -0.825 0 270) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
       (net 94 "/Channel Power Supply 2/Current Sense /Output") (pintype "passive") (tstamp b9c8d817-eb2a-4fdf-9f38-0b4d5a6ff40e))
-    (pad "2" smd roundrect (at 0.825 0) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
+    (pad "2" smd roundrect (at 0.825 0 270) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
       (net 106 "/Channel Power Supply 2/ADC 4") (pintype "passive") (tstamp 5d02026c-1021-4cf4-8b84-8156dae0db5e))
     (model "${KICAD6_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0603_1608Metric.wrl"
       (offset (xyz 0 0 0))
@@ -7223,7 +7223,7 @@
 
   (footprint "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm" (layer "F.Cu")
     (tedit 5AE50EF1) (tstamp 8f182f88-b7a9-4abd-90ba-0caf480a58a1)
-    (at 144.78 38.1 90)
+    (at 147.32 66.04 90)
     (descr "CP, Radial series, Radial, pin pitch=5.00mm, , diameter=10mm, Electrolytic Capacitor")
     (tags "CP Radial series Radial pin pitch 5.00mm  diameter 10mm Electrolytic Capacitor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -7710,7 +7710,7 @@
 
   (footprint "Package_TO_SOT_SMD:SOT-23-5" (layer "F.Cu")
     (tedit 5F6F9B37) (tstamp 9a31283f-4bd6-49dd-bab2-8951dc2a4922)
-    (at 248.14 98.33)
+    (at 245.6 93.03)
     (descr "SOT, 5 Pin (https://www.jedec.org/sites/default/files/docs/Mo-178c.PDF variant AA), generated with kicad-footprint-generator ipc_gullwing_generator.py")
     (tags "SOT TO_SOT_SMD")
     (property "Sheetfile" "CurrentSense.kicad_sch")
@@ -7900,7 +7900,7 @@
 
   (footprint "Capacitor_THT:C_Disc_D6.0mm_W2.5mm_P5.00mm" (layer "F.Cu")
     (tedit 5AE50EF0) (tstamp 9e42e86c-966b-471b-9b52-89f739de3d17)
-    (at 120.65 88.9)
+    (at 119.38 109.22)
     (descr "C, Disc series, Radial, pin pitch=5.00mm, , diameter*width=6*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
     (tags "C Disc series Radial pin pitch 5.00mm  diameter 6mm width 2.5mm Capacitor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -8041,7 +8041,7 @@
 
   (footprint "Package_TO_SOT_SMD:SOT-23-5" (layer "F.Cu")
     (tedit 5F6F9B37) (tstamp a394b649-96b4-4c32-a61e-eebcbc1619b0)
-    (at 248.4875 42.57)
+    (at 243.84 22.86)
     (descr "SOT, 5 Pin (https://www.jedec.org/sites/default/files/docs/Mo-178c.PDF variant AA), generated with kicad-footprint-generator ipc_gullwing_generator.py")
     (tags "SOT TO_SOT_SMD")
     (property "Sheetfile" "CurrentSense.kicad_sch")
@@ -8092,7 +8092,7 @@
 
   (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal" (layer "F.Cu")
     (tedit 5AE50CD5) (tstamp a45e1235-f066-4dc2-8655-0f2eeb5f1ac9)
-    (at 137.16 37.002323 90)
+    (at 137.16 64.942323 90)
     (descr "Diode, DO-41_SOD81 series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf")
     (tags "Diode DO-41_SOD81 series Axial Horizontal pin pitch 10.16mm  length 5.2mm diameter 2.7mm")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -8636,7 +8636,7 @@
 
   (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu")
     (tedit 5F68FEEE) (tstamp b017b28d-dabf-4bf0-b3ae-7be8e4577894)
-    (at 251.06 38.08)
+    (at 243.84 27.94)
     (descr "Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "resistor")
     (property "Sheetfile" "CurrentSense.kicad_sch")
@@ -8873,7 +8873,7 @@
 
   (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu")
     (tedit 5F68FEEE) (tstamp b6171fcd-2d76-45be-b5fd-132eca84bdd5)
-    (at 258.62 90.78)
+    (at 246.38 99.06)
     (descr "Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "resistor")
     (property "Sheetfile" "CurrentSense.kicad_sch")
@@ -9430,22 +9430,22 @@
 
   (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu")
     (tedit 5F68FEEE) (tstamp bb0bd90f-689e-4e18-a468-6724ea91480a)
-    (at 242.76 42.33)
+    (at 236.22 30.48 -90)
     (descr "Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "resistor")
     (property "Sheetfile" "CurrentSense.kicad_sch")
     (property "Sheetname" "Current Sense ")
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf/fab63de1-1f7f-4a6a-80ea-2311fc618d34")
     (attr smd)
-    (fp_text reference "R3_CS1" (at 0 -1.43) (layer "F.SilkS")
+    (fp_text reference "R3_CS1" (at 0 -1.43 90) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 587824c0-ea29-4e7c-9227-86f616444bde)
     )
-    (fp_text value "1k" (at 0 1.43) (layer "F.Fab")
+    (fp_text value "1k" (at 0 1.43 90) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 48b4a316-b60b-41a6-93a4-9b77db520026)
     )
-    (fp_text user "${REFERENCE}" (at 0 0) (layer "F.Fab")
+    (fp_text user "${REFERENCE}" (at 0 0 90) (layer "F.Fab")
       (effects (font (size 0.4 0.4) (thickness 0.06)))
       (tstamp ea2f6ddf-78c3-4617-978c-22403836e3fd)
     )
@@ -9459,9 +9459,9 @@
     (fp_line (start -0.8 -0.4125) (end 0.8 -0.4125) (layer "F.Fab") (width 0.1) (tstamp 9d4e7ae4-e4b8-4caf-864b-c5089f0c3440))
     (fp_line (start 0.8 -0.4125) (end 0.8 0.4125) (layer "F.Fab") (width 0.1) (tstamp b6e97cb4-a1cd-4450-822b-5271be1d0b6a))
     (fp_line (start -0.8 0.4125) (end -0.8 -0.4125) (layer "F.Fab") (width 0.1) (tstamp f087fb06-edfa-4aba-bec1-d94229b1fca3))
-    (pad "1" smd roundrect (at -0.825 0) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
+    (pad "1" smd roundrect (at -0.825 0 270) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
       (net 109 "/Channel Power Supply 1/ADC 4") (pintype "passive") (tstamp e65cfa23-ed67-4686-91b1-7ca1b1086004))
-    (pad "2" smd roundrect (at 0.825 0) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
+    (pad "2" smd roundrect (at 0.825 0 270) (size 0.8 0.95) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
       (net 13 "GND1") (pintype "passive") (tstamp 57f68414-f080-401c-9b4b-13209c194c27))
     (model "${KICAD6_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0603_1608Metric.wrl"
       (offset (xyz 0 0 0))
@@ -9688,7 +9688,7 @@
 
   (footprint "Connector_Wire:SolderWire-2sqmm_1x02_P7.8mm_D2mm_OD3.9mm" (layer "F.Cu")
     (tedit 5EB70B45) (tstamp c43b7122-8561-4ec0-919c-495fbd1e743f)
-    (at 383.45 -11.43)
+    (at 270.6 93.98 180)
     (descr "Soldered wire connection, for 2 times 2 mm² wires, reinforced insulation, conductor diameter 2mm, outer diameter 3.9mm, size source Multi-Contact FLEXI-xV 2.0 (https://ec.staubli.com/AcroFiles/Catalogues/TM_Cab-Main-11014119_(en)_hi.pdf), bend radius 3 times outer diameter, generated with kicad-footprint-generator")
     (tags "connector wire 2sqmm")
     (property "Sheetfile" "CurrentSense.kicad_sch")
@@ -9717,9 +9717,9 @@
     (fp_line (start 10.5 2.45) (end 10.5 -2.45) (layer "F.CrtYd") (width 0.05) (tstamp fa1726ac-df23-4c87-a13b-045b1f264bf9))
     (fp_circle (center 7.8 0) (end 9.75 0) (layer "F.Fab") (width 0.1) (fill none) (tstamp ed209736-c072-46d1-a15c-be82d639423e))
     (fp_circle (center 0 0) (end 1.95 0) (layer "F.Fab") (width 0.1) (fill none) (tstamp fc65ae98-a058-4003-9a60-791f1746b728))
-    (pad "1" thru_hole roundrect (at 0 0) (size 3.9 3.9) (drill 2.5) (layers *.Cu *.Mask) (roundrect_rratio 0.064103)
+    (pad "1" thru_hole roundrect (at 0 0 180) (size 3.9 3.9) (drill 2.5) (layers *.Cu *.Mask) (roundrect_rratio 0.064103)
       (net 52 "Net-(F_CS2-Pad2)") (pinfunction "Pin_1") (pintype "passive") (tstamp 3f7bd376-9636-4472-94f6-63fda966bc2e))
-    (pad "2" thru_hole circle (at 7.8 0) (size 3.9 3.9) (drill 2.5) (layers *.Cu *.Mask)
+    (pad "2" thru_hole circle (at 7.8 0 180) (size 3.9 3.9) (drill 2.5) (layers *.Cu *.Mask)
       (net 8 "GND2") (pinfunction "Pin_2") (pintype "passive") (tstamp 1ddbea15-4555-4786-9a48-3917403d78c6))
     (model "${KICAD6_3DMODEL_DIR}/Connector_Wire.3dshapes/SolderWire-2sqmm_1x02_P7.8mm_D2mm_OD3.9mm.wrl"
       (offset (xyz 0 0 0))
@@ -9863,7 +9863,7 @@
 
   (footprint "Capacitor_THT:C_Disc_D6.0mm_W2.5mm_P5.00mm" (layer "F.Cu")
     (tedit 5AE50EF0) (tstamp c7768dd0-c7f2-4f3c-9a67-ccfaac503382)
-    (at 139.7 92.505 -90)
+    (at 149.86 116.84 -90)
     (descr "C, Disc series, Radial, pin pitch=5.00mm, , diameter*width=6*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
     (tags "C Disc series Radial pin pitch 5.00mm  diameter 6mm width 2.5mm Capacitor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -10054,7 +10054,7 @@
 
   (footprint "Package_TO_SOT_THT:TO-92_Inline" (layer "F.Cu")
     (tedit 5A1DD157) (tstamp cc28507d-e254-44ee-916d-666f9bff5201)
-    (at 156.21 29.382323 -90)
+    (at 162.56 60.96 -90)
     (descr "TO-92 leads in-line, narrow, oval pads, drill 0.75mm (see NXP sot054_po.pdf)")
     (tags "to-92 sc-43 sc-43a sot54 PA33 transistor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -10332,7 +10332,7 @@
 
   (footprint "Package_TO_SOT_THT:TO-92_Inline" (layer "F.Cu")
     (tedit 5A1DD157) (tstamp d163ceb4-f8e5-40ca-8589-fcedbec4bb0c)
-    (at 143.51 91.44 -90)
+    (at 157.48 116.84 -90)
     (descr "TO-92 leads in-line, narrow, oval pads, drill 0.75mm (see NXP sot054_po.pdf)")
     (tags "to-92 sc-43 sc-43a sot54 PA33 transistor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -11953,7 +11953,7 @@
 
   (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal" (layer "F.Cu")
     (tedit 5AE50CD5) (tstamp f46469d4-4f38-4d0d-bf13-2b015eeeecad)
-    (at 236.22 38.1)
+    (at 248.92 33.02 180)
     (descr "Diode, DO-41_SOD81 series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf")
     (tags "Diode DO-41_SOD81 series Axial Horizontal pin pitch 10.16mm  length 5.2mm diameter 2.7mm")
     (property "Sheetfile" "CurrentSense.kicad_sch")
@@ -12002,9 +12002,9 @@
     (fp_line (start 3.26 -1.35) (end 3.26 1.35) (layer "F.Fab") (width 0.1) (tstamp d316c0b7-8f97-4105-a8d8-a40840175b86))
     (fp_line (start 2.48 1.35) (end 7.68 1.35) (layer "F.Fab") (width 0.1) (tstamp d5a9a5de-1c50-459a-b308-de2238ffe193))
     (fp_line (start 0 0) (end 2.48 0) (layer "F.Fab") (width 0.1) (tstamp fde21419-2609-4ead-af91-1e8aa460285b))
-    (pad "1" thru_hole rect (at 0 0) (size 2.2 2.2) (drill 1.1) (layers *.Cu *.Mask)
+    (pad "1" thru_hole rect (at 0 0 180) (size 2.2 2.2) (drill 1.1) (layers *.Cu *.Mask)
       (net 95 "/Channel Power Supply 1/Current Sense /Output") (pinfunction "K") (pintype "passive") (tstamp 016a0456-ea62-4f3e-84d8-d8387fb96546))
-    (pad "2" thru_hole oval (at 10.16 0) (size 2.2 2.2) (drill 1.1) (layers *.Cu *.Mask)
+    (pad "2" thru_hole oval (at 10.16 0 180) (size 2.2 2.2) (drill 1.1) (layers *.Cu *.Mask)
       (net 13 "GND1") (pinfunction "A") (pintype "passive") (tstamp f5d4d71d-b13c-4c81-8a8a-5d0c2b8fdb4f))
     (model "${KICAD6_3DMODEL_DIR}/Diode_THT.3dshapes/D_DO-41_SOD81_P10.16mm_Horizontal.wrl"
       (offset (xyz 0 0 0))
@@ -12374,7 +12374,7 @@
 
   (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal" (layer "F.Cu")
     (tedit 5AE50CD5) (tstamp fc451da0-a12a-4559-83eb-3b25b9b9091e)
-    (at 236.22 93.98)
+    (at 251.46 104.14 180)
     (descr "Diode, DO-41_SOD81 series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf")
     (tags "Diode DO-41_SOD81 series Axial Horizontal pin pitch 10.16mm  length 5.2mm diameter 2.7mm")
     (property "Sheetfile" "CurrentSense.kicad_sch")
@@ -12423,9 +12423,9 @@
     (fp_line (start 7.68 1.35) (end 7.68 -1.35) (layer "F.Fab") (width 0.1) (tstamp 9d88b29b-5704-429f-aa03-8f4956fb90f1))
     (fp_line (start 3.16 -1.35) (end 3.16 1.35) (layer "F.Fab") (width 0.1) (tstamp d9a96248-cdd1-47c8-94ea-b2b5b464dda9))
     (fp_line (start 0 0) (end 2.48 0) (layer "F.Fab") (width 0.1) (tstamp ec8b2323-7f91-4c0c-8920-e076a63b2215))
-    (pad "1" thru_hole rect (at 0 0) (size 2.2 2.2) (drill 1.1) (layers *.Cu *.Mask)
+    (pad "1" thru_hole rect (at 0 0 180) (size 2.2 2.2) (drill 1.1) (layers *.Cu *.Mask)
       (net 94 "/Channel Power Supply 2/Current Sense /Output") (pinfunction "K") (pintype "passive") (tstamp 44be80fc-2018-4b2a-ab0b-86b2b59eab8a))
-    (pad "2" thru_hole oval (at 10.16 0) (size 2.2 2.2) (drill 1.1) (layers *.Cu *.Mask)
+    (pad "2" thru_hole oval (at 10.16 0 180) (size 2.2 2.2) (drill 1.1) (layers *.Cu *.Mask)
       (net 8 "GND2") (pinfunction "A") (pintype "passive") (tstamp e2c24b17-218d-4ecb-a42c-6ba8bac2cd61))
     (model "${KICAD6_3DMODEL_DIR}/Diode_THT.3dshapes/D_DO-41_SOD81_P10.16mm_Horizontal.wrl"
       (offset (xyz 0 0 0))
@@ -12472,7 +12472,7 @@
 
   (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu")
     (tedit 5F68FEEE) (tstamp fe073332-5d3c-4b90-8422-12e0df349e5b)
-    (at 142.24 88.9)
+    (at 149.86 109.22)
     (descr "Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "resistor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -12607,6 +12607,17 @@
     )
   )
 
+  (group "" (id 0c4ec7d5-2bb8-446c-95dc-a531380bb436)
+    (members
+      290ca3d2-ee0c-4420-8a22-432748e7d4ba
+      6d44c937-f82c-401d-afd7-523e9a0dbd95
+      87e2ec86-adc6-4f3f-ac6f-1b324859c9c8
+      9a31283f-4bd6-49dd-bab2-8951dc2a4922
+      b6171fcd-2d76-45be-b5fd-132eca84bdd5
+      c43b7122-8561-4ec0-919c-495fbd1e743f
+      fc451da0-a12a-4559-83eb-3b25b9b9091e
+    )
+  )
   (group "" (id 15bd2de5-d609-47f7-a759-5f210abd1e8a)
     (members
       1e09d9d2-d106-409e-b2f4-ca85b86e4b89
@@ -12676,6 +12687,17 @@
       f67ba34b-0351-4a77-8c8b-bdd9b5082849
     )
   )
+  (group "" (id 39cb8bce-0a73-4dbc-a334-093ca8e9f8ec)
+    (members
+      025c3c1c-4013-416c-adca-24324282444f
+      0c6ca1de-2126-4d56-9d0f-1b13a49ad953
+      185a4217-1806-4b48-ad93-e3baaa2c4cfd
+      a394b649-96b4-4c32-a61e-eebcbc1619b0
+      b017b28d-dabf-4bf0-b3ae-7be8e4577894
+      bb0bd90f-689e-4e18-a468-6724ea91480a
+      f46469d4-4f38-4d0d-bf13-2b015eeeecad
+    )
+  )
   (group "" (id 4067e2c0-2c9b-4590-8f6b-aa5a596e70ca)
     (members
       9cddc302-4d74-4890-ab26-59fd1e7746ba
@@ -12686,17 +12708,6 @@
   (group "" (id 42f8c35c-8c7c-4764-bfc3-a860832df229)
     (members
       567b82ea-7afc-4607-bbf9-6fc699fbb996
-    )
-  )
-  (group "" (id 71fabf41-2f73-4d25-8e46-ab168254bff7)
-    (members
-      11d5aca1-35f0-498d-9328-88edea3d0386
-      12b69387-c57a-4fdc-8e35-edd9fcfd2339
-      1ae7225b-bef0-410e-ae20-96652261b852
-      9e42e86c-966b-471b-9b52-89f739de3d17
-      c7768dd0-c7f2-4f3c-9a67-ccfaac503382
-      d163ceb4-f8e5-40ca-8589-fcedbec4bb0c
-      fe073332-5d3c-4b90-8422-12e0df349e5b
     )
   )
   (group "" (id 853c8dd3-5559-45ed-94d9-3241a76a44df)
@@ -12715,17 +12726,6 @@
       fb235242-b883-466a-8c90-5271ada3aab1
       fb3f9a58-4e53-4d3d-a9f4-ea3cdc0df652
       fd0906c3-99ea-48f6-a68c-ea3b1c125a6d
-    )
-  )
-  (group "" (id 9697f297-a7ad-4bee-9932-3c52d18db12c)
-    (members
-      250619b9-d1ab-436d-8d7b-5a4ecc26f6b6
-      35934f30-cf21-4399-91f9-8fd779cf0641
-      66d6f617-0ab3-45f2-b1c0-82d8211f73f6
-      8083739f-2c5e-44e2-979c-0b19136c95e2
-      8f182f88-b7a9-4abd-90ba-0caf480a58a1
-      a45e1235-f066-4dc2-8655-0f2eeb5f1ac9
-      cc28507d-e254-44ee-916d-666f9bff5201
     )
   )
   (group "" (id 99faa268-3bb1-4d0f-99cb-6387546f7400)
@@ -12777,6 +12777,17 @@
       d3f4fbb5-e97c-453f-aa58-7389fe13e087
       ee24bd75-248c-42f7-badf-013a65c80274
       f9fa4cc0-5439-4635-a040-c61c0fb83d39
+    )
+  )
+  (group "" (id db690e73-707b-4b6f-b092-173e57516a0c)
+    (members
+      11d5aca1-35f0-498d-9328-88edea3d0386
+      12b69387-c57a-4fdc-8e35-edd9fcfd2339
+      1ae7225b-bef0-410e-ae20-96652261b852
+      9e42e86c-966b-471b-9b52-89f739de3d17
+      c7768dd0-c7f2-4f3c-9a67-ccfaac503382
+      d163ceb4-f8e5-40ca-8589-fcedbec4bb0c
+      fe073332-5d3c-4b90-8422-12e0df349e5b
     )
   )
   (group "" (id ddb61da0-7871-4d25-890d-c8b5275c3583)
