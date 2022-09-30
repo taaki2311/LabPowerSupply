@@ -234,7 +234,6 @@
     )
   )
 
-
   (junction (at 166.37 86.36) (diameter 0) (color 0 0 0 0)
     (uuid 012328db-afdc-43fe-a7b5-204140703011)
   )
@@ -594,7 +593,7 @@
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 9e40d895-a947-4b33-a248-0d0dda788e56)
     (property "Reference" "R11_OA1" (id 0) (at 181.61 113.03 90))
-    (property "Value" "4k" (id 1) (at 181.61 115.57 90))
+    (property "Value" "10k" (id 1) (at 181.61 115.57 90))
     (property "Footprint" "Resistor_SMD:R_0603_1608Metric" (id 2) (at 181.864 118.364 90)
       (effects (font (size 1.27 1.27)) hide)
     )

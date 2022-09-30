@@ -1841,6 +1841,21 @@
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/1f8c5f30-7c48-4f7f-ae89-842563537cb2/09382b9a-7b42-4662-a48b-9d5c4c6fa98e"
       (reference "Inverter1") (unit 1) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
     )
+    (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/6bedb626-f7f4-4d9b-bcaa-ffffbedfd80d"
+      (reference "Inverter1") (unit 2) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
+    )
+    (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/480f2d05-3620-4dc5-a46a-07836492330a"
+      (reference "Inverter1") (unit 3) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
+    )
+    (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/cb1646eb-b72b-47fb-b96d-d2f003d1fd48"
+      (reference "Inverter1") (unit 4) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
+    )
+    (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/13058a2f-1304-4b36-8837-9d49d7a19fd1"
+      (reference "Inverter1") (unit 5) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
+    )
+    (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/27774e70-a241-45f3-b972-1af853896663"
+      (reference "Inverter1") (unit 6) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
+    )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/1f8c5f30-7c48-4f7f-ae89-842563537cb2/06471eeb-c80c-4525-aa09-860691a94d28"
       (reference "Inverter1") (unit 7) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
     )
@@ -1852,6 +1867,15 @@
     )
     (path "/3d294f79-f2d7-4288-8001-342bbe758cab/c0231952-2d13-4e62-89d9-e6a6b0cb25ff"
       (reference "Inverter2") (unit 3) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
+    )
+    (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/b0a7cc4c-a5d6-4906-abb6-c5a27c2da092"
+      (reference "Inverter2") (unit 4) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
+    )
+    (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/c7e86102-4df2-47f6-99ab-0271c3f78fe9"
+      (reference "Inverter2") (unit 5) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
+    )
+    (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/e3ce5eac-8ee4-46ab-aee1-2e021fccf6dc"
+      (reference "Inverter2") (unit 6) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/1f8c5f30-7c48-4f7f-ae89-842563537cb2/06471eeb-c80c-4525-aa09-860691a94d28"
       (reference "Inverter2") (unit 7) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
@@ -2142,10 +2166,10 @@
       (reference "R10_OA2") (unit 1) (value "1k") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/7e152100-3451-4635-9914-2a0b75d7b7b6/9e40d895-a947-4b33-a248-0d0dda788e56"
-      (reference "R11_OA1") (unit 1) (value "4k") (footprint "Resistor_SMD:R_0603_1608Metric")
+      (reference "R11_OA1") (unit 1) (value "10k") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/7e152100-3451-4635-9914-2a0b75d7b7b6/9e40d895-a947-4b33-a248-0d0dda788e56"
-      (reference "R11_OA2") (unit 1) (value "4k") (footprint "Resistor_SMD:R_0603_1608Metric")
+      (reference "R11_OA2") (unit 1) (value "10k") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/b78ed596-2ebf-471d-87f7-c16705ddf1d3"
       (reference "R_CC1") (unit 1) (value "4.7k") (footprint "Resistor_SMD:R_0603_1608Metric")

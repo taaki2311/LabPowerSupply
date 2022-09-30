@@ -291,6 +291,22 @@
   (net 214 "Net-(OpAmp1-Pad13)")
   (net 215 "Net-(J_Boot1-Pad1)")
   (net 216 "Net-(J_Boot2-Pad1)")
+  (net 217 "unconnected-(Inverter1-Pad3)")
+  (net 218 "unconnected-(Inverter1-Pad4)")
+  (net 219 "unconnected-(Inverter1-Pad5)")
+  (net 220 "unconnected-(Inverter1-Pad6)")
+  (net 221 "unconnected-(Inverter1-Pad8)")
+  (net 222 "unconnected-(Inverter1-Pad9)")
+  (net 223 "unconnected-(Inverter1-Pad10)")
+  (net 224 "unconnected-(Inverter1-Pad11)")
+  (net 225 "unconnected-(Inverter1-Pad12)")
+  (net 226 "unconnected-(Inverter1-Pad13)")
+  (net 227 "unconnected-(Inverter2-Pad8)")
+  (net 228 "unconnected-(Inverter2-Pad9)")
+  (net 229 "unconnected-(Inverter2-Pad10)")
+  (net 230 "unconnected-(Inverter2-Pad11)")
+  (net 231 "unconnected-(Inverter2-Pad12)")
+  (net 232 "unconnected-(Inverter2-Pad13)")
 
   (footprint "Button_Switch_SMD:SW_MEC_5GSH9" (layer "F.Cu")
     (tedit 5A02FC95) (tstamp 01c213d9-b600-420a-af14-de799ee02512)
@@ -2606,12 +2622,18 @@
       (net 120 "Net-(Inverter2-Pad6)") (pintype "output") (tstamp 42b35f54-e035-4f0d-b7a9-1007f479f728))
     (pad "7" thru_hole oval (at 0 15.24 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
       (net 8 "GND2") (pinfunction "GND") (pintype "power_in") (tstamp a7c2ef3d-cc2e-408b-b615-e64fcd2dea31))
-    (pad "8" thru_hole oval (at 7.62 15.24 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp cba3ba74-5c78-4243-af36-8a2f7f07ce9d))
-    (pad "9" thru_hole oval (at 7.62 12.7 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp 6051fdf5-c8a7-4a7d-b07c-bafc1d0eb0d8))
-    (pad "10" thru_hole oval (at 7.62 10.16 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp f6cdc72d-1521-42f5-93e4-857f611634b0))
-    (pad "11" thru_hole oval (at 7.62 7.62 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp 6ae71571-f68e-43e3-bba9-a043fa900e30))
-    (pad "12" thru_hole oval (at 7.62 5.08 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp a46591f8-1cb4-4f20-810a-f55621e134fc))
-    (pad "13" thru_hole oval (at 7.62 2.54 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp 07ff8838-d804-4bd2-97ad-9f124492ed7e))
+    (pad "8" thru_hole oval (at 7.62 15.24 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 227 "unconnected-(Inverter2-Pad8)") (pintype "output+no_connect") (tstamp cba3ba74-5c78-4243-af36-8a2f7f07ce9d))
+    (pad "9" thru_hole oval (at 7.62 12.7 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 228 "unconnected-(Inverter2-Pad9)") (pintype "input+no_connect") (tstamp 6051fdf5-c8a7-4a7d-b07c-bafc1d0eb0d8))
+    (pad "10" thru_hole oval (at 7.62 10.16 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 229 "unconnected-(Inverter2-Pad10)") (pintype "output+no_connect") (tstamp f6cdc72d-1521-42f5-93e4-857f611634b0))
+    (pad "11" thru_hole oval (at 7.62 7.62 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 230 "unconnected-(Inverter2-Pad11)") (pintype "input+no_connect") (tstamp 6ae71571-f68e-43e3-bba9-a043fa900e30))
+    (pad "12" thru_hole oval (at 7.62 5.08 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 231 "unconnected-(Inverter2-Pad12)") (pintype "output+no_connect") (tstamp a46591f8-1cb4-4f20-810a-f55621e134fc))
+    (pad "13" thru_hole oval (at 7.62 2.54 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 232 "unconnected-(Inverter2-Pad13)") (pintype "input+no_connect") (tstamp 07ff8838-d804-4bd2-97ad-9f124492ed7e))
     (pad "14" thru_hole oval (at 7.62 0 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
       (net 15 "+3.3VA") (pinfunction "VCC") (pintype "power_in") (tstamp 95270dec-b81e-4913-9bf9-f50658971276))
     (model "${KICAD6_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-14_W7.62mm.wrl"
@@ -2725,7 +2747,7 @@
 
   (footprint "Capacitor_THT:C_Disc_D6.0mm_W2.5mm_P5.00mm" (layer "F.Cu")
     (tedit 5AE50EF0) (tstamp 250619b9-d1ab-436d-8d7b-5a4ecc26f6b6)
-    (at 127 54.782323)
+    (at 120.65 62.402323)
     (descr "C, Disc series, Radial, pin pitch=5.00mm, , diameter*width=6*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
     (tags "C Disc series Radial pin pitch 5.00mm  diameter 6mm width 2.5mm Capacitor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -3215,7 +3237,7 @@
 
   (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal" (layer "F.Cu")
     (tedit 5AE50CD5) (tstamp 35934f30-cf21-4399-91f9-8fd779cf0641)
-    (at 142.24 54.782323)
+    (at 135.89 62.402323)
     (descr "Diode, DO-41_SOD81 series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf")
     (tags "Diode DO-41_SOD81 series Axial Horizontal pin pitch 10.16mm  length 5.2mm diameter 2.7mm")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -3831,7 +3853,7 @@
 
   (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu")
     (tedit 5F68FEEE) (tstamp 4423b505-92ed-4ce6-ae5c-46c6e302f3b5)
-    (at 276.86 129.54)
+    (at 278.13 130.81)
     (descr "Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "resistor")
     (property "Sheetfile" "PrimaryController.kicad_sch")
@@ -4010,7 +4032,7 @@
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 68a2f4ee-73f0-4379-8f38-21543ccd2b61)
     )
-    (fp_text value "4k" (at 0 1.43) (layer "F.Fab")
+    (fp_text value "10k" (at 0 1.43) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 8b47ede0-018c-4d77-b0eb-bb53f27c4320)
     )
@@ -5278,7 +5300,7 @@
 
   (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu")
     (tedit 5F68FEEE) (tstamp 66d6f617-0ab3-45f2-b1c0-82d8211f73f6)
-    (at 157.48 54.782323)
+    (at 151.13 62.402323)
     (descr "Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "resistor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -6193,7 +6215,7 @@
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 22b1cd8c-2e36-48a0-8bf6-a170f18e5c4d)
     )
-    (fp_text value "4k" (at 0 1.43) (layer "F.Fab")
+    (fp_text value "10k" (at 0 1.43) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 36a42c9b-4dd2-456a-b8d2-e71754bb6ce3)
     )
@@ -6752,7 +6774,7 @@
 
   (footprint "Capacitor_THT:C_Disc_D6.0mm_W2.5mm_P5.00mm" (layer "F.Cu")
     (tedit 5AE50EF0) (tstamp 8083739f-2c5e-44e2-979c-0b19136c95e2)
-    (at 154.94 60.96 -90)
+    (at 148.59 68.58 -90)
     (descr "C, Disc series, Radial, pin pitch=5.00mm, , diameter*width=6*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
     (tags "C Disc series Radial pin pitch 5.00mm  diameter 6mm width 2.5mm Capacitor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -7223,7 +7245,7 @@
 
   (footprint "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm" (layer "F.Cu")
     (tedit 5AE50EF1) (tstamp 8f182f88-b7a9-4abd-90ba-0caf480a58a1)
-    (at 147.32 66.04 90)
+    (at 140.97 73.66 90)
     (descr "CP, Radial series, Radial, pin pitch=5.00mm, , diameter=10mm, Electrolytic Capacitor")
     (tags "CP Radial series Radial pin pitch 5.00mm  diameter 10mm Electrolytic Capacitor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -8092,7 +8114,7 @@
 
   (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal" (layer "F.Cu")
     (tedit 5AE50CD5) (tstamp a45e1235-f066-4dc2-8655-0f2eeb5f1ac9)
-    (at 137.16 64.942323 90)
+    (at 130.81 72.562323 90)
     (descr "Diode, DO-41_SOD81 series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf")
     (tags "Diode DO-41_SOD81 series Axial Horizontal pin pitch 10.16mm  length 5.2mm diameter 2.7mm")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -9516,7 +9538,7 @@
 
   (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm" (layer "F.Cu")
     (tedit 5AE50EF0) (tstamp bc6cbbb7-f01f-43c1-a2b8-5fb50e6d8c24)
-    (at 307.34 36.83)
+    (at 304.8 38.1)
     (descr "C, Disc series, Radial, pin pitch=2.50mm, , diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
     (tags "C Disc series Radial pin pitch 2.50mm  diameter 5mm width 2.5mm Capacitor")
     (property "Sheetfile" "PrimaryController.kicad_sch")
@@ -10054,7 +10076,7 @@
 
   (footprint "Package_TO_SOT_THT:TO-92_Inline" (layer "F.Cu")
     (tedit 5A1DD157) (tstamp cc28507d-e254-44ee-916d-666f9bff5201)
-    (at 162.56 60.96 -90)
+    (at 156.21 68.58 -90)
     (descr "TO-92 leads in-line, narrow, oval pads, drill 0.75mm (see NXP sot054_po.pdf)")
     (tags "to-92 sc-43 sc-43a sot54 PA33 transistor")
     (property "Sheetfile" "ChargePump.kicad_sch")
@@ -10240,7 +10262,7 @@
 
   (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm" (layer "F.Cu")
     (tedit 5AE50EF0) (tstamp ceb647f6-68fc-40c3-bb5d-04dc9326b4b9)
-    (at 307.34 31.75)
+    (at 304.8 31.75)
     (descr "C, Disc series, Radial, pin pitch=2.50mm, , diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
     (tags "C Disc series Radial pin pitch 2.50mm  diameter 5mm width 2.5mm Capacitor")
     (property "Sheetfile" "PrimaryController.kicad_sch")
@@ -10572,7 +10594,7 @@
 
   (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu")
     (tedit 5F68FEEE) (tstamp d52a2571-a97c-42be-8dd6-45a2647728e0)
-    (at 277.9375 144.78)
+    (at 279.2075 146.05)
     (descr "Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "resistor")
     (property "Sheetfile" "PrimaryController.kicad_sch")
@@ -10772,7 +10794,7 @@
 
   (footprint "Connector_IDC:IDC-Header_2x10_P2.54mm_Vertical" (layer "F.Cu")
     (tedit 5EAC9A07) (tstamp dbfcb77d-b3f2-4257-a07d-786617efbdf2)
-    (at 267.4525 161.29 180)
+    (at 268.7225 162.56 180)
     (descr "Through hole IDC box header, 2x10, 2.54mm pitch, DIN 41651 / IEC 60603-13, double rows, https://docs.google.com/spreadsheets/d/16SsEcesNF15N3Lb4niX7dcUr-NY5_MFPQhobNuNppn4/edit#gid=0")
     (tags "Through hole vertical IDC box header THT 2x10 2.54mm double row")
     (property "Sheetfile" "PrimaryController.kicad_sch")
@@ -11613,7 +11635,7 @@
 
   (footprint "Connector_USB:USB_C_Receptacle_Palconn_UTC16-G" (layer "F.Cu")
     (tedit 5CF432E0) (tstamp f1b78034-2f88-4503-b61e-6671a06898fa)
-    (at 279.4 137.16 90)
+    (at 280.67 138.43 90)
     (descr "http://www.palpilot.com/wp-content/uploads/2017/05/UTC027-GKN-OR-Rev-A.pdf")
     (tags "USB C Type-C Receptacle USB2.0")
     (property "Sheetfile" "PrimaryController.kicad_sch")
@@ -12075,9 +12097,9 @@
     (at 210.78 55.88 -90)
     (descr "14-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)")
     (tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
-    (property "Sheetfile" "LinearVoltageRegulator.kicad_sch")
-    (property "Sheetname" "Linear Voltage Regulator ")
-    (path "/0c3af00c-caea-46d1-9953-712c4efb6180/1f8c5f30-7c48-4f7f-ae89-842563537cb2/09382b9a-7b42-4662-a48b-9d5c4c6fa98e")
+    (property "Sheetfile" "NoConnect.kicad_sch")
+    (property "Sheetname" "No Connect")
+    (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/6bedb626-f7f4-4d9b-bcaa-ffffbedfd80d")
     (attr through_hole)
     (fp_text reference "Inverter1" (at 3.81 -2.33 90) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
@@ -12110,18 +12132,28 @@
       (net 53 "/Channel Power Supply 1/On{slash}Off") (pintype "input") (tstamp 1226ca72-a42c-4c51-815b-c7a1da8928e7))
     (pad "2" thru_hole oval (at 0 2.54 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
       (net 182 "Net-(Inverter1-Pad2)") (pintype "output") (tstamp ba45b6f8-907c-49a3-bc8f-1e070651e581))
-    (pad "3" thru_hole oval (at 0 5.08 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp 872a8db8-6e66-4d29-a566-edab258e7234))
-    (pad "4" thru_hole oval (at 0 7.62 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp fab74916-e742-4b79-9565-d342cd43bd64))
-    (pad "5" thru_hole oval (at 0 10.16 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp 26c44e48-da8c-45ed-8727-13fbc9ca4ac2))
-    (pad "6" thru_hole oval (at 0 12.7 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp 0f1b2904-36d6-4f77-926c-ba0f264c809a))
+    (pad "3" thru_hole oval (at 0 5.08 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 217 "unconnected-(Inverter1-Pad3)") (pintype "input+no_connect") (tstamp 872a8db8-6e66-4d29-a566-edab258e7234))
+    (pad "4" thru_hole oval (at 0 7.62 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 218 "unconnected-(Inverter1-Pad4)") (pintype "output+no_connect") (tstamp fab74916-e742-4b79-9565-d342cd43bd64))
+    (pad "5" thru_hole oval (at 0 10.16 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 219 "unconnected-(Inverter1-Pad5)") (pintype "input+no_connect") (tstamp 26c44e48-da8c-45ed-8727-13fbc9ca4ac2))
+    (pad "6" thru_hole oval (at 0 12.7 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 220 "unconnected-(Inverter1-Pad6)") (pintype "output+no_connect") (tstamp 0f1b2904-36d6-4f77-926c-ba0f264c809a))
     (pad "7" thru_hole oval (at 0 15.24 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
       (net 13 "GND1") (pinfunction "GND") (pintype "power_in") (tstamp ffcba82e-90b6-44bb-8df9-54d6d187a23d))
-    (pad "8" thru_hole oval (at 7.62 15.24 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp d52247c5-ece2-4bb5-92ea-a55f65f9c5cd))
-    (pad "9" thru_hole oval (at 7.62 12.7 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp 78e1bf87-fbd4-4cab-a7b6-476b07d91a03))
-    (pad "10" thru_hole oval (at 7.62 10.16 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp 2c9d7b1e-0f7a-49e7-8d65-1de17ab6410c))
-    (pad "11" thru_hole oval (at 7.62 7.62 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp 46dfc804-d9b3-4944-a93b-050acf9d2192))
-    (pad "12" thru_hole oval (at 7.62 5.08 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp d77c0a88-d5d0-4bc2-a5c7-7eacb624620a))
-    (pad "13" thru_hole oval (at 7.62 2.54 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask) (tstamp a44e70a9-adfd-4363-99be-a14f33bdb70d))
+    (pad "8" thru_hole oval (at 7.62 15.24 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 221 "unconnected-(Inverter1-Pad8)") (pintype "output+no_connect") (tstamp d52247c5-ece2-4bb5-92ea-a55f65f9c5cd))
+    (pad "9" thru_hole oval (at 7.62 12.7 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 222 "unconnected-(Inverter1-Pad9)") (pintype "input+no_connect") (tstamp 78e1bf87-fbd4-4cab-a7b6-476b07d91a03))
+    (pad "10" thru_hole oval (at 7.62 10.16 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 223 "unconnected-(Inverter1-Pad10)") (pintype "output+no_connect") (tstamp 2c9d7b1e-0f7a-49e7-8d65-1de17ab6410c))
+    (pad "11" thru_hole oval (at 7.62 7.62 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 224 "unconnected-(Inverter1-Pad11)") (pintype "input+no_connect") (tstamp 46dfc804-d9b3-4944-a93b-050acf9d2192))
+    (pad "12" thru_hole oval (at 7.62 5.08 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 225 "unconnected-(Inverter1-Pad12)") (pintype "output+no_connect") (tstamp d77c0a88-d5d0-4bc2-a5c7-7eacb624620a))
+    (pad "13" thru_hole oval (at 7.62 2.54 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
+      (net 226 "unconnected-(Inverter1-Pad13)") (pintype "input+no_connect") (tstamp a44e70a9-adfd-4363-99be-a14f33bdb70d))
     (pad "14" thru_hole oval (at 7.62 0 270) (size 1.6 1.6) (drill 0.8) (layers *.Cu *.Mask)
       (net 16 "+3.3V") (pinfunction "VCC") (pintype "power_in") (tstamp 6e2c1d9e-758b-498a-a6b8-fe42e63efbf2))
     (model "${KICAD6_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-14_W7.62mm.wrl"
@@ -12670,6 +12702,17 @@
       ddd345d1-7b09-493a-9337-71eb792193b5
     )
   )
+  (group "" (id 33794a32-9b3e-4b77-a4d9-a6e925487c3b)
+    (members
+      250619b9-d1ab-436d-8d7b-5a4ecc26f6b6
+      35934f30-cf21-4399-91f9-8fd779cf0641
+      66d6f617-0ab3-45f2-b1c0-82d8211f73f6
+      8083739f-2c5e-44e2-979c-0b19136c95e2
+      8f182f88-b7a9-4abd-90ba-0caf480a58a1
+      a45e1235-f066-4dc2-8655-0f2eeb5f1ac9
+      cc28507d-e254-44ee-916d-666f9bff5201
+    )
+  )
   (group "" (id 389c7550-4a8f-44da-a035-4056cbf463f6)
     (members
       d0e7f678-e52c-42c6-ad33-c820bac3a6af
@@ -12703,11 +12746,6 @@
       9cddc302-4d74-4890-ab26-59fd1e7746ba
       eaf4d4b7-36cc-4c91-ad65-be884e55ae58
       f3e8ec53-87fb-432d-acdb-72cf70eed24b
-    )
-  )
-  (group "" (id 42f8c35c-8c7c-4764-bfc3-a860832df229)
-    (members
-      567b82ea-7afc-4607-bbf9-6fc699fbb996
     )
   )
   (group "" (id 853c8dd3-5559-45ed-94d9-3241a76a44df)
@@ -12756,13 +12794,6 @@
       f1f35aa8-1871-49eb-a1ac-4b9502f8079a
     )
   )
-  (group "" (id b9ecacd8-c746-4182-ab24-fe6f8f24c20e)
-    (members
-      0e8b7e8e-3312-4884-9cb5-4aaea1d6e19d
-      1b367bd0-ff92-4e13-8898-9f162d555447
-      42f8c35c-8c7c-4764-bfc3-a860832df229
-    )
-  )
   (group "" (id bdfbd80e-4e95-4dd0-bca3-22fd1033a5ed)
     (members
       33fbcd29-fccd-4ee0-89d1-4250bac327ce
@@ -12777,6 +12808,13 @@
       d3f4fbb5-e97c-453f-aa58-7389fe13e087
       ee24bd75-248c-42f7-badf-013a65c80274
       f9fa4cc0-5439-4635-a040-c61c0fb83d39
+    )
+  )
+  (group "" (id c88d2faf-e5de-410a-b99e-6cbecebdcdc0)
+    (members
+      0e8b7e8e-3312-4884-9cb5-4aaea1d6e19d
+      1b367bd0-ff92-4e13-8898-9f162d555447
+      567b82ea-7afc-4607-bbf9-6fc699fbb996
     )
   )
   (group "" (id db690e73-707b-4b6f-b092-173e57516a0c)

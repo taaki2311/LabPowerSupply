@@ -479,15 +479,14 @@
     )
   )
 
-
-  (junction (at 132.08 77.47) (diameter 0) (color 0 0 0 0)
-    (uuid 97c15aaa-f081-4fcb-a934-b2999140b5ee)
-  )
   (junction (at 154.94 111.76) (diameter 0) (color 0 0 0 0)
     (uuid 989f68dc-f606-4825-9fd1-7de8f6b94c8c)
   )
   (junction (at 106.68 111.76) (diameter 0) (color 0 0 0 0)
     (uuid a25669ab-a5da-414e-b4dd-db2116e78a1f)
+  )
+  (junction (at 132.08 77.47) (diameter 0) (color 0 0 0 0)
+    (uuid e0733017-612e-4a6e-93b7-b4989b8f1e18)
   )
   (junction (at 116.84 101.6) (diameter 0) (color 0 0 0 0)
     (uuid fa0cf200-1453-4790-beef-59e74371956d)
