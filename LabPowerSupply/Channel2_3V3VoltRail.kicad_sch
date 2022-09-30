@@ -208,7 +208,7 @@
     (property "Reference" "C2_3.3V2" (id 0) (at 158.75 104.1399 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Value" "220n" (id 1) (at 158.75 106.6799 0)
+    (property "Value" "2.2u" (id 1) (at 158.75 106.6799 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Footprint" "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm" (id 2) (at 155.9052 109.22 0)
