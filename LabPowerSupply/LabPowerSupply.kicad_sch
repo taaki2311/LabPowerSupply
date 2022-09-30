@@ -1754,10 +1754,10 @@
       (reference "C3_CP2") (unit 1) (value "1m") (footprint "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/1f8c5f30-7c48-4f7f-ae89-842563537cb2/8aaef4e2-99fb-4a2d-ba3f-6a7d22855ac5"
-      (reference "C3_LVR1") (unit 1) (value "10u") (footprint "Capacitor_THT:C_Disc_D7.5mm_W2.5mm_P5.00mm")
+      (reference "C3_LVR1") (unit 1) (value "10u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/1f8c5f30-7c48-4f7f-ae89-842563537cb2/8aaef4e2-99fb-4a2d-ba3f-6a7d22855ac5"
-      (reference "C3_LVR2") (unit 1) (value "10u") (footprint "Capacitor_THT:C_Disc_D7.5mm_W2.5mm_P5.00mm")
+      (reference "C3_LVR2") (unit 1) (value "10u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/fba723df-b241-4063-8db6-e899e6f4ff70"
       (reference "C3_Power1") (unit 1) (value "1u") (footprint "Capacitor_SMD:C_0603_1608Metric")
@@ -1772,10 +1772,10 @@
       (reference "C3_SVR2") (unit 1) (value "22n") (footprint "Capacitor_THT:C_Disc_D7.5mm_W2.5mm_P5.00mm")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/1f8c5f30-7c48-4f7f-ae89-842563537cb2/d8777a1f-ccc1-490c-b086-50623f3cfac0"
-      (reference "C4_LVR1") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D7.5mm_W2.5mm_P5.00mm")
+      (reference "C4_LVR1") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/1f8c5f30-7c48-4f7f-ae89-842563537cb2/d8777a1f-ccc1-490c-b086-50623f3cfac0"
-      (reference "C4_LVR2") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D7.5mm_W2.5mm_P5.00mm")
+      (reference "C4_LVR2") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/5c06a03a-cb7e-42fc-97a3-9252db7bc734"
       (reference "C4_Power1") (unit 1) (value "1u") (footprint "Capacitor_SMD:C_0603_1608Metric")
