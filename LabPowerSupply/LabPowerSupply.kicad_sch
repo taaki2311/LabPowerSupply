@@ -563,6 +563,10 @@
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 559cb6a1-4815-4822-a40c-dba6cfe8ceb5)
   )
+  (wire (pts (xy 50.8 116.84) (xy 53.34 116.84))
+    (stroke (width 0) (type default) (color 0 0 0 0))
+    (uuid 56584e52-cb35-414e-8512-0723169a60dd)
+  )
   (wire (pts (xy 125.73 73.66) (xy 127 73.66))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 565f0949-cb39-4566-9d4f-3089a87e408e)
@@ -754,6 +758,10 @@
   (wire (pts (xy 144.78 71.12) (xy 182.88 71.12))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid d09f51f1-c957-42ba-ae2b-7c3b3537aed9)
+  )
+  (wire (pts (xy 50.8 114.3) (xy 53.34 114.3))
+    (stroke (width 0) (type default) (color 0 0 0 0))
+    (uuid d52c7969-72da-4f53-83f0-c31c15f22c50)
   )
   (wire (pts (xy 115.57 119.38) (xy 115.57 109.22))
     (stroke (width 0) (type default) (color 0 0 0 0))
@@ -1053,6 +1061,22 @@
     (pin "1" (uuid f0bf3cd3-22bd-496c-8388-e80112ca545a))
   )
 
+  (symbol (lib_id "power:GND2") (at 50.8 116.84 0) (unit 1)
+    (in_bom yes) (on_board yes) (fields_autoplaced)
+    (uuid b5bf4841-0d39-4f0d-9958-14299868af13)
+    (property "Reference" "#PWR?" (id 0) (at 50.8 123.19 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "GND2" (id 1) (at 50.8 121.92 0))
+    (property "Footprint" "" (id 2) (at 50.8 116.84 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (id 3) (at 50.8 116.84 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid b0045eb8-5ea3-4697-b878-c008479d44f9))
+  )
+
   (symbol (lib_id "Connector_Generic:Conn_01x02") (at 46.99 95.25 0) (mirror y) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid bf5af52a-c844-427c-91df-9ea4ca7e911f)
@@ -1098,6 +1122,24 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (pin "1" (uuid 0728b1cb-5e53-4d50-b457-b13a0943f97a))
+  )
+
+  (symbol (lib_id "power:GND1") (at 50.8 114.3 270) (unit 1)
+    (in_bom yes) (on_board yes) (fields_autoplaced)
+    (uuid cd892934-216a-48b0-af88-b3a5aabbbe38)
+    (property "Reference" "#PWR?" (id 0) (at 44.45 114.3 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "GND1" (id 1) (at 46.99 114.2999 90)
+      (effects (font (size 1.27 1.27)) (justify right))
+    )
+    (property "Footprint" "" (id 2) (at 50.8 114.3 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (id 3) (at 50.8 114.3 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 4116cd75-66ec-41e5-a189-26d97c083814))
   )
 
   (symbol (lib_id "SamacSys_Parts:FS24-800-C2") (at 54.61 93.98 0) (unit 1)
@@ -1449,15 +1491,23 @@
     )
   )
 
-  (sheet (at 53.34 113.03) (size 12.7 3.81) (fields_autoplaced)
+  (sheet (at 53.34 113.03) (size 12.7 5.08) (fields_autoplaced)
     (stroke (width 0.1524) (type solid) (color 0 0 0 0))
     (fill (color 0 0 0 0.0000))
     (uuid a569c6f8-91b9-4e91-b9c5-403fc4fb3026)
     (property "Sheet name" "No Connect" (id 0) (at 53.34 112.3184 0)
       (effects (font (size 1.27 1.27)) (justify left bottom))
     )
-    (property "Sheet file" "NoConnect.kicad_sch" (id 1) (at 53.34 117.4246 0)
+    (property "Sheet file" "NoConnect.kicad_sch" (id 1) (at 53.34 118.6946 0)
       (effects (font (size 1.27 1.27)) (justify left top) hide)
+    )
+    (pin "GND1" input (at 53.34 114.3 180)
+      (effects (font (size 1.27 1.27)) (justify left))
+      (uuid c3048cc7-4197-468a-95f8-4e7ef8fcb463)
+    )
+    (pin "GND2" input (at 53.34 116.84 180)
+      (effects (font (size 1.27 1.27)) (justify left))
+      (uuid a7bfd4d6-2dcd-4a3c-81f8-7df57bc66be1)
     )
   )
 
@@ -1601,6 +1651,12 @@
     (path "/425d5add-12d6-45fb-b01c-ebdbf701a7cc"
       (reference "#PWR018") (unit 1) (value "GND2") (footprint "")
     )
+    (path "/b5bf4841-0d39-4f0d-9958-14299868af13"
+      (reference "#PWR?") (unit 1) (value "GND2") (footprint "")
+    )
+    (path "/cd892934-216a-48b0-af88-b3a5aabbbe38"
+      (reference "#PWR?") (unit 1) (value "GND1") (footprint "")
+    )
     (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1/4644c5bb-c1ac-4fdb-bb83-51789fa92ed7"
       (reference "C1_3.3V1") (unit 1) (value "1u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
     )
@@ -1629,10 +1685,10 @@
       (reference "C1_LVR2") (unit 1) (value "4.7u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/bcce49d6-fd1a-44d3-995e-3240f3f7d1d9"
-      (reference "C1_Power1") (unit 1) (value "1u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C1_Power1") (unit 1) (value "1u") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/2fe31ecc-dee4-4c05-8775-22bca1687116"
-      (reference "C1_Power2") (unit 1) (value "1u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C1_Power2") (unit 1) (value "1u") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7/a5f06dfc-3fa8-40e8-bc3f-73cb2d658cb7"
       (reference "C1_SVR1") (unit 1) (value "10u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
@@ -1671,10 +1727,10 @@
       (reference "C2_LVR2") (unit 1) (value "10u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/bcb7596c-c3bf-4311-8160-e481c5cfbf72"
-      (reference "C2_Power1") (unit 1) (value "1u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C2_Power1") (unit 1) (value "1u") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/89c3d81a-415d-4e4f-8aca-b9a43e4ea4e6"
-      (reference "C2_Power2") (unit 1) (value "1u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C2_Power2") (unit 1) (value "1u") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7/c2401621-782c-4840-972a-334269bd565e"
       (reference "C2_SVR1") (unit 1) (value "100u") (footprint "Capacitor_THT:C_Radial_D8.0mm_H7.0mm_P3.50mm")
@@ -1698,34 +1754,34 @@
       (reference "C3_CP2") (unit 1) (value "1m") (footprint "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/1f8c5f30-7c48-4f7f-ae89-842563537cb2/8aaef4e2-99fb-4a2d-ba3f-6a7d22855ac5"
-      (reference "C3_LVR1") (unit 1) (value "10u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C3_LVR1") (unit 1) (value "10u") (footprint "Capacitor_THT:C_Disc_D7.5mm_W2.5mm_P5.00mm")
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/1f8c5f30-7c48-4f7f-ae89-842563537cb2/8aaef4e2-99fb-4a2d-ba3f-6a7d22855ac5"
-      (reference "C3_LVR2") (unit 1) (value "10u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C3_LVR2") (unit 1) (value "10u") (footprint "Capacitor_THT:C_Disc_D7.5mm_W2.5mm_P5.00mm")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/fba723df-b241-4063-8db6-e899e6f4ff70"
-      (reference "C3_Power1") (unit 1) (value "1u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C3_Power1") (unit 1) (value "1u") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/a057987a-fac2-41b8-b2c2-daf0bc999920"
-      (reference "C3_Power2") (unit 1) (value "1u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C3_Power2") (unit 1) (value "1u") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7/2ed3a93c-6d90-4a89-a9b9-d1e7f7ad9b38"
-      (reference "C3_SVR1") (unit 1) (value "22n") (footprint "Capacitor_THT:C_Disc_D7.0mm_W2.5mm_P5.00mm")
+      (reference "C3_SVR1") (unit 1) (value "22n") (footprint "Capacitor_THT:C_Disc_D7.5mm_W2.5mm_P5.00mm")
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7/2ed3a93c-6d90-4a89-a9b9-d1e7f7ad9b38"
-      (reference "C3_SVR2") (unit 1) (value "22n") (footprint "Capacitor_THT:C_Disc_D7.0mm_W2.5mm_P5.00mm")
+      (reference "C3_SVR2") (unit 1) (value "22n") (footprint "Capacitor_THT:C_Disc_D7.5mm_W2.5mm_P5.00mm")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/1f8c5f30-7c48-4f7f-ae89-842563537cb2/d8777a1f-ccc1-490c-b086-50623f3cfac0"
-      (reference "C4_LVR1") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C4_LVR1") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D7.5mm_W2.5mm_P5.00mm")
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/1f8c5f30-7c48-4f7f-ae89-842563537cb2/d8777a1f-ccc1-490c-b086-50623f3cfac0"
-      (reference "C4_LVR2") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C4_LVR2") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D7.5mm_W2.5mm_P5.00mm")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/5c06a03a-cb7e-42fc-97a3-9252db7bc734"
-      (reference "C4_Power1") (unit 1) (value "1u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C4_Power1") (unit 1) (value "1u") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/c11229af-7317-4a21-9101-b04d4349c67e"
-      (reference "C4_Power2") (unit 1) (value "1u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C4_Power2") (unit 1) (value "1u") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7/e38e77b8-dfbe-4d6f-8f9a-1469db9af726"
       (reference "C4_SVR1") (unit 1) (value "220p") (footprint "Capacitor_THT:C_Disc_D7.5mm_W2.5mm_P5.00mm")
@@ -1734,34 +1790,34 @@
       (reference "C4_SVR2") (unit 1) (value "220p") (footprint "Capacitor_THT:C_Disc_D7.5mm_W2.5mm_P5.00mm")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/73ed34cb-2319-423d-a2d9-b56cfdb9a478"
-      (reference "C5_Power1") (unit 1) (value "1u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C5_Power1") (unit 1) (value "1u") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/40b71e71-4082-40ca-a69a-009671993fc3"
-      (reference "C5_Power2") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C5_Power2") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/bd5a79c6-aa46-4103-8d4f-d3095a27715e"
-      (reference "C6_Power1") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C6_Power1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/564c12e1-207b-44cf-ac13-5c637ab497bd"
-      (reference "C6_Power2") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C6_Power2") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/cd1edf3b-3e7c-43bc-a516-57c87c49d787"
-      (reference "C7_Power1") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C7_Power1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/19841d47-ab65-4d53-b3c2-70f6cd47d3cc"
-      (reference "C7_Power2") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C7_Power2") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/5ce2b538-e262-444d-8a0d-ae353703919a"
-      (reference "C8_Power1") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C8_Power1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/0407b42a-0ddf-4f4e-af6d-6a2d762e7e74"
-      (reference "C8_Power2") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C8_Power2") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/a8ac00b1-09cf-406c-89ac-9cb9c31c44f4"
-      (reference "C9_Power1") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C9_Power1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/da229d01-fa09-4a32-8b11-399c27e22ee5"
-      (reference "C10_Power1") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C10_Power1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1/204e8e4f-f461-4b9c-b352-ebb2dcedd771"
       (reference "C_3V1") (unit 1) (value "2.2u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
