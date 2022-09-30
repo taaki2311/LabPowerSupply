@@ -1697,10 +1697,10 @@
       (reference "C1_SVR2") (unit 1) (value "10u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/864e8df8-3853-49e9-b495-8c2fe97f425e"
-      (reference "C1_Y1") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C1_Y1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/9d82f33c-8e0d-479c-8530-6f84688ebd4d"
-      (reference "C1_Y2") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C1_Y2") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/a3dae924-e417-49be-91d8-6ac1c53a3f40/a4bb2c6f-bf51-4162-9a22-3ed79e70db04"
       (reference "C2_3.3V2") (unit 1) (value "2.2u") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
@@ -1739,10 +1739,10 @@
       (reference "C2_SVR2") (unit 1) (value "100u") (footprint "Capacitor_THT:C_Radial_D8.0mm_H7.0mm_P3.50mm")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/213cdcba-8490-413b-b779-c591bb10455b"
-      (reference "C2_Y1") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C2_Y1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/0ad15ddc-72ef-4cc7-b25d-0cba030083c6"
-      (reference "C2_Y2") (unit 1) (value "100n") (footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
+      (reference "C2_Y2") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1/51ee05e6-a72b-4db7-87d1-379ad8ec5bd6"
       (reference "C3_5V1") (unit 1) (value "100u") (footprint "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm")
