@@ -544,7 +544,7 @@
     (property "Value" "10u" (id 1) (at 111.76 82.5499 0)
       (effects (font (size 1.27 1.27)) (justify right))
     )
-    (property "Footprint" "Capacitor_SMD:C_1210_3225Metric" (id 2) (at 116.5352 77.47 0)
+    (property "Footprint" "Capacitor_SMD:C_1206_3216Metric" (id 2) (at 116.5352 77.47 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 115.57 81.28 0)
