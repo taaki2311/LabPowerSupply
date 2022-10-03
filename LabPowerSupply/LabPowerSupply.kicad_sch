@@ -510,10 +510,6 @@
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 2bbf9e10-397f-4995-94a1-bd9605f04601)
   )
-  (wire (pts (xy 180.34 99.06) (xy 182.88 99.06))
-    (stroke (width 0) (type default) (color 0 0 0 0))
-    (uuid 300efb24-f98b-4428-b6e5-9fcdc26e10c2)
-  )
   (wire (pts (xy 203.2 101.6) (xy 205.74 101.6))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 31c8ae87-a13c-435f-ae23-2211901a74bf)
@@ -957,19 +953,19 @@
     (pin "1" (uuid 16f78782-9a98-4f7b-99f0-52a0e04ed23c))
   )
 
-  (symbol (lib_id "power:+3.3VA") (at 180.34 99.06 90) (unit 1)
+  (symbol (lib_id "power:+3.3VA") (at 182.88 99.06 90) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 7b202c19-2e22-4e15-adca-a1bafcbdf1e7)
-    (property "Reference" "#PWR013" (id 0) (at 184.15 99.06 0)
+    (property "Reference" "#PWR013" (id 0) (at 186.69 99.06 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Value" "+3.3VA" (id 1) (at 176.53 99.0599 90)
+    (property "Value" "+3.3VA" (id 1) (at 179.07 99.0599 90)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "" (id 2) (at 180.34 99.06 0)
+    (property "Footprint" "" (id 2) (at 182.88 99.06 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Datasheet" "" (id 3) (at 180.34 99.06 0)
+    (property "Datasheet" "" (id 3) (at 182.88 99.06 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (pin "1" (uuid 99707e99-9c40-42ba-92f2-26bc3d7326cd))
@@ -1960,8 +1956,8 @@
     (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/21c7d9c4-4fb7-4da8-b69b-45ae94af5567"
       (reference "J_FrontPanel1") (unit 1) (value "Conn_02x10_Counter_Clockwise") (footprint "Connector_IDC:IDC-Header_2x10_P2.54mm_Vertical")
     )
-    (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/1ba5f48f-de02-4ead-855e-47e2c3c3aa85"
-      (reference "J_I2C1") (unit 1) (value "Conn_01x03_Male") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical")
+    (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/0320cc0c-dd91-4c19-aa2c-97a817800c7a"
+      (reference "J_I2C") (unit 1) (value "Conn_01x03_Male") (footprint "Connector_JST:JST_PH_B4B-PH-K_1x04_P2.00mm_Vertical")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/15c12785-6e2f-4c28-b6be-b3f955d4ebdf"
       (reference "J_STLink1") (unit 1) (value "Conn_01x03_Male") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical")
@@ -2072,10 +2068,10 @@
       (reference "Q3_LVR2") (unit 1) (value "PJA3404_R1_00001") (footprint "SamacSys_Parts:SOT95P240X110-3N")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/5c353a14-3b88-4b93-a78d-82d7af554850/973ba8c2-9f61-4fa4-875a-01b00d754e2a"
-      (reference "Q_CP1") (unit 1) (value "2N2219") (footprint "Package_TO_SOT_THT:TO-92_Inline")
+      (reference "Q_CP1") (unit 1) (value "FMNT495TA") (footprint "Package_TO_SOT_SMD:SOT-23")
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/5c353a14-3b88-4b93-a78d-82d7af554850/973ba8c2-9f61-4fa4-875a-01b00d754e2a"
-      (reference "Q_CP2") (unit 1) (value "2N2219") (footprint "Package_TO_SOT_THT:TO-92_Inline")
+      (reference "Q_CP2") (unit 1) (value "FMNT495TA") (footprint "Package_TO_SOT_SMD:SOT-23")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/d0a03699-50f8-46bd-ab34-900d57d3ac72"
       (reference "R1_Boot1") (unit 1) (value "5.1k") (footprint "Resistor_SMD:R_0603_1608Metric")
