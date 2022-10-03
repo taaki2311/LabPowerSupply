@@ -612,7 +612,7 @@
     (property "Value" "2N2219" (id 1) (at 189.23 107.9499 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Package_TO_SOT_THT:TO-92_Inline" (id 2) (at 189.23 104.775 0)
+    (property "Footprint" "" (id 2) (at 189.23 104.775 0)
       (effects (font (size 1.27 1.27) italic) (justify left) hide)
     )
     (property "Datasheet" "http://www.onsemi.com/pub_link/Collateral/2N2219-D.PDF" (id 3) (at 194.31 106.68 0)

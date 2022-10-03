@@ -781,7 +781,7 @@
   (symbol (lib_id "Device:R_US") (at 100.33 116.84 270) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid a5654e60-41f6-4830-a241-f388ee417df0)
-    (property "Reference" "R8_SVR2" (id 0) (at 100.33 110.49 90))
+    (property "Reference" "R8_SVR1" (id 0) (at 100.33 110.49 90))
     (property "Value" "1.2k" (id 1) (at 100.33 113.03 90))
     (property "Footprint" "Resistor_SMD:R_0603_1608Metric" (id 2) (at 100.076 117.856 90)
       (effects (font (size 1.27 1.27)) hide)

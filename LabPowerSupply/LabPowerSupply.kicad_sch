@@ -2072,10 +2072,10 @@
       (reference "Q3_LVR2") (unit 1) (value "PJA3404_R1_00001") (footprint "SamacSys_Parts:SOT95P240X110-3N")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/5c353a14-3b88-4b93-a78d-82d7af554850/973ba8c2-9f61-4fa4-875a-01b00d754e2a"
-      (reference "Q_CP1") (unit 1) (value "2N2219") (footprint "Package_TO_SOT_THT:TO-92_Inline")
+      (reference "Q_CP1") (unit 1) (value "2N2219") (footprint "Package_TO_SOT_SMD:SOT-23")
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/5c353a14-3b88-4b93-a78d-82d7af554850/973ba8c2-9f61-4fa4-875a-01b00d754e2a"
-      (reference "Q_CP2") (unit 1) (value "2N2219") (footprint "Package_TO_SOT_THT:TO-92_Inline")
+      (reference "Q_CP2") (unit 1) (value "2N2219") (footprint "Package_TO_SOT_SMD:SOT-23")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/d0a03699-50f8-46bd-ab34-900d57d3ac72"
       (reference "R1_Boot1") (unit 1) (value "5.1k") (footprint "Resistor_SMD:R_0603_1608Metric")
