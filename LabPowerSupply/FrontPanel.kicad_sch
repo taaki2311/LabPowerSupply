@@ -1695,7 +1695,7 @@
   (symbol (lib_id "Connector_Generic:Conn_02x08_Counter_Clockwise") (at 116.84 123.19 0) (unit 1)
     (in_bom yes) (on_board yes)
     (uuid 76001132-fc93-4571-a564-be532809f9fe)
-    (property "Reference" "FrontPanel2" (id 0) (at 118.11 109.22 0))
+    (property "Reference" "FrontPanel1" (id 0) (at 118.11 109.22 0))
     (property "Value" "Conn_02x10_Counter_Clockwise" (id 1) (at 118.11 111.76 0))
     (property "Footprint" "Connector_IDC:IDC-Header_2x10_P2.54mm_Vertical" (id 2) (at 116.84 123.19 0)
       (effects (font (size 1.27 1.27)) hide)

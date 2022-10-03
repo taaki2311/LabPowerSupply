@@ -467,7 +467,7 @@
   (symbol (lib_id "Device:R_US") (at 153.67 97.79 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 1d7b1b70-c62e-4c6a-a70d-ce2f4fc17bce)
-    (property "Reference" "R22_CS2" (id 0) (at 156.21 96.5199 0)
+    (property "Reference" "R22_CS1" (id 0) (at 156.21 96.5199 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Value" "1k" (id 1) (at 156.21 99.0599 0)
