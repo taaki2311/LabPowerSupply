@@ -1585,7 +1585,7 @@
     (property "Value" "SW_MEC_5G" (id 1) (at 55.88 69.85 90)
       (effects (font (size 1.27 1.27)) (justify right))
     )
-    (property "Footprint" "Button_Switch_SMD:SW_MEC_5GSH9" (id 2) (at 63.5 68.58 0)
+    (property "Footprint" "Button_Switch_THT:SW_PUSH-12mm" (id 2) (at 63.5 68.58 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "http://www.apem.com/int/index.php?controller=attachment&id_attachment=488" (id 3) (at 63.5 68.58 0)

@@ -1500,6 +1500,12 @@
     (path "/cd892934-216a-48b0-af88-b3a5aabbbe38"
       (reference "#PWR0102") (unit 1) (value "GND1") (footprint "")
     )
+    (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1/039beae0-e1a4-422b-92e1-125ed1e1c5a1"
+      (reference "C1_3V1") (unit 1) (value "22u") (footprint "Capacitor_SMD:C_1210_3225Metric")
+    )
+    (path "/a3dae924-e417-49be-91d8-6ac1c53a3f40/2345eebc-8a79-444b-9162-db418984208d"
+      (reference "C1_3V2") (unit 1) (value "22u") (footprint "Capacitor_SMD:C_1210_3225Metric")
+    )
     (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1/6031abc5-967c-49fa-8497-ab7902ffad70"
       (reference "C1_5V1") (unit 1) (value "10u") (footprint "Capacitor_SMD:C_1206_3216Metric")
     )
@@ -1541,6 +1547,12 @@
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/9d82f33c-8e0d-479c-8530-6f84688ebd4d"
       (reference "C1_Y2") (unit 1) (value "20p") (footprint "Capacitor_SMD:C_0603_1608Metric")
+    )
+    (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1/204e8e4f-f461-4b9c-b352-ebb2dcedd771"
+      (reference "C2_3V1") (unit 1) (value "2.2u") (footprint "Capacitor_SMD:C_0805_2012Metric")
+    )
+    (path "/a3dae924-e417-49be-91d8-6ac1c53a3f40/a4bb2c6f-bf51-4162-9a22-3ed79e70db04"
+      (reference "C2_3V2") (unit 1) (value "2.2u") (footprint "Capacitor_SMD:C_0805_2012Metric")
     )
     (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1/7e6a1146-51b1-45d9-be78-1b7ee09d5d4e"
       (reference "C2_5V1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
@@ -1608,12 +1620,6 @@
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7/2ed3a93c-6d90-4a89-a9b9-d1e7f7ad9b38"
       (reference "C3_SVR2") (unit 1) (value "22n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
-    (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1/039beae0-e1a4-422b-92e1-125ed1e1c5a1"
-      (reference "C4_5V1") (unit 1) (value "22u") (footprint "Capacitor_SMD:C_1210_3225Metric")
-    )
-    (path "/a3dae924-e417-49be-91d8-6ac1c53a3f40/2345eebc-8a79-444b-9162-db418984208d"
-      (reference "C4_5V2") (unit 1) (value "22u") (footprint "Capacitor_SMD:C_1210_3225Metric")
-    )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/5c353a14-3b88-4b93-a78d-82d7af554850/2ea03e32-fab9-4a26-a250-672cc0d499ae"
       (reference "C4_CP1") (unit 1) (value "22u") (footprint "Capacitor_SMD:C_1210_3225Metric")
     )
@@ -1673,12 +1679,6 @@
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/da229d01-fa09-4a32-8b11-399c27e22ee5"
       (reference "C10_Power1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
-    )
-    (path "/a3dae924-e417-49be-91d8-6ac1c53a3f40/a4bb2c6f-bf51-4162-9a22-3ed79e70db04"
-      (reference "C_3.3V2") (unit 1) (value "2.2u") (footprint "Capacitor_SMD:C_0805_2012Metric")
-    )
-    (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1/204e8e4f-f461-4b9c-b352-ebb2dcedd771"
-      (reference "C_3V1") (unit 1) (value "2.2u") (footprint "Capacitor_SMD:C_0805_2012Metric")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf/ad5d9838-b611-434b-a2e7-188d7ef8b357"
       (reference "CurrentSense1") (unit 1) (value "INA180A1") (footprint "Package_TO_SOT_SMD:SOT-23-5")
@@ -1786,19 +1786,19 @@
       (reference "Inverter2") (unit 1) (value "74AHC04") (footprint "Package_SO:SSOP-14_5.3x6.2mm_P0.65mm")
     )
     (path "/3d294f79-f2d7-4288-8001-342bbe758cab/6a4d3001-cc75-4a26-9db6-fec090d7b2ec"
-      (reference "Inverter2") (unit 2) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
+      (reference "Inverter2") (unit 2) (value "74AHC04") (footprint "Package_SO:SSOP-14_5.3x6.2mm_P0.65mm")
     )
     (path "/3d294f79-f2d7-4288-8001-342bbe758cab/c0231952-2d13-4e62-89d9-e6a6b0cb25ff"
-      (reference "Inverter2") (unit 3) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
+      (reference "Inverter2") (unit 3) (value "74AHC04") (footprint "Package_SO:SSOP-14_5.3x6.2mm_P0.65mm")
     )
     (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/b0a7cc4c-a5d6-4906-abb6-c5a27c2da092"
-      (reference "Inverter2") (unit 4) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
+      (reference "Inverter2") (unit 4) (value "74AHC04") (footprint "Package_SO:SSOP-14_5.3x6.2mm_P0.65mm")
     )
     (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/c7e86102-4df2-47f6-99ab-0271c3f78fe9"
-      (reference "Inverter2") (unit 5) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
+      (reference "Inverter2") (unit 5) (value "74AHC04") (footprint "Package_SO:SSOP-14_5.3x6.2mm_P0.65mm")
     )
     (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/e3ce5eac-8ee4-46ab-aee1-2e021fccf6dc"
-      (reference "Inverter2") (unit 6) (value "74AHC04") (footprint "Package_DIP:DIP-14_W7.62mm")
+      (reference "Inverter2") (unit 6) (value "74AHC04") (footprint "Package_SO:SSOP-14_5.3x6.2mm_P0.65mm")
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/1f8c5f30-7c48-4f7f-ae89-842563537cb2/0b411b50-3134-4720-a5e2-acc02f377cfe"
       (reference "Inverter2") (unit 7) (value "74AHC04") (footprint "Package_SO:SSOP-14_5.3x6.2mm_P0.65mm")
@@ -2140,10 +2140,10 @@
       (reference "R_Reset2") (unit 1) (value "1k") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/5e87d4f6-c08d-477e-90c0-ca31b0b2dee4"
-      (reference "SW_Reset1") (unit 1) (value "SW_MEC_5G") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
+      (reference "SW_Reset1") (unit 1) (value "SW_MEC_5G") (footprint "Button_Switch_THT:SW_PUSH-12mm")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/f4c98269-7dfb-4e2b-8239-6a07f5f70cee"
-      (reference "SW_Reset2") (unit 1) (value "SW_MEC_5G") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
+      (reference "SW_Reset2") (unit 1) (value "SW_MEC_5G") (footprint "Button_Switch_THT:SW_PUSH-12mm")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7/63654400-d52f-4400-ae29-64c424c33528"
       (reference "Switching1") (unit 1) (value "L6902D") (footprint "Package_SO:SOIC-8-1EP_3.9x4.9mm_P1.27mm_EP2.95x4.9mm_Mask2.71x3.4mm")
@@ -2152,10 +2152,10 @@
       (reference "Switching2") (unit 1) (value "L6902D") (footprint "Package_SO:SOIC-8-1EP_3.9x4.9mm_P1.27mm_EP2.95x4.9mm_Mask2.71x3.4mm")
     )
     (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1/3bbd9086-be74-4d4b-a27c-e967d6868fe1"
-      (reference "U_3.3V1") (unit 1) (value "LP2950-3.3_TO92") (footprint "Package_TO_SOT_SMD:TO-252-3_TabPin4")
+      (reference "U_3V1") (unit 1) (value "LP2950-3.3_TO92") (footprint "Package_TO_SOT_SMD:TO-252-3_TabPin4")
     )
     (path "/a3dae924-e417-49be-91d8-6ac1c53a3f40/43be692b-8745-4611-85c0-40d1424103c0"
-      (reference "U_3.3V2") (unit 1) (value "LP2950-3.3_TO92") (footprint "Package_TO_SOT_SMD:TO-252-3_TabPin4")
+      (reference "U_3V2") (unit 1) (value "LP2950-3.3_TO92") (footprint "Package_TO_SOT_SMD:TO-252-3_TabPin4")
     )
     (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1/a7fa76ce-b67a-4329-8e45-35eb3a807b19"
       (reference "U_5V1") (unit 1) (value "AP63205WU") (footprint "Package_TO_SOT_SMD:TSOT-23-6")
