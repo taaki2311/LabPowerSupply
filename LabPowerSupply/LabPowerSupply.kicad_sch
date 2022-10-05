@@ -1183,18 +1183,6 @@
     )
   )
 
-  (sheet (at 215.9 60.96) (size 12.7 3.81) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid) (color 0 0 0 0))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20ff20ac-1c34-4936-9191-63e4ae5c0946)
-    (property "Sheet name" "Front Panel" (id 0) (at 215.9 60.2484 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom))
-    )
-    (property "Sheet file" "FrontPanel.kicad_sch" (id 1) (at 215.9 65.3546 0)
-      (effects (font (size 1.27 1.27)) (justify left top) hide)
-    )
-  )
-
   (sheet (at 215.9 73.66) (size 12.7 43.18)
     (stroke (width 0.1524) (type solid) (color 0 0 0 0))
     (fill (color 0 0 0 0.0000))
@@ -1438,7 +1426,6 @@
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf" (page "8"))
     (path "/a3dae924-e417-49be-91d8-6ac1c53a3f40" (page "9"))
     (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1" (page "14"))
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946" (page "17"))
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180" (page "18"))
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/ec5f87ba-0df6-4f82-8dbe-a19fd5b0d25e" (page "19"))
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/5c353a14-3b88-4b93-a78d-82d7af554850" (page "20"))
@@ -1762,9 +1749,6 @@
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/9e48610e-0fa7-49ef-ab85-b59b06ff4cfe"
       (reference "Front_Panel1") (unit 1) (value "Conn_02x08_Counter_Clockwise") (footprint "Connector_IDC:IDC-Header_2x08_P2.54mm_Vertical")
     )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/76001132-fc93-4571-a564-be532809f9fe"
-      (reference "Front_Panel2") (unit 1) (value "Conn_02x08_Counter_Clockwise") (footprint "Connector_IDC:IDC-Header_2x08_P2.54mm_Vertical")
-    )
     (path "/237c9094-a290-420e-b787-b312c23981e6"
       (reference "Input1") (unit 1) (value "Conn_01x01") (footprint "Connector_Wire:SolderWire-2sqmm_1x01_D2mm_OD3.9mm")
     )
@@ -1909,12 +1893,6 @@
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf/b3161413-4cc5-49b4-9af3-c170d027655f"
       (reference "Output2") (unit 1) (value "Conn_01x02") (footprint "Connector_Wire:SolderWire-2sqmm_1x02_P7.8mm_D2mm_OD3.9mm")
     )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/ea7369d2-40eb-4a8e-a4b5-829199cb3821"
-      (reference "Power1") (unit 1) (value "LED") (footprint "LED_THT:LED_D3.0mm")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/3ccfc64e-7851-4cee-827b-1811a2b23414"
-      (reference "Power2") (unit 1) (value "LED") (footprint "LED_THT:LED_D3.0mm")
-    )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/5c353a14-3b88-4b93-a78d-82d7af554850/fa67281e-351d-40d8-9388-66c5f89675e7"
       (reference "Q1_CP1") (unit 1) (value "FMMT495TA") (footprint "Package_TO_SOT_SMD:SOT-23")
     )
@@ -1950,12 +1928,6 @@
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf/47bd2c18-6728-4952-aff4-c44e64d63302"
       (reference "R1_CS2") (unit 1) (value "300m") (footprint "Resistor_SMD:R_0603_1608Metric")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/5642d051-f64c-4e26-ac3c-91a459c490f3"
-      (reference "R1_LED1") (unit 1) (value "100") (footprint "Resistor_SMD:R_0603_1608Metric")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/7613fa48-15ad-46e3-9ba3-9c77ac3cc3e8"
-      (reference "R1_LED2") (unit 1) (value "100") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7/1fb3ebf7-6052-47ed-ac22-a94d9f462d78"
       (reference "R1_SVR1") (unit 1) (value "180m") (footprint "Resistor_SMD:R_0603_1608Metric")
@@ -2166,69 +2138,6 @@
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/d4e15d71-fdbb-41e4-bfb4-049165de898a"
       (reference "R_Reset2") (unit 1) (value "1k") (footprint "Resistor_SMD:R_0603_1608Metric")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/e8038d9e-cba9-4977-b976-1043dc157856"
-      (reference "RotaryEncoder+Switch1") (unit 1) (value "IgnorePinsOnSymbol") (footprint "Rotary_Encoder:RotaryEncoder_Alps_EC11E-Switch_Vertical_H20mm")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/8f2d650f-cce9-48c9-9a99-b9c4e404752b"
-      (reference "SW11") (unit 1) (value "Decimal") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/1dd5bbf6-8161-4856-a160-0cc0d49cbd83"
-      (reference "SW12") (unit 1) (value "0") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/90afc4d2-be0c-4725-bab2-08d6d5ff86d5"
-      (reference "SW13") (unit 1) (value "Backspace") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/f3136c8e-740c-441d-9775-bd05f4691914"
-      (reference "SW14") (unit 1) (value "Current 2") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/e2356d6f-0bc7-4d20-80d8-6f8fb96535e9"
-      (reference "SW15") (unit 1) (value "Cancel") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/39fac3d9-4e33-4ea8-918d-b43dd05a2def"
-      (reference "SW21") (unit 1) (value "1") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/24095e09-4cd3-4df9-a830-28c4b59b6001"
-      (reference "SW22") (unit 1) (value "2") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/c060b3d2-c46d-4e17-b558-0435aec4f394"
-      (reference "SW23") (unit 1) (value "3") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/93e5c739-8eec-4de7-ab07-d1ac1308f657"
-      (reference "SW24") (unit 1) (value "Voltage 2") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/8dc338c5-db68-4ebe-82b5-044d3ca081a5"
-      (reference "SW25") (unit 1) (value "Confirm") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/ee4ebdf4-8bd5-435c-a5c7-5bdf256cc8aa"
-      (reference "SW31") (unit 1) (value "4") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/98b87da5-52f9-44cf-a275-55aabe1b0085"
-      (reference "SW32") (unit 1) (value "5") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/086301a0-0887-4157-9254-1f5d535620a3"
-      (reference "SW33") (unit 1) (value "6") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/ad08e5a5-5905-4e43-9ca7-9d76db91b02c"
-      (reference "SW34") (unit 1) (value "Current 1") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/47a1eecb-94ef-47c4-a9a2-bbbd9573c008"
-      (reference "SW35") (unit 1) (value "Channel 2") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/b5bf1e2c-aea1-454f-abca-e88cbfc8e420"
-      (reference "SW41") (unit 1) (value "7") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/b9e9920a-d05d-4d00-98bd-d460f8dde8ef"
-      (reference "SW42") (unit 1) (value "8") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/a510be27-4c53-4705-83fe-23336610282d"
-      (reference "SW43") (unit 1) (value "9") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/d265d1b6-a42e-4c7d-917d-b2a7154db270"
-      (reference "SW44") (unit 1) (value "Voltage 1") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
-    )
-    (path "/20ff20ac-1c34-4936-9191-63e4ae5c0946/797cfbd1-b8c6-4b72-ae5f-2ce3c5082a15"
-      (reference "SW45") (unit 1) (value "Channel 1") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/5e87d4f6-c08d-477e-90c0-ca31b0b2dee4"
       (reference "SW_Reset1") (unit 1) (value "SW_MEC_5G") (footprint "Button_Switch_SMD:SW_MEC_5GSH9")
