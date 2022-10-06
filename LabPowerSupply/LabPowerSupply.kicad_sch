@@ -2152,10 +2152,10 @@
       (reference "Switching2") (unit 1) (value "L6902D") (footprint "Package_SO:SOIC-8-1EP_3.9x4.9mm_P1.27mm_EP2.95x4.9mm_Mask2.71x3.4mm")
     )
     (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1/3bbd9086-be74-4d4b-a27c-e967d6868fe1"
-      (reference "U_3V1") (unit 1) (value "LP2950-3.3_TO92") (footprint "Package_TO_SOT_SMD:TO-252-3_TabPin4")
+      (reference "U_3V1") (unit 1) (value "LP2950-3.3_TO252") (footprint "Package_TO_SOT_SMD:TO-252-2")
     )
     (path "/a3dae924-e417-49be-91d8-6ac1c53a3f40/43be692b-8745-4611-85c0-40d1424103c0"
-      (reference "U_3V2") (unit 1) (value "LP2950-3.3_TO92") (footprint "Package_TO_SOT_SMD:TO-252-3_TabPin4")
+      (reference "U_3V2") (unit 1) (value "LP2950-3.3_TO252") (footprint "Package_TO_SOT_SMD:TO-252-2")
     )
     (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1/a7fa76ce-b67a-4329-8e45-35eb3a807b19"
       (reference "U_5V1") (unit 1) (value "AP63205WU") (footprint "Package_TO_SOT_SMD:TSOT-23-6")
