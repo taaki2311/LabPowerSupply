@@ -62,7 +62,7 @@ float D = 0.1;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
- ADC_HandleTypeDef hadc;
+ADC_HandleTypeDef hadc;
 DMA_HandleTypeDef hdma_adc;
 
 DAC_HandleTypeDef hdac;
@@ -279,7 +279,7 @@ int main(void)
 			integral += error;
 			derivative = error - error_previous;
 			error_previous = error;
-			correction = P * proportional + I * integral + D * derivative;
+			correction = P * error + I * integral + D * derivative;
 			correctedvoltnum1 = voltnum1 - correction;
 			if(correctedvoltnum1 > 12.0){
 				correctedvoltnum1 = 12.0;
@@ -945,7 +945,8 @@ void lcd_psu_init(void){
 
 void lcd_psu_update(void){
 	LCD_CursorBlinkOnOff(0,0);
-	if(kpenum == WAIT){
+	switch (kpenum) {
+		case WAIT:
 		lcd_update_voltage(1,voltnum1);
 		lcd_update_amperage(2,ampnum1);
 		lcd_update_voltage(2,lin_num);
@@ -953,8 +954,9 @@ void lcd_psu_update(void){
 		lcd_update_voltage(3,voltnum2);
 		lcd_update_amperage(3,ampnum2);
 		lcd_update_voltage(4,swi_num);
-	}
-	else if(kpenum == V1){
+		break;
+		
+		case V1:
 		//lcd_update_voltage(1,voltnum1);
 		lcd_update_amperage(2,ampnum1);
 		lcd_update_voltage(2,lin_num);
@@ -982,8 +984,9 @@ void lcd_psu_update(void){
 		if(keypadarr[4] != 'z'){
 			lcd_send_data(keypadarr[4]);
 		}
-	}
-	else if(kpenum == V2){
+		break;
+		
+		case V2:
 		lcd_update_voltage(1,voltnum1);
 		lcd_update_amperage(2,ampnum1);
 		lcd_update_voltage(2,lin_num);
@@ -1011,8 +1014,9 @@ void lcd_psu_update(void){
 		if(keypadarr[4] != 'z'){
 			lcd_send_data(keypadarr[4]);
 		}
-	}
-	else if(kpenum == A1){
+		break;
+		
+		case A1:
 		lcd_update_voltage(1,voltnum1);
 		//lcd_update_amperage(2,ampnum1);
 		lcd_update_voltage(2,lin_num);
@@ -1040,8 +1044,9 @@ void lcd_psu_update(void){
 		if(keypadarr[4] != 'z'){
 			lcd_send_data(keypadarr[4]);
 		}
-	}
-	else if(kpenum == A2){
+		break;
+		
+		case A2:
 		lcd_update_voltage(1,voltnum1);
 		lcd_update_amperage(2,ampnum1);
 		lcd_update_voltage(2,lin_num);
@@ -1069,6 +1074,11 @@ void lcd_psu_update(void){
 		if(keypadarr[4] != 'z'){
 			lcd_send_data(keypadarr[4]);
 		}
+		break;
+		
+		default:
+		// error
+		break;
 	}
 }
 /* LCD Section End -----------------------------------------------------------*/
@@ -1285,20 +1295,10 @@ uint8_t checkkeypad(uint8_t which){
 	//which=0 for voltage which=1 for amperage
 	float temp = translatekeypad();
 	if(which){
-		if(temp >= 0 && temp <= 0.5){
-			return 1;//valid
-		}
-		else{
-			return 0;//invalid
-		}
+		return (temp >= 0 && temp <= 0.5);
 	}
 	else{
-		if(temp >= 0 && temp <= 12.00){
-			return 1;//valid
-		}
-		else{
-			return 0;//invalid
-		}
+		return (temp >= 0 && temp <= 10.00);
 	}
 }
 
