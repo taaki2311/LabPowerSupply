@@ -688,7 +688,7 @@
     (uuid 63654400-d52f-4400-ae29-64c424c33528)
     (property "Reference" "Switching1" (id 0) (at 124.46 85.09 0))
     (property "Value" "L6902D" (id 1) (at 124.46 87.63 0))
-    (property "Footprint" "Package_SO:SOIC-8-1EP_3.9x4.9mm_P1.27mm_EP2.95x4.9mm_Mask2.71x3.4mm" (id 2) (at 114.3 90.17 0)
+    (property "Footprint" "Package_SO:SO-8_3.9x4.9mm_P1.27mm" (id 2) (at 114.3 90.17 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
     (property "Datasheet" "https://componentsearchengine.com/Datasheets/1/L6902D.pdf" (id 3) (at 114.3 92.71 0)

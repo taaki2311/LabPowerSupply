@@ -2146,10 +2146,10 @@
       (reference "SW_Reset2") (unit 1) (value "SW_MEC_5G") (footprint "Button_Switch_THT:SW_PUSH-12mm")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7/63654400-d52f-4400-ae29-64c424c33528"
-      (reference "Switching1") (unit 1) (value "L6902D") (footprint "Package_SO:SOIC-8-1EP_3.9x4.9mm_P1.27mm_EP2.95x4.9mm_Mask2.71x3.4mm")
+      (reference "Switching1") (unit 1) (value "L6902D") (footprint "Package_SO:SO-8_3.9x4.9mm_P1.27mm")
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7/63654400-d52f-4400-ae29-64c424c33528"
-      (reference "Switching2") (unit 1) (value "L6902D") (footprint "Package_SO:SOIC-8-1EP_3.9x4.9mm_P1.27mm_EP2.95x4.9mm_Mask2.71x3.4mm")
+      (reference "Switching2") (unit 1) (value "L6902D") (footprint "Package_SO:SO-8_3.9x4.9mm_P1.27mm")
     )
     (path "/77fcffa2-9d70-4da1-b633-0d00734b5fc1/3bbd9086-be74-4d4b-a27c-e967d6868fe1"
       (reference "U_3V1") (unit 1) (value "LP2950-3.3_TO252") (footprint "Package_TO_SOT_SMD:TO-252-2")
