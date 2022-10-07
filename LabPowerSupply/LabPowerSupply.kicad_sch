@@ -2139,10 +2139,10 @@
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/d4e15d71-fdbb-41e4-bfb4-049165de898a"
       (reference "R_Reset2") (unit 1) (value "1k") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
-    (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/5e87d4f6-c08d-477e-90c0-ca31b0b2dee4"
+    (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/a6f5cc99-d4d5-42a4-8270-ebcc09038911"
       (reference "SW_Reset1") (unit 1) (value "SW_MEC_5G") (footprint "Button_Switch_THT:SW_PUSH-12mm")
     )
-    (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/f4c98269-7dfb-4e2b-8239-6a07f5f70cee"
+    (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/9dd7d31c-f97f-49ab-b02c-577826f5103c"
       (reference "SW_Reset2") (unit 1) (value "SW_MEC_5G") (footprint "Button_Switch_THT:SW_PUSH-12mm")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7/63654400-d52f-4400-ae29-64c424c33528"
