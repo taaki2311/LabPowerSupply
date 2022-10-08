@@ -1990,10 +1990,10 @@
       (reference "R1_Boot2") (unit 1) (value "5.1k") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf/47bd2c18-6728-4952-aff4-c44e64d63302"
-      (reference "R1_CS1") (unit 1) (value "300m") (footprint "Resistor_SMD:R_0603_1608Metric")
+      (reference "R1_CS1") (unit 1) (value "300m") (footprint "Resistor_SMD:R_1206_3216Metric")
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf/47bd2c18-6728-4952-aff4-c44e64d63302"
-      (reference "R1_CS2") (unit 1) (value "300m") (footprint "Resistor_SMD:R_0603_1608Metric")
+      (reference "R1_CS2") (unit 1) (value "300m") (footprint "Resistor_SMD:R_1206_3216Metric")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7/1fb3ebf7-6052-47ed-ac22-a94d9f462d78"
       (reference "R1_SVR1") (unit 1) (value "180m") (footprint "Resistor_SMD:R_0603_1608Metric")
