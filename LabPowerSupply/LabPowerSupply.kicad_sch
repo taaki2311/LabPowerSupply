@@ -2183,6 +2183,12 @@
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/7e152100-3451-4635-9914-2a0b75d7b7b6/81f223d8-c5ee-4a2d-866e-4dc72c0219e8"
       (reference "R12_OA2") (unit 1) (value "2k") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
+    (path "/0c3af00c-caea-46d1-9953-712c4efb6180/1f8c5f30-7c48-4f7f-ae89-842563537cb2/fc195212-03c3-456e-8c13-cd6ea1f24622"
+      (reference "R13_LVR1") (unit 1) (value "10k") (footprint "Resistor_SMD:R_0603_1608Metric")
+    )
+    (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/1f8c5f30-7c48-4f7f-ae89-842563537cb2/fc195212-03c3-456e-8c13-cd6ea1f24622"
+      (reference "R13_LVR2") (unit 1) (value "10k") (footprint "Resistor_SMD:R_0603_1608Metric")
+    )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/7e152100-3451-4635-9914-2a0b75d7b7b6/ef6c2e94-0836-4bef-8ffa-e5086d9dab4c"
       (reference "R13_OA1") (unit 1) (value "2k") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
