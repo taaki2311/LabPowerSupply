@@ -1913,6 +1913,12 @@
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/1f8c5f30-7c48-4f7f-ae89-842563537cb2/dff3028f-f22b-4d70-bbdb-b158ad882454"
       (reference "Inverter2") (unit 1) (value "74AHC04") (footprint "Package_SO:SSOP-14_5.3x6.2mm_P0.65mm")
     )
+    (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/b4a61cb4-64fc-4f55-ac70-630a4b2e1802"
+      (reference "Inverter2") (unit 2) (value "74AHC04") (footprint "Package_SO:SSOP-14_5.3x6.2mm_P0.65mm")
+    )
+    (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/f80dcc2e-17cf-4b74-ad1f-4eb98c623a1e"
+      (reference "Inverter2") (unit 3) (value "74AHC04") (footprint "Package_SO:SSOP-14_5.3x6.2mm_P0.65mm")
+    )
     (path "/a569c6f8-91b9-4e91-b9c5-403fc4fb3026/b0a7cc4c-a5d6-4906-abb6-c5a27c2da092"
       (reference "Inverter2") (unit 4) (value "74AHC04") (footprint "Package_SO:SSOP-14_5.3x6.2mm_P0.65mm")
     )
