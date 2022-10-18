@@ -1758,7 +1758,7 @@
       (reference "C4_CP1") (unit 1) (value "22u") (footprint "Capacitor_SMD:C_1210_3225Metric")
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/5c353a14-3b88-4b93-a78d-82d7af554850/2ea03e32-fab9-4a26-a250-672cc0d499ae"
-      (reference "C4_CP3") (unit 1) (value "22u") (footprint "Capacitor_SMD:C_1210_3225Metric")
+      (reference "C4_CP2") (unit 1) (value "22u") (footprint "Capacitor_SMD:C_1210_3225Metric")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/1f8c5f30-7c48-4f7f-ae89-842563537cb2/149aa0c1-01ff-4bdf-8333-52b118491748"
       (reference "C4_LVR1") (unit 1) (value "20p") (footprint "Capacitor_SMD:C_0603_1608Metric")
