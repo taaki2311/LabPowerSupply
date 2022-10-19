@@ -1315,7 +1315,7 @@
   (symbol (lib_id "Device:C") (at 87.63 127 180) (unit 1)
     (in_bom yes) (on_board yes)
     (uuid 8593098b-f15d-439b-8094-0023f0ebc382)
-    (property "Reference" "C_INV2" (id 0) (at 87.63 119.38 0))
+    (property "Reference" "C_INV1" (id 0) (at 87.63 119.38 0))
     (property "Value" "100n" (id 1) (at 87.63 134.62 0))
     (property "Footprint" "Capacitor_SMD:C_0603_1608Metric" (id 2) (at 86.6648 123.19 0)
       (effects (font (size 1.27 1.27)) hide)

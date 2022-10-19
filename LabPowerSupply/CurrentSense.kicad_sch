@@ -738,7 +738,7 @@
   (symbol (lib_id "Device:C") (at 134.62 107.95 270) (unit 1)
     (in_bom yes) (on_board yes)
     (uuid f3b7bb4f-3c1d-4dfa-8749-a3a16444aa2b)
-    (property "Reference" "C_CUR2" (id 0) (at 127 107.95 0))
+    (property "Reference" "C_CUR1" (id 0) (at 127 107.95 0))
     (property "Value" "100n" (id 1) (at 142.24 107.95 0))
     (property "Footprint" "Capacitor_SMD:C_0603_1608Metric" (id 2) (at 130.81 108.9152 0)
       (effects (font (size 1.27 1.27)) hide)
