@@ -1223,19 +1223,19 @@
       (effects (font (size 1.27 1.27)) (justify right))
       (uuid a931e574-ea5b-49d7-a220-4d9c542d15d3)
     )
-    (pin "ADC 0" input (at 182.88 71.12 180)
+    (pin "ADC 1" input (at 182.88 71.12 180)
       (effects (font (size 1.27 1.27)) (justify left))
       (uuid f186e5c5-6016-4fdf-8fc7-f2c92a10ddbd)
     )
-    (pin "ADC 2" input (at 182.88 76.2 180)
+    (pin "ADC 3" input (at 182.88 76.2 180)
       (effects (font (size 1.27 1.27)) (justify left))
       (uuid 41e28cc5-dd8f-492a-be02-ce0a952c6cfb)
     )
-    (pin "ADC 1" input (at 182.88 73.66 180)
+    (pin "ADC 2" input (at 182.88 73.66 180)
       (effects (font (size 1.27 1.27)) (justify left))
       (uuid 8d97a75b-2745-4c2a-ae29-2baeb17d8bf6)
     )
-    (pin "ADC 3" input (at 182.88 78.74 180)
+    (pin "ADC 4" input (at 182.88 78.74 180)
       (effects (font (size 1.27 1.27)) (justify left))
       (uuid 4450d484-54de-4318-846c-e828aa471d40)
     )
@@ -1813,6 +1813,24 @@
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/da229d01-fa09-4a32-8b11-399c27e22ee5"
       (reference "C10_Power1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
+    )
+    (path "/0c3af00c-caea-46d1-9953-712c4efb6180/877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf/f3b7bb4f-3c1d-4dfa-8749-a3a16444aa2b"
+      (reference "C_CUR1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
+    )
+    (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf/f3b7bb4f-3c1d-4dfa-8749-a3a16444aa2b"
+      (reference "C_CUR2") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
+    )
+    (path "/0c3af00c-caea-46d1-9953-712c4efb6180/1f8c5f30-7c48-4f7f-ae89-842563537cb2/8593098b-f15d-439b-8094-0023f0ebc382"
+      (reference "C_INV1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
+    )
+    (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/1f8c5f30-7c48-4f7f-ae89-842563537cb2/8593098b-f15d-439b-8094-0023f0ebc382"
+      (reference "C_INV2") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
+    )
+    (path "/3d294f79-f2d7-4288-8001-342bbe758cab/6678ab0e-55b4-4de2-ab64-1e272bb328a1"
+      (reference "C_OPT1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
+    )
+    (path "/3d294f79-f2d7-4288-8001-342bbe758cab/b5ccd18e-1d8f-4940-b38a-e2dbf67af339"
+      (reference "C_OPT2") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/877b38b4-9fca-4c7e-a1c5-d7e6e745bcaf/ad5d9838-b611-434b-a2e7-188d7ef8b357"
       (reference "CurrentSense1") (unit 1) (value "INA180A1") (footprint "Package_TO_SOT_SMD:SOT-23-5")
