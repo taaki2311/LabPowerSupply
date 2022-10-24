@@ -897,8 +897,8 @@
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 2aaa1bd4-6035-4324-a426-e8fa06723fe3)
     (property "Reference" "Input2" (id 0) (at 110.49 91.44 0))
-    (property "Value" "Screw_Terminal_01x03" (id 1) (at 110.49 93.98 0))
-    (property "Footprint" "TerminalBlock:TerminalBlock_Altech_AK300-3_P5.00mm" (id 2) (at 110.49 100.33 0)
+    (property "Value" "" (id 1) (at 110.49 93.98 0))
+    (property "Footprint" "" (id 2) (at 110.49 100.33 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 110.49 100.33 0)
@@ -1185,8 +1185,8 @@
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid df3e6d86-e8c3-402d-822b-5febbdb17fdc)
     (property "Reference" "Input1" (id 0) (at 110.49 60.96 0))
-    (property "Value" "Screw_Terminal_01x03" (id 1) (at 110.49 63.5 0))
-    (property "Footprint" "TerminalBlock:TerminalBlock_Altech_AK300-3_P5.00mm" (id 2) (at 110.49 69.85 0)
+    (property "Value" "" (id 1) (at 110.49 63.5 0))
+    (property "Footprint" "" (id 2) (at 110.49 69.85 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 110.49 69.85 0)
@@ -1635,10 +1635,10 @@
       (reference "#PWR0102") (unit 1) (value "GND1") (footprint "")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/90ba863e-1272-4db2-9d6c-45423f9bc63d"
-      (reference "A1_1") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical")
+      (reference "A1_1") (unit 1) (value "Conn_01x01_Male") (footprint "")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/a2db6478-1e29-49c2-b0b1-c84fdb101372"
-      (reference "A1_2") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical")
+      (reference "A1_2") (unit 1) (value "Conn_01x01_Male") (footprint "")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/7b6683ab-2449-4e07-ad92-67368f0a49dc"
       (reference "ADC342_1") (unit 1) (value "Conn_01x03_Male") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical")
@@ -1803,10 +1803,10 @@
       (reference "C5_Power2") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7/ee1cba11-2f2c-467a-937f-a2013d595fda"
-      (reference "C5_SVR1") (unit 1) (value "1u") (footprint "Capacitor_SMD:C_0603_1608Metric")
+      (reference "C5_SVR1") (unit 1) (value "1u") (footprint "")
     )
     (path "/e157f35d-29d6-4a10-895b-6361f5380fc1/4d9e571f-dae1-4ed5-9f8d-0fc03fa434f7/ee1cba11-2f2c-467a-937f-a2013d595fda"
-      (reference "C5_SVR2") (unit 1) (value "1u") (footprint "Capacitor_SMD:C_0603_1608Metric")
+      (reference "C5_SVR2") (unit 1) (value "1u") (footprint "")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/bd5a79c6-aa46-4103-8d4f-d3095a27715e"
       (reference "C6_Power1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
@@ -1857,10 +1857,10 @@
       (reference "CurrentSense2") (unit 1) (value "INA180A1") (footprint "Package_TO_SOT_SMD:SOT-23-5")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/52649bd6-018c-4ead-b592-236b959d97d6"
-      (reference "D1_1") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical")
+      (reference "D1_1") (unit 1) (value "Conn_01x01_Male") (footprint "")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/fc195d54-cfe4-49ac-8a71-9dd4a0dc19de"
-      (reference "D1_2") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical")
+      (reference "D1_2") (unit 1) (value "Conn_01x01_Male") (footprint "")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/ec5f87ba-0df6-4f82-8dbe-a19fd5b0d25e/9d97da99-0b25-4b48-9a49-e97a94fbcf7e"
       (reference "D1_BR1") (unit 1) (value "PMEG4050EP") (footprint "Diode_SMD:D_SOD-128")
@@ -1875,10 +1875,10 @@
       (reference "D1_CP2") (unit 1) (value "1N4001") (footprint "Diode_SMD:D_SMA")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/ae4166d0-3501-472b-a768-e7fba8d8da90"
-      (reference "D2_1") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical")
+      (reference "D2_1") (unit 1) (value "Conn_01x01_Male") (footprint "")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/87d6c3a1-7129-4354-ae7a-06b226e92bed"
-      (reference "D2_2") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical")
+      (reference "D2_2") (unit 1) (value "Conn_01x01_Male") (footprint "")
     )
     (path "/0c3af00c-caea-46d1-9953-712c4efb6180/ec5f87ba-0df6-4f82-8dbe-a19fd5b0d25e/47e36874-a349-4d76-adfa-1aaacc774a73"
       (reference "D2_BR1") (unit 1) (value "PMEG4050EP") (footprint "Diode_SMD:D_SOD-128")
@@ -1983,7 +1983,7 @@
       (reference "J_Boot1") (unit 1) (value "Conn_01x03_Male") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical")
     )
     (path "/67b0d6de-a54b-4bd2-af78-b383bfe8d0e6/2401bd75-1fd8-478a-9cea-2d9e787b3e18"
-      (reference "J_Boot2") (unit 1) (value "Conn_01x03_Male") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical")
+      (reference "J_Boot2") (unit 1) (value "Conn_01x03_Male") (footprint "")
     )
     (path "/08fd45d5-b4ab-46e8-a348-5c4ac8e52155/4562e315-4764-4c90-b39e-6cfb51f79e8b"
       (reference "J_I2C1") (unit 1) (value "Conn_01x04_Male") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical")
