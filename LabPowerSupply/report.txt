@@ -1,0 +1,13 @@
+Plotted to 'C:\Users\Krotain\Documents\Git\ece_492-3_topic_1\LabPowerSupply\Gerbers\LabPowerSupply-Fsig_Cu.gbr'.
+Plotted to 'C:\Users\Krotain\Documents\Git\ece_492-3_topic_1\LabPowerSupply\Gerbers\LabPowerSupply-pwr_Cu.gbr'.
+Plotted to 'C:\Users\Krotain\Documents\Git\ece_492-3_topic_1\LabPowerSupply\Gerbers\LabPowerSupply-gnd_Cu.gbr'.
+Plotted to 'C:\Users\Krotain\Documents\Git\ece_492-3_topic_1\LabPowerSupply\Gerbers\LabPowerSupply-Bsig_Cu.gbr'.
+Plotted to 'C:\Users\Krotain\Documents\Git\ece_492-3_topic_1\LabPowerSupply\Gerbers\LabPowerSupply-F_Paste.gbr'.
+Plotted to 'C:\Users\Krotain\Documents\Git\ece_492-3_topic_1\LabPowerSupply\Gerbers\LabPowerSupply-B_Paste.gbr'.
+Plotted to 'C:\Users\Krotain\Documents\Git\ece_492-3_topic_1\LabPowerSupply\Gerbers\LabPowerSupply-F_Silkscreen.gbr'.
+Plotted to 'C:\Users\Krotain\Documents\Git\ece_492-3_topic_1\LabPowerSupply\Gerbers\LabPowerSupply-B_Silkscreen.gbr'.
+Plotted to 'C:\Users\Krotain\Documents\Git\ece_492-3_topic_1\LabPowerSupply\Gerbers\LabPowerSupply-F_Mask.gbr'.
+Plotted to 'C:\Users\Krotain\Documents\Git\ece_492-3_topic_1\LabPowerSupply\Gerbers\LabPowerSupply-B_Mask.gbr'.
+Plotted to 'C:\Users\Krotain\Documents\Git\ece_492-3_topic_1\LabPowerSupply\Gerbers\LabPowerSupply-Edge_Cuts.gbr'.
+Created Gerber job file 'C:\Users\Krotain\Documents\Git\ece_492-3_topic_1\LabPowerSupply\Gerbers\LabPowerSupply-job.gbrjob'.
+Info: Done.
