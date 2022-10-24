@@ -7,7 +7,7 @@
     "high_contrast_mode": 0,
     "net_color_mode": 1,
     "opacity": {
-      "pads": 0.8500000238418579,
+      "pads": 1.0,
       "tracks": 1.0,
       "vias": 1.0,
       "zones": 0.6
@@ -66,7 +66,7 @@
     "zone_display_mode": 0
   },
   "meta": {
-    "filename": "FrontPanel.kicad_prl",
+    "filename": "LabPowerSupply.kicad_prl",
     "version": 3
   },
   "project": {
