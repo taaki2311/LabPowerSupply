@@ -1,7 +1,7 @@
 $fn = 32;
 
-Label = "0";
-TextSize = 8;
+Label = "A";
+TextSize = 5;
 
 module Clip(StemOuter, StemInter, ClipHeight) {
     union() {
@@ -11,18 +11,36 @@ module Clip(StemOuter, StemInter, ClipHeight) {
             linear_extrude(ClipHeight)
                 square(StemInter, center=true);
         }
-
-        ClipDepth = 0.3;
-        dimple_offset = StemInter / 2;
-        dimple_height = ClipHeight - ClipDepth;
-        translate([dimple_offset, 0, dimple_height])
-            sphere(ClipDepth);
-        translate([0, dimple_offset, dimple_height])
-            sphere(ClipDepth);
-        translate([-dimple_offset, 0, dimple_height])
-            sphere(ClipDepth);
-        translate([0, -dimple_offset, dimple_height])
-            sphere(ClipDepth);
+        
+        intersection() {
+            union() {
+                ClipDepth = 0.3;
+                IndentHeight = 1;
+                BallRadius = (IndentHeight ^ 2) / 8 + (ClipDepth / 2);
+                BallLargeOffset = (StemInter / 2) + (BallRadius - ClipDepth);
+                BallSmallOffset = (StemInter / 4);
+                BallHeight = ClipHeight - ClipDepth;
+                translate([BallLargeOffset, BallSmallOffset, BallHeight])
+                    sphere(BallRadius);
+                translate([BallSmallOffset, BallLargeOffset, BallHeight])
+                    sphere(BallRadius);
+                translate([-BallLargeOffset, BallSmallOffset, BallHeight])
+                    sphere(BallRadius);
+                translate([BallSmallOffset, -BallLargeOffset, BallHeight])
+                    sphere(BallRadius);
+                translate([BallLargeOffset, -BallSmallOffset, BallHeight])
+                    sphere(BallRadius);
+                translate([-BallSmallOffset, BallLargeOffset, BallHeight])
+                    sphere(BallRadius);
+                translate([-BallLargeOffset, -BallSmallOffset, BallHeight])
+                    sphere(BallRadius);
+                translate([-BallSmallOffset, -BallLargeOffset, BallHeight])
+                    sphere(BallRadius);
+            }
+            
+            linear_extrude(ClipHeight)
+                square(StemInter, center=true);
+        }
     }
 }
 
@@ -43,9 +61,9 @@ module ButtonBase(ButtonWidth, ButtonThickness, StemLength) {
 }
 
 module Button(Label, TextSize) {
-    ButtonWidth = 12;
+    ButtonWidth = 11;
     ButtonThickness = 3;
-    StemLength = 6.6;
+    StemLength = 7;
 
     difference() {
         ButtonBase(ButtonWidth, ButtonThickness, StemLength);
