@@ -22,17 +22,17 @@ module Clip(StemOuter, StemInter, ClipHeight) {
                 BallHeight = ClipHeight - ClipDepth;
                 translate([BallLargeOffset, BallSmallOffset, BallHeight])
                     sphere(BallRadius);
-                translate([BallSmallOffset, BallLargeOffset, BallHeight])
-                    sphere(BallRadius);
-                translate([-BallLargeOffset, BallSmallOffset, BallHeight])
-                    sphere(BallRadius);
-                translate([BallSmallOffset, -BallLargeOffset, BallHeight])
-                    sphere(BallRadius);
                 translate([BallLargeOffset, -BallSmallOffset, BallHeight])
+                    sphere(BallRadius);
+                translate([BallSmallOffset, BallLargeOffset, BallHeight])
                     sphere(BallRadius);
                 translate([-BallSmallOffset, BallLargeOffset, BallHeight])
                     sphere(BallRadius);
+                translate([-BallLargeOffset, BallSmallOffset, BallHeight])
+                    sphere(BallRadius);
                 translate([-BallLargeOffset, -BallSmallOffset, BallHeight])
+                    sphere(BallRadius);
+                translate([BallSmallOffset, -BallLargeOffset, BallHeight])
                     sphere(BallRadius);
                 translate([-BallSmallOffset, -BallLargeOffset, BallHeight])
                     sphere(BallRadius);
