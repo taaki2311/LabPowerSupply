@@ -1,7 +1,7 @@
 $fn = 32;
 
 Label = "A";
-TextSize = 5;
+TextSize = 10;
 
 module Clip(StemOuter, StemInter, ClipHeight) {
     union() {
@@ -16,25 +16,16 @@ module Clip(StemOuter, StemInter, ClipHeight) {
             union() {
                 ClipDepth = 0.3;
                 IndentHeight = 1;
-                BallRadius = (IndentHeight ^ 2) / 8 + (ClipDepth / 2);
-                BallLargeOffset = (StemInter / 2) + (BallRadius - ClipDepth);
-                BallSmallOffset = (StemInter / 4);
-                BallHeight = ClipHeight - ClipDepth;
-                translate([BallLargeOffset, BallSmallOffset, BallHeight])
+                BallRadius = (IndentHeight ^ 2) + (ClipDepth / 2);
+                BallOffset = (StemInter / 2) + (BallRadius - ClipDepth);
+                BallHeight = ClipHeight - BallRadius;
+                translate([BallOffset, 0, BallHeight])
                     sphere(BallRadius);
-                translate([BallLargeOffset, -BallSmallOffset, BallHeight])
+                translate([0, BallOffset, BallHeight])
                     sphere(BallRadius);
-                translate([BallSmallOffset, BallLargeOffset, BallHeight])
+                translate([-BallOffset, 0, BallHeight])
                     sphere(BallRadius);
-                translate([-BallSmallOffset, BallLargeOffset, BallHeight])
-                    sphere(BallRadius);
-                translate([-BallLargeOffset, BallSmallOffset, BallHeight])
-                    sphere(BallRadius);
-                translate([-BallLargeOffset, -BallSmallOffset, BallHeight])
-                    sphere(BallRadius);
-                translate([BallSmallOffset, -BallLargeOffset, BallHeight])
-                    sphere(BallRadius);
-                translate([-BallSmallOffset, -BallLargeOffset, BallHeight])
+                translate([0, -BallOffset, BallHeight])
                     sphere(BallRadius);
             }
             
@@ -50,8 +41,8 @@ module ButtonBase(ButtonWidth, ButtonThickness, StemLength) {
             linear_extrude(ButtonThickness)
                 square(ButtonWidth, center=true);
 
-        StemOuter = 5;
-        StemInter = 4;
+        StemOuter = 5.2;
+        StemInter = 4.2;
         ClipHeight = 3;
         linear_extrude(StemLength - ClipHeight)
             square(StemOuter, center=true);
@@ -61,7 +52,7 @@ module ButtonBase(ButtonWidth, ButtonThickness, StemLength) {
 }
 
 module Button(Label, TextSize) {
-    ButtonWidth = 11;
+    ButtonWidth = 12;
     ButtonThickness = 3;
     StemLength = 7;
 
