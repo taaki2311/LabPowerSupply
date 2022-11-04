@@ -1,6 +1,6 @@
 $fn = 32;
 
-Label = "A";
+Label = "3";
 TextSize = 10;
 
 module Clip(StemOuter, StemInter, ClipHeight) {
@@ -62,8 +62,7 @@ module Button(Label, TextSize) {
         translate([0, 0, -ButtonThickness])
             linear_extrude(ButtonThickness/4)
                 mirror([0, 1, 0])
-                    text(Label, size=TextSize, halign="center", valign="center");
+                    text(Label, size=TextSize, halign="center", valign="center", font="Liberation Sans:style=Bold");
     }
 }
-
 Button(Label, TextSize);
