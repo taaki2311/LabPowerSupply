@@ -1,6 +1,6 @@
 $fn=32;
 
-module spacer(height, inner_radius = 5, thickness = 2) {
+module spacer(height = 10, inner_radius = 4, thickness = 1) {
     outer_radius = thickness + inner_radius;
     difference() {
         cylinder(h=height, r=outer_radius);
@@ -8,4 +8,4 @@ module spacer(height, inner_radius = 5, thickness = 2) {
     }
 }
 
-spacer(5);
+spacer();

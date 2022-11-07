@@ -1,6 +1,6 @@
 $fn = 32;
 
-Label = "3";
+Label = "8";
 TextSize = 10;
 
 module Clip(StemOuter, StemInter, ClipHeight) {
