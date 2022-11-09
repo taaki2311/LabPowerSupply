@@ -23,7 +23,7 @@ module Posts(Height) {
 
 union() {
 
-    PlateThickness = 0.5;
+    PlateThickness = 4;
     PostHeight = 4.5;
     Posts(PostHeight);
     
