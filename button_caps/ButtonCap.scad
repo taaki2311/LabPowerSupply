@@ -1,7 +1,7 @@
 $fn = 32;
 
-Label = "8";
-TextSize = 10;
+Label = "Õ";
+TextSize = 6;
 
 module Clip(StemOuter, StemInter, ClipHeight) {
     union() {
@@ -41,7 +41,7 @@ module ButtonBase(ButtonWidth, ButtonThickness, StemLength) {
             linear_extrude(ButtonThickness)
                 square(ButtonWidth, center=true);
 
-        StemOuter = 5.2;
+        StemOuter = 5.5;
         StemInter = 4.2;
         ClipHeight = 3;
         linear_extrude(StemLength - ClipHeight)
@@ -62,7 +62,7 @@ module Button(Label, TextSize) {
         translate([0, 0, -ButtonThickness])
             linear_extrude(ButtonThickness/4)
                 mirror([0, 1, 0])
-                    text(Label, size=TextSize, halign="center", valign="center", font="Liberation Sans:style=Bold");
+                    text(Label, size=TextSize, halign="center", valign="center", font="Wingdings");
     }
 }
 Button(Label, TextSize);
