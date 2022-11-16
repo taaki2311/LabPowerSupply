@@ -15,7 +15,7 @@ module Post(Width=5) {
 module front_panel_plate() {
     union() {
 
-        PlateThickness = 4;
+        PlateThickness = 2;
         
         AltCols = [8.3, 43.2];
         LEDRows = [23.5, 49.2];
@@ -43,7 +43,11 @@ module front_panel_plate() {
                             }
                     }
                 }
-            linear_extrude(2)
+                
+                
+            // Cut Out in the Mounting Posts for the Standoffs
+            StandoffDepth = 4.2;
+            linear_extrude(StandoffDepth)
                 union() {
                     for (MountingCol = MountingCols) {
                         for (MountingRow = MountingRows) {
@@ -59,9 +63,9 @@ module front_panel_plate() {
                 difference() {
 
                     // Main Plate
-                    TotalHeight = 73;
-                    TotalWidth = 117.3;
-                    square([TotalWidth, TotalHeight]);
+                    TotalWidth = 73;
+                    TotalLength = 117.3;
+                    square([TotalLength, TotalWidth]);
                     
                     union() {
 
@@ -78,7 +82,7 @@ module front_panel_plate() {
                             circle(4); // 8mm  Diameter
                         
                         // Main Keypad Matrix
-                        ButtonHole = 6.2;
+                        ButtonHole = 6.4;
                         rows = [63.1, 45.3, 27.5, 9.8];
                         cols = [57.4, 71.6, 85.9, 100.1];
                         for (row = rows) {
