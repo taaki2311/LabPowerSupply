@@ -1,6 +1,6 @@
 $fn = 32;
 
-Label = "Õ";
+Label = "V2";
 TextSize = 6;
 
 module Clip(StemOuter, StemInter, ClipHeight) {
@@ -54,7 +54,7 @@ module ButtonBase(ButtonWidth, ButtonThickness, StemLength) {
 module Button(Label, TextSize) {
     ButtonWidth = 12;
     ButtonThickness = 3;
-    StemLength = 7;
+    StemLength = 5;
 
     difference() {
         ButtonBase(ButtonWidth, ButtonThickness, StemLength);
@@ -62,7 +62,7 @@ module Button(Label, TextSize) {
         translate([0, 0, -ButtonThickness])
             linear_extrude(ButtonThickness/4)
                 mirror([0, 1, 0])
-                    text(Label, size=TextSize, halign="center", valign="center", font="Wingdings");
+                    text(Label, size=TextSize, halign="center", valign="center", font="Liberation Sans; style=bold");
     }
 }
 Button(Label, TextSize);
