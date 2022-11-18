@@ -62,7 +62,7 @@ float D = 0.1;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc;
+ ADC_HandleTypeDef hadc;
 DMA_HandleTypeDef hdma_adc;
 
 DAC_HandleTypeDef hdac;
