@@ -2248,7 +2248,7 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 183d276f-f508-401c-ac4a-4d16d3b45ce0)
   )
-  (label "SWO" (at 240.03 109.22 0)
+  (label "SW_O" (at 240.03 109.22 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 299712ff-09b3-456c-a5eb-2fa0bceadf45)
   )
