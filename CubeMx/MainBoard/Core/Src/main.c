@@ -22,6 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "usbd_cdc_if.h"
 #include "string.h"
 /* USER CODE END Includes */
 
@@ -50,10 +51,6 @@ const uint8_t customChar[64] = {
 };
 /* LCD Section End -----------------------------------------------------------*/
 
-float P = 0.1;
-float I = 0.1;
-float D = 0.1;
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -73,13 +70,21 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart1;
+DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USER CODE BEGIN PV */
+
+float P = 0.1;
+float I = 0.1;
+float D = 0.1;
 
 /* USB Section Begin ---------------------------------------------------------*/
 EXTI_HandleTypeDef hexti1;
 
 uint8_t usbbuffer[128];//Usb buffer
+uint8_t txbuffer[64];//Uart TX Buffer
+uint8_t rxbuffer[64];//Uart RX Buffer
+uint8_t rxbuffercpy[64];//Uart RX Buffer copy for manipulation
 /* USB Section End -----------------------------------------------------------*/
 
 /* Keypad Section Begin ------------------------------------------------------*/
@@ -230,6 +235,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+		
+		//CDC_Transmit_FS((uint8_t*)"Hello World",sizeof("Hello World"));
+		
 		//Control channel here
 		
 		if(voltnum1 <= 0.00){
@@ -285,7 +293,7 @@ int main(void)
 
 		
 
-
+/*
 		else{ // Bang-Bang Controller
 			//Try really hard to get the voltage right
 			const float margin = 0.05;
@@ -298,10 +306,10 @@ int main(void)
 				HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 			}
 		}
+*/
 
 
 
-/*		
 		else {
 			error = lin_num - voltnum1;
 			integral += error;
@@ -318,7 +326,7 @@ int main(void)
 			v1 = (uint16_t)((( (correctedvoltnum1 / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
 			HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		}
-*/
+
 
 
 		if(voltnum1 > 0.00){
@@ -614,7 +622,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 32000;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 250;
+  htim3.Init.Period = 500;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -654,10 +662,10 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.BaudRate = 4800;
+  huart1.Init.WordLength = UART_WORDLENGTH_9B;
   huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Parity = UART_PARITY_ODD;
   huart1.Init.Mode = UART_MODE_TX_RX;
   huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart1.Init.OverSampling = UART_OVERSAMPLING_16;
@@ -684,6 +692,9 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+  /* DMA1_Channel5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 
 }
 
@@ -785,6 +796,13 @@ void ourInit(void){
 	lcd_psu_init();
 	//Start display timer
 	HAL_TIM_Base_Start_IT(&htim3);
+	
+	memset (usbbuffer, '\0', 128);  // clear the buffer
+	memset (txbuffer, '\0', 64);  // clear the buffer
+	memset (rxbuffer, '\0', 64);  // clear the buffer
+	memset (rxbuffercpy, '\0', 64);  // clear the buffer
+	
+	HAL_UART_Receive_DMA (&huart1, rxbuffer, 64);  // Receive 32 Bytes of data
 }
 
 /* USB Section Begin ---------------------------------------------------------*/
@@ -797,10 +815,7 @@ void USB_EXTIinit(void)
   ExtiConfig.Trigger = EXTI_TRIGGER_RISING_FALLING;
   HAL_EXTI_SetConfigLine(&hexti1, &ExtiConfig);
 	
-	/* The function below appears to be superfluous since we simply call our now
-	 * "fake" callback function inside the EXTI IRQHandler that is recognised by
-	 * the HAL library without needing this.
-	 */
+	//The function below doesn't work and I don't know why so we just call our callback in the irqhandler
 	//HAL_EXTI_RegisterCallback(&hexti1, HAL_EXTI_COMMON_CB_ID, USB_Interrupt_Callback);
 	
 	HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
@@ -1642,7 +1657,10 @@ void columnInput(void){
 
 /* Interrupt Callback Section Begin ------------------------------------------*/
 static void USB_Interrupt_Callback(void){
-	HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
+	if(strncmp("1",(char*)usbbuffer,sizeof("1")) == 0){
+		HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
+	}
+	memset (usbbuffer, '\0', 128);  // clear the buffer
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
@@ -1905,6 +1923,25 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 	adc_opamp = adcvalues[0];
 	adc_switching = adcvalues[3];
 	adc_vref = adcvalues[4];
+}
+
+void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart){
+  //
+	for(int i = 0; i < 32; i++){
+		rxbuffercpy[i] = rxbuffer[i];
+	}
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+  //
+	for(int i = 32; i < 64; i++){
+		rxbuffercpy[i] = rxbuffer[i];
+	}
+	CDC_Transmit_FS(rxbuffercpy,64);
+	if(strncmp("Hello World From Second MCU\n", (char*)rxbuffercpy, sizeof("Hello World From Second MCU\n")) == 0){
+		HAL_GPIO_WritePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_SET);
+	}
+	memset (rxbuffercpy, '\0', 64);  // clear the buffer
 }
 
 /* USER CODE END 4 */

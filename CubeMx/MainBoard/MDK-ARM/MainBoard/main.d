@@ -44,3 +44,9 @@ mainboard\main.o: ../USB_DEVICE/Target/usbd_conf.h
 mainboard\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 mainboard\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 mainboard\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+mainboard\main.o: ../USB_DEVICE/App/usbd_cdc_if.h
+mainboard\main.o: ../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h
+mainboard\main.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h
+mainboard\main.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h
+mainboard\main.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h
+mainboard\main.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h

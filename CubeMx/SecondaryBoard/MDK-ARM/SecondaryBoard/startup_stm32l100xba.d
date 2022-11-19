@@ -1,0 +1,1 @@
+secondaryboard\startup_stm32l100xba.o: startup_stm32l100xba.s
