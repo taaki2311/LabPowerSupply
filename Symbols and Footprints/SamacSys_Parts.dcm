@@ -1,17 +1,5 @@
 EESchema-DOCLIB  Version 2.0
 #
-$CMP NE555DR
-D Single Precision Timer
-K
-F http://www.ti.com/lit/ds/symlink/ne555.pdf
-$ENDCMP
-#
-$CMP RS207M
-D Bridge Rectifiers Lead Frame 2A 1000V
-K
-F http://www.rectron.com/data_sheets/rs201m-rs207m.pdf
-$ENDCMP
-#
 $CMP FS24-800-C2
 D Power Transformers POWER XFMR 24 Vct @ 800 mA UL/cUL - Class 2/3, TUV, 115/230V SPLIT PACK PCB MOUNT / FS24-800-C2
 K
