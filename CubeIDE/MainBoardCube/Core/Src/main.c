@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
 #include "string.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -71,6 +72,7 @@ TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_rx;
+DMA_HandleTypeDef hdma_usart1_tx;
 
 /* USER CODE BEGIN PV */
 
@@ -84,7 +86,6 @@ EXTI_HandleTypeDef hexti1;
 uint8_t usbbuffer[128];//Usb buffer
 uint8_t txbuffer[64];//Uart TX Buffer
 uint8_t rxbuffer[64];//Uart RX Buffer
-uint8_t rxbuffercpy[64];//Uart RX Buffer copy for manipulation
 
 uint8_t firstmessage = 0;
 /* USB Section End -----------------------------------------------------------*/
@@ -119,13 +120,18 @@ uint16_t adc_opamp = 0;
 uint16_t adc_switching = 0;
 uint16_t adc_vref = 0;
 uint16_t* vrefptr = ((uint16_t*)VREFINT_CAL_ADDR_CMSIS);
+int chstat1 = 0;
+int chstat2 = 0;
 
 //Globals for adc values
 uint16_t v1;
-float lin_num;
-float cur_num;
-float op_num;
-float swi_num;
+float lin_num = 0;
+float cur_num = 0;
+float op_num = 0;
+float swi_num = 0;
+
+float slin_num = 0;
+float scur_num = 0;
 
 // The value for the Intgral part of the PID controller
 float error = 0;
@@ -242,6 +248,9 @@ int main(void)
 
 	  if(voltnum1 <= 0.00){
 		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_RESET);
+	  }
+	  if(chstat2 == 0){
 		  HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_RESET);
 	  }
 
@@ -327,6 +336,9 @@ int main(void)
 
 	  if(voltnum1 > 0.00){
 		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_SET);
+	  }
+	  if(chstat2 == 1){
 		  HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_SET);
 	  }
 
@@ -687,6 +699,9 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+  /* DMA1_Channel4_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
   /* DMA1_Channel5_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
@@ -789,9 +804,11 @@ void ourInit(void){
 	memset (usbbuffer, '\0', 128);  // clear the buffer
 	memset (txbuffer, '\0', 64);  // clear the buffer
 	memset (rxbuffer, '\0', 64);  // clear the buffer
-	memset (rxbuffercpy, '\0', 64);  // clear the buffer
 
-	HAL_UART_Receive_DMA (&huart1, rxbuffer, 64);  // Receive 32 Bytes of data
+	HAL_UART_Receive_DMA (&huart1, rxbuffer, 64);  // Receive 64 Bytes of data
+
+	snprintf((char*)txbuffer, 26, "*STRT,%05.2f,%5.3f,%d,FNSH!", voltnum2, ampnum2, chstat2);
+	HAL_UART_Transmit_DMA(&huart1, txbuffer, 64);
 }
 
 /* USB Section Begin ---------------------------------------------------------*/
@@ -985,54 +1002,27 @@ void lcd_psu_init(void){
 void lcd_psu_update(void){
 	LCD_CursorBlinkOnOff(0,0);
 	if(kpenum == WAIT){
-		lcd_update_voltage(1,voltnum1);
-		lcd_update_amperage(1,ampnum1);
-		lcd_update_voltage(2,lin_num);
-		lcd_update_amperage(2,cur_num);
-		lcd_update_voltage(3,voltnum2);
-		lcd_update_amperage(3,ampnum2);
-		lcd_update_voltage(4,swi_num);
-	}
-	else if(kpenum == V1){
-		//lcd_update_voltage(1,voltnum1);
-		lcd_update_amperage(1,ampnum1);
-		lcd_update_voltage(2,lin_num);
-		lcd_update_amperage(2,cur_num);
-		lcd_update_voltage(3,voltnum2);
-		lcd_update_amperage(3,ampnum2);
-		lcd_update_voltage(4,swi_num);
-		lcd_put_cur(0,3);
-		lcd_send_string("      ");
-		lcd_put_cur(0,3);
-		LCD_CursorBlinkOnOff(1,1);
-		//Print the keypad array
-		if(keypadarr[0] != 'z'){
-			lcd_send_data(keypadarr[0]);
-		}
-		if(keypadarr[1] != 'z'){
-			lcd_send_data(keypadarr[1]);
-		}
-		if(keypadarr[2] != 'z'){
-			lcd_send_data(keypadarr[2]);
-		}
-		if(keypadarr[3] != 'z'){
-			lcd_send_data(keypadarr[3]);
-		}
-		if(keypadarr[4] != 'z'){
-			lcd_send_data(keypadarr[4]);
-		}
+		lcd_update_voltage(1,voltnum2);
+		lcd_update_amperage(1,ampnum2);
+		lcd_update_voltage(2,slin_num);
+		lcd_update_amperage(2,scur_num);
+		lcd_update_voltage(3,voltnum1);
+		lcd_update_amperage(3,ampnum1);
+		lcd_update_voltage(4,lin_num);
+		lcd_update_amperage(4,cur_num);
 	}
 	else if(kpenum == V2){
-		lcd_update_voltage(1,voltnum1);
-		lcd_update_amperage(1,ampnum1);
-		lcd_update_voltage(2,lin_num);
-		lcd_update_amperage(2,cur_num);
-		//lcd_update_voltage(3,voltnum2);
-		lcd_update_amperage(3,ampnum2);
-		lcd_update_voltage(4,swi_num);
-		lcd_put_cur(2,3);
+		//lcd_update_voltage(1,voltnum2);
+		lcd_update_amperage(1,ampnum2);
+		lcd_update_voltage(2,slin_num);
+		lcd_update_amperage(2,scur_num);
+		lcd_update_voltage(3,voltnum1);
+		lcd_update_amperage(3,ampnum1);
+		lcd_update_voltage(4,lin_num);
+		lcd_update_amperage(4,cur_num);
+		lcd_put_cur(0,3);
 		lcd_send_string("      ");
-		lcd_put_cur(2,3);
+		lcd_put_cur(0,3);
 		LCD_CursorBlinkOnOff(1,1);
 		//Print the keypad array
 		if(keypadarr[0] != 'z'){
@@ -1051,17 +1041,18 @@ void lcd_psu_update(void){
 			lcd_send_data(keypadarr[4]);
 		}
 	}
-	else if(kpenum == A1){
-		lcd_update_voltage(1,voltnum1);
-		//lcd_update_amperage(1,ampnum1);
-		lcd_update_voltage(2,lin_num);
-		lcd_update_amperage(2,cur_num);
-		lcd_update_voltage(3,voltnum2);
-		lcd_update_amperage(3,ampnum2);
-		lcd_update_voltage(4,swi_num);
-		lcd_put_cur(1,3);
+	else if(kpenum == V1){
+		lcd_update_voltage(1,voltnum2);
+		lcd_update_amperage(1,ampnum2);
+		lcd_update_voltage(2,slin_num);
+		lcd_update_amperage(2,scur_num);
+		//lcd_update_voltage(3,voltnum1);
+		lcd_update_amperage(3,ampnum1);
+		lcd_update_voltage(4,lin_num);
+		lcd_update_amperage(4,cur_num);
+		lcd_put_cur(2,3);
 		lcd_send_string("      ");
-		lcd_put_cur(1,3);
+		lcd_put_cur(2,3);
 		LCD_CursorBlinkOnOff(1,1);
 		//Print the keypad array
 		if(keypadarr[0] != 'z'){
@@ -1081,13 +1072,44 @@ void lcd_psu_update(void){
 		}
 	}
 	else if(kpenum == A2){
-		lcd_update_voltage(1,voltnum1);
-		lcd_update_amperage(1,ampnum1);
-		lcd_update_voltage(2,lin_num);
-		lcd_update_amperage(2,cur_num);
-		lcd_update_voltage(3,voltnum2);
-		//lcd_update_amperage(3,ampnum2);
-		lcd_update_voltage(4,swi_num);
+		lcd_update_voltage(1,voltnum2);
+		//lcd_update_amperage(1,ampnum2);
+		lcd_update_voltage(2,slin_num);
+		lcd_update_amperage(2,scur_num);
+		lcd_update_voltage(3,voltnum1);
+		lcd_update_amperage(3,ampnum1);
+		lcd_update_voltage(4,lin_num);
+		lcd_update_amperage(4,cur_num);
+		lcd_put_cur(1,3);
+		lcd_send_string("      ");
+		lcd_put_cur(1,3);
+		LCD_CursorBlinkOnOff(1,1);
+		//Print the keypad array
+		if(keypadarr[0] != 'z'){
+			lcd_send_data(keypadarr[0]);
+		}
+		if(keypadarr[1] != 'z'){
+			lcd_send_data(keypadarr[1]);
+		}
+		if(keypadarr[2] != 'z'){
+			lcd_send_data(keypadarr[2]);
+		}
+		if(keypadarr[3] != 'z'){
+			lcd_send_data(keypadarr[3]);
+		}
+		if(keypadarr[4] != 'z'){
+			lcd_send_data(keypadarr[4]);
+		}
+	}
+	else if(kpenum == A1){
+		lcd_update_voltage(1,voltnum2);
+		lcd_update_amperage(1,ampnum2);
+		lcd_update_voltage(2,slin_num);
+		lcd_update_amperage(2,scur_num);
+		lcd_update_voltage(3,voltnum1);
+		//lcd_update_amperage(3,ampnum1);
+		lcd_update_voltage(4,lin_num);
+		lcd_update_amperage(4,cur_num);
 		lcd_put_cur(3,3);
 		lcd_send_string("      ");
 		lcd_put_cur(3,3);
@@ -1469,7 +1491,6 @@ void keypadsm(char num){
 		if(num == 'A'){
 			kpenum = WAIT;
 			clearkeypad();
-			first_shot = 1;
 		}
 		else if(num == 'B'){
 			kpenum = WAIT;
@@ -1646,9 +1667,7 @@ void columnInput(void){
 
 /* Interrupt Callback Section Begin ------------------------------------------*/
 void USB_Interrupt_Callback(void){
-	if(strncmp("1",(char*)usbbuffer,sizeof("1")) == 0){
-		HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
-	}
+	//
 	memset (usbbuffer, '\0', 128);  // clear the buffer
 }
 
@@ -1879,19 +1898,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			columnInput();
 			//Col1
 			if(HAL_GPIO_ReadPin(Col_1_GPIO_Port, Col_1_Pin) == 0){
-				keypadsm('A');
+				keypadsm('C');
 			}
 			//Col2
 			else if(HAL_GPIO_ReadPin(Col_2_GPIO_Port, Col_2_Pin) == 0){
-				keypadsm('B');
+				keypadsm('D');
 			}
 			//Col3
 			else if(HAL_GPIO_ReadPin(Col_3_GPIO_Port, Col_3_Pin) == 0){
-				keypadsm('C');
+				keypadsm('A');
 			}
 			//Col4
 			else if(HAL_GPIO_ReadPin(Col_4_GPIO_Port, Col_4_Pin) == 0){
-				keypadsm('D');
+				keypadsm('B');
 			}
 			rowInput();
 		}
@@ -1906,47 +1925,102 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	}
 }
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
-{
-  adc_current = adcvalues[2];
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+	adc_current = adcvalues[2];
 	adc_linear = adcvalues[1];
 	adc_opamp = adcvalues[0];
 	adc_switching = adcvalues[3];
 	adc_vref = adcvalues[4];
 }
 
+
 void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart){
-  //
-	for(int i = 0; i < 32; i++){
-		rxbuffercpy[i] = rxbuffer[i];
-	}
+  //do nothing cause we're a lazy receiver
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-  //
-	for(int i = 32; i < 64; i++){
-		rxbuffercpy[i] = rxbuffer[i];
-	}
-/*
-	CDC_Transmit_FS(rxbuffercpy,64);
-	if(strncmp("Hello World From Second MCU\n", (char*)rxbuffercpy, sizeof("Hello World From Second MCU\n")) == 0){
-		HAL_GPIO_WritePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_SET);
-	}
-*/
-	if(firstmessage){
-		char buf[256];
-		memset (buf, '\0', 256);  // clear the buffer
-		strcpy(buf,"Begin\n");
-		for(int i = 0; i < 64; i++){
-			char tempbuf[16];
-			snprintf(tempbuf, 16, "%d:%c\n", i, rxbuffercpy[i]);
-			strcat(buf, tempbuf);
+  /*
+   * Messages are structured as follows *STRT,00.00,0.000,0,FNSH!
+   * Here we will search for the unique start character * and check that the
+   * full 25 character string is correct. We may have to wrap around our buffer
+   * since we may begin reading at any point in the transmission.
+   */
+
+	//CDC_Transmit_FS(rxbuffer,64);
+	uint8_t rxiter = 0;
+	for(int i = 0; i < 64; i++){
+		if(rxbuffer[i] == '*'){
+			rxiter = i;//Found start condition
+			break;
 		}
-		strcat(buf, "End\n");
-		CDC_Transmit_FS((uint8_t*)buf,256);
-		firstmessage = 0;
 	}
-	memset (rxbuffercpy, '\0', 64);  // clear the buffer
+	uint8_t rxbuffercpy[32];
+	memset (rxbuffercpy, '\0', 32);  // clear the buffer
+	//Copy our message into a buffer that isn't offset
+	for(int i = 0; i < 25; i++){
+		rxbuffercpy[i] = rxbuffer[rxiter];
+		rxiter++;
+		if(rxiter >= 64){
+			rxiter = 0;
+		}
+	}
+
+	//CDC_Transmit_FS(rxbuffercpy,32);
+
+	if( //Check start condition
+		(rxbuffercpy[0] == '*' && rxbuffercpy[1] == 'S' && rxbuffercpy[2] == 'T' && rxbuffercpy[3] == 'R' && rxbuffercpy[4] == 'T') &&
+		//Check finish condition
+		(rxbuffercpy[20] == 'F' && rxbuffercpy[21] == 'N' && rxbuffercpy[22] == 'S' && rxbuffercpy[23] == 'H' && rxbuffercpy[24] == '!') &&
+		//Check commas
+		(rxbuffercpy[5] == ',' && rxbuffercpy[11] == ',' && rxbuffercpy[17] == ',' && rxbuffercpy[19] == ',') &&
+		//Check voltage
+		((rxbuffercpy[6] >= '0' && rxbuffercpy[6] <= '9') && (rxbuffercpy[7] >= '0' && rxbuffercpy[7] <= '9') && rxbuffercpy[8] == '.' &&
+		(rxbuffercpy[9] >= '0' && rxbuffercpy[9] <= '9') && (rxbuffercpy[10] >= '0' && rxbuffercpy[10] <= '9')) &&
+		//Check amperage
+		((rxbuffercpy[12] >= '0' && rxbuffercpy[12] <= '9') && rxbuffercpy[13] == '.' && (rxbuffercpy[14] >= '0' && rxbuffercpy[14] <= '9') &&
+		(rxbuffercpy[15] >= '0' && rxbuffercpy[15] <= '9') && (rxbuffercpy[16] >= '0' && rxbuffercpy[16] <= '9')) &&
+		//Check chstat
+		(rxbuffercpy[18] == '0' || rxbuffercpy[18] == '1' || rxbuffercpy[18] == '2')
+			){
+		//Valid message
+		float tempv2 = 0;
+		float tempa2 = 0;
+
+		tempv2 += (float)(rxbuffercpy[6]-48) * (float)10.0;
+		tempv2 += (float)(rxbuffercpy[7]-48) * (float)1.0;
+		tempv2 += (float)(rxbuffercpy[9]-48) / (float)10.0;
+		tempv2 += (float)(rxbuffercpy[10]-48) / (float)100.0;
+
+		tempa2 += (float)(rxbuffercpy[12]-48) * (float)1.0;
+		tempa2 += (float)(rxbuffercpy[14]-48) / (float)10.0;
+		tempa2 += (float)(rxbuffercpy[15]-48) / (float)100.0;
+		tempa2 += (float)(rxbuffercpy[16]-48) / (float)1000.0;
+
+		slin_num = tempv2;
+		scur_num = tempa2;
+		chstat2 = rxbuffercpy[18]-48;
+
+		//strcat((char*)rxbuffercpy, "\n");
+		//CDC_Transmit_FS(rxbuffercpy,32);
+
+		//uint8_t tstbuf[64];
+		//snprintf((char*)tstbuf, 64, "%f, %f", tempv2, tempa2);
+		//CDC_Transmit_FS(tstbuf,64);
+	}
+
+	memset (rxbuffer, '\0', 64);  // clear the buffer
+	HAL_UART_Receive_DMA (&huart1, rxbuffer, 64);  // Receive 64 Bytes of data
+}
+
+
+void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart){
+
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
+	memset (txbuffer, '\0', 64);  // clear the buffer
+	snprintf((char*)txbuffer, 26, "*STRT,%05.2f,%5.3f,%d,FNSH!", voltnum2, ampnum2, chstat2);
+	HAL_UART_Transmit_DMA(&huart1, txbuffer, 64);
 }
 
 /* USER CODE END 4 */

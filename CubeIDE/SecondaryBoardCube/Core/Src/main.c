@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "string.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,6 +47,7 @@ DAC_HandleTypeDef hdac;
 
 UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_tx;
+DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USER CODE BEGIN PV */
 
@@ -55,7 +57,6 @@ float D = 0.1;
 
 uint8_t txbuffer[64];//Uart TX Buffer
 uint8_t rxbuffer[64];//Uart RX Buffer
-uint8_t rxbuffercpy[64];//Uart RX Buffer copy for manipulation
 
 //Channel numbers
 float voltnum1 = 0.0;
@@ -75,6 +76,7 @@ uint16_t adc_opamp = 0;
 uint16_t adc_switching = 0;
 uint16_t adc_vref = 0;
 uint16_t* vrefptr = ((uint16_t*)VREFINT_CAL_ADDR_CMSIS);
+int chstat = 0;
 
 //Globals for adc values
 uint16_t v1;
@@ -158,6 +160,7 @@ int main(void)
 
 	  if(voltnum1 <= 0.00){
 		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
+		  chstat = 0;
 		  //HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_RESET);
 	  }
 
@@ -243,6 +246,7 @@ int main(void)
 
 	  if(voltnum1 > 0.00){
 		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_RESET);
+		  chstat = 1;
 		  //HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_SET);
 	  }
 
@@ -481,6 +485,9 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel4_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
+  /* DMA1_Channel5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 
 }
 
@@ -540,11 +547,14 @@ void ourInit(void){
 
 	memset (txbuffer, '\0', 64);  // clear the buffer
 	memset (rxbuffer, '\0', 64);  // clear the buffer
-	memset (rxbuffercpy, '\0', 64);  // clear the buffer
 
-	strncpy((char*)txbuffer, "Hello World From Second MCU\n", 64);
+	//strncpy((char*)txbuffer, "Hello World From Second MCU\n", 64);
+
+	snprintf((char*)txbuffer, 26, "*STRT,%5.2f,%5.3f,%d,FNSH!", lin_num, cur_num, chstat);
 
 	HAL_UART_Transmit_DMA(&huart1, txbuffer, 64);
+
+	HAL_UART_Receive_DMA (&huart1, rxbuffer, 64);  // Receive 64 Bytes of data
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
@@ -555,13 +565,89 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 	adc_vref = adcvalues[4];
 }
 
+
 void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart){
 
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
-
+	memset (txbuffer, '\0', 64);  // clear the buffer
+	snprintf((char*)txbuffer, 26, "*STRT,%05.2f,%5.3f,%d,FNSH!", lin_num, cur_num, chstat);
+	HAL_UART_Transmit_DMA(&huart1, txbuffer, 64);
 }
+
+void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart){
+  //do nothing cause we're a lazy receiver
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+  /*
+   * Messages are structured as follows *STRT,00.00,0.000,0,FNSH!
+   * Here we will search for the unique start character * and check that the
+   * full 25 character string is correct. We may have to wrap around our buffer
+   * since we may begin reading at any point in the transmission.
+   */
+	uint8_t rxiter = 0;
+	for(int i = 0; i < 64; i++){
+		if(rxbuffer[i] == '*'){
+			rxiter = i;//Found start condition
+			break;
+		}
+	}
+	uint8_t rxbuffercpy[32];
+	memset (rxbuffercpy, '\0', 32);  // clear the buffer
+	//Copy our message into a buffer that isn't offset
+	for(int i = 0; i < 25; i++){
+		rxbuffercpy[i] = rxbuffer[rxiter];
+		rxiter++;
+		if(rxiter >= 64){
+			rxiter = 0;
+		}
+	}
+
+	if( //Check start condition
+		(rxbuffercpy[0] == '*' && rxbuffercpy[1] == 'S' && rxbuffercpy[2] == 'T' && rxbuffercpy[3] == 'R' && rxbuffercpy[4] == 'T') &&
+		//Check finish condition
+		(rxbuffercpy[20] == 'F' && rxbuffercpy[21] == 'N' && rxbuffercpy[22] == 'S' && rxbuffercpy[23] == 'H' && rxbuffercpy[24] == '!') &&
+		//Check commas
+		(rxbuffercpy[5] == ',' && rxbuffercpy[11] == ',' && rxbuffercpy[17] == ',' && rxbuffercpy[19] == ',') &&
+		//Check voltage
+		((rxbuffercpy[6] >= '0' && rxbuffercpy[6] <= '9') && (rxbuffercpy[7] >= '0' && rxbuffercpy[7] <= '9') && rxbuffercpy[8] == '.' &&
+		(rxbuffercpy[9] >= '0' && rxbuffercpy[9] <= '9') && (rxbuffercpy[10] >= '0' && rxbuffercpy[10] <= '9')) &&
+		//Check amperage
+		((rxbuffercpy[12] >= '0' && rxbuffercpy[12] <= '9') && rxbuffercpy[13] == '.' && (rxbuffercpy[14] >= '0' && rxbuffercpy[14] <= '9') &&
+		(rxbuffercpy[15] >= '0' && rxbuffercpy[15] <= '9') && (rxbuffercpy[16] >= '0' && rxbuffercpy[16] <= '9')) &&
+		//Check chstat
+		(rxbuffercpy[18] == '0' || rxbuffercpy[18] == '1' || rxbuffercpy[18] == '2')
+			){
+		//Valid message
+		float tempv2 = 0;
+		float tempa2 = 0;
+
+		tempv2 += (float)(rxbuffercpy[6]-48) * (float)10.0;
+		tempv2 += (float)(rxbuffercpy[7]-48) * (float)1.0;
+		tempv2 += (float)(rxbuffercpy[9]-48) / (float)10.0;
+		tempv2 += (float)(rxbuffercpy[10]-48) / (float)100.0;
+
+		tempa2 += (float)(rxbuffercpy[12]-48) * (float)1.0;
+		tempa2 += (float)(rxbuffercpy[14]-48) / (float)10.0;
+		tempa2 += (float)(rxbuffercpy[15]-48) / (float)100.0;
+		tempa2 += (float)(rxbuffercpy[16]-48) / (float)1000.0;
+
+		if(tempv2 >= 0.00 && tempv2 <= 12.00){
+			first_shot = 1;
+			voltnum1 = tempv2;
+		}
+		if(tempa2 >= 0.00 && tempa2 <= 0.800){
+			ampnum1 = tempa2;
+		}
+		//chstat = rxbuffercpy[18]-48;
+	}
+
+	memset (rxbuffer, '\0', 64);  // clear the buffer
+	HAL_UART_Receive_DMA (&huart1, rxbuffer, 64);  // Receive 64 Bytes of data
+}
+
 
 /* USER CODE END 4 */
 
