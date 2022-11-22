@@ -767,6 +767,12 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
@@ -1791,6 +1797,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 				rowpin = -1;
 			}
 		}
+
+	// External Interrupts for the Rotary Encoder
+	} else if ((GPIO_Pin == Rot_CLK_Pin) || (GPIO_Pin== Rot_SW_Pin)) {
+		HAL_TIM_Base_Start_IT(&htim2);
 	}
 }
 
@@ -1806,7 +1816,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			//Col1
 			if(HAL_GPIO_ReadPin(Col_1_GPIO_Port, Col_1_Pin) == 0){
 				//Ch1
-				//HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
+				HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
 				firstmessage = 1;
 			}
 			//Col2
@@ -1832,7 +1842,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			columnInput();
 			//Col1
 			if(HAL_GPIO_ReadPin(Col_1_GPIO_Port, Col_1_Pin) == 0){
-				keypadsm('7');
+				keypadsm('1');
 			}
 			//Col2
 			else if(HAL_GPIO_ReadPin(Col_2_GPIO_Port, Col_2_Pin) == 0){
@@ -1840,7 +1850,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			}
 			//Col3
 			else if(HAL_GPIO_ReadPin(Col_3_GPIO_Port, Col_3_Pin) == 0){
-				keypadsm('1');
+				keypadsm('7');
 			}
 			//Col4
 			else if(HAL_GPIO_ReadPin(Col_4_GPIO_Port, Col_4_Pin) == 0){
@@ -1854,7 +1864,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			columnInput();
 			//Col1
 			if(HAL_GPIO_ReadPin(Col_1_GPIO_Port, Col_1_Pin) == 0){
-				keypadsm('8');
+				keypadsm('2');
 			}
 			//Col2
 			else if(HAL_GPIO_ReadPin(Col_2_GPIO_Port, Col_2_Pin) == 0){
@@ -1862,7 +1872,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			}
 			//Col3
 			else if(HAL_GPIO_ReadPin(Col_3_GPIO_Port, Col_3_Pin) == 0){
-				keypadsm('2');
+				keypadsm('8');
 			}
 			//Col4
 			else if(HAL_GPIO_ReadPin(Col_4_GPIO_Port, Col_4_Pin) == 0){
@@ -1876,7 +1886,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			columnInput();
 			//Col1
 			if(HAL_GPIO_ReadPin(Col_1_GPIO_Port, Col_1_Pin) == 0){
-				keypadsm('9');
+				keypadsm('3');
 			}
 			//Col2
 			else if(HAL_GPIO_ReadPin(Col_2_GPIO_Port, Col_2_Pin) == 0){
@@ -1884,7 +1894,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			}
 			//Col3
 			else if(HAL_GPIO_ReadPin(Col_3_GPIO_Port, Col_3_Pin) == 0){
-				keypadsm('3');
+				keypadsm('9');
 			}
 			//Col4
 			else if(HAL_GPIO_ReadPin(Col_4_GPIO_Port, Col_4_Pin) == 0){
@@ -1913,6 +1923,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				keypadsm('B');
 			}
 			rowInput();
+		}
+
+		// Timer Interrupts for the Rotary Encoder
+		else if (HAL_GPIO_ReadPin(Rot_CLK_GPIO_Port, Rot_CLK_Pin) == 0) {
+			if (HAL_GPIO_ReadPin(Rot_DT_GPIO_Port, Rot_DT_Pin)) {
+				// TODO: Rotary Left Turn Function
+			} else {
+				// TODO: Rotary Right Turn Function
+			}
+		} else if (HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin) == 0) {
+			//TODO: Rotary Button Function
 		}
 	}
 	else if(htim == &htim3){
