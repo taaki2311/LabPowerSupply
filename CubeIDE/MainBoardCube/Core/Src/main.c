@@ -69,6 +69,8 @@ I2C_HandleTypeDef hi2c1;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim9;
 
 UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_rx;
@@ -83,9 +85,9 @@ float D = 0.1;
 /* USB Section Begin ---------------------------------------------------------*/
 EXTI_HandleTypeDef hexti1;
 
-uint8_t usbbuffer[128];//Usb buffer
-uint8_t txbuffer[64];//Uart TX Buffer
-uint8_t rxbuffer[64];//Uart RX Buffer
+uint8_t usbbuffer[128]; // USB buffer
+uint8_t txbuffer[64]; // UART TX Buffer
+uint8_t rxbuffer[64]; // UART RX Buffer
 
 uint8_t firstmessage = 0;
 /* USB Section End -----------------------------------------------------------*/
@@ -93,6 +95,9 @@ uint8_t firstmessage = 0;
 /* Keypad Section Begin ------------------------------------------------------*/
 int rowpin = -1;
 int kpedge = 1; //0== falling edge 1== rising edge
+volatile uint8_t Rot_interrupt = 0; // 0 = No Rotation, 1 = CW, 2 = CCW
+volatile uint8_t Rot_SW_state = 0; // 0 = Closed, 1 = Open
+volatile uint8_t Rot_Mode = 0; // 0 = Value Mode, 1 = Index Mode
 
 uint8_t keypadlength = 5;
 char keypadarr[5] = {'z','z','z','z','z'};//z is null
@@ -112,7 +117,7 @@ float correctedvoltnum1;
 
 uint8_t first_shot = 1;
 
-//Array for the adc values and vars to hold them
+//Array for the ADC values and the variables to hold them
 uint16_t adcvalues[5];
 uint16_t adc_current = 0;
 uint16_t adc_linear = 0;
@@ -123,7 +128,7 @@ uint16_t* vrefptr = ((uint16_t*)VREFINT_CAL_ADDR_CMSIS);
 int chstat1 = 0;
 int chstat2 = 0;
 
-//Globals for adc values
+//Globals for ADC values
 uint16_t v1;
 float lin_num = 0;
 float cur_num = 0;
@@ -133,7 +138,7 @@ float swi_num = 0;
 float slin_num = 0;
 float scur_num = 0;
 
-// The value for the Intgral part of the PID controller
+// The value for the Integral part of the PID controller
 float error = 0;
 float derivative = 0;
 float integral = 0;
@@ -152,6 +157,8 @@ static void MX_I2C1_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_TIM4_Init(void);
+static void MX_TIM9_Init(void);
 /* USER CODE BEGIN PFP */
 
 void ourInit(void);//Runs several Inits
@@ -163,10 +170,10 @@ void EXTI1_IRQHandler(void);
 /* USB Section End -----------------------------------------------------------*/
 
 /* LCD Section Begin ---------------------------------------------------------*/
-void lcd_init (void);   // initialize lcd
-void lcd_send_cmd (char cmd);  // send command to the lcd
-void lcd_send_data (char data);  // send data to the lcd
-void lcd_send_string (char *str);  // send string to the lcd
+void lcd_init (void);   // initialize LCD
+void lcd_send_cmd (char cmd);  // send command to the LCD
+void lcd_send_data (char data);  // send data to the LCD
+void lcd_send_string (char *str);  // send string to the LCD
 void lcd_put_cur(int row, int col);  // put cursor at the entered position row (0 or 1), col (0-15);
 void lcd_clear (void);
 void LCD_CursorBlinkOnOff( uint8_t cursor_status, uint8_t blink_status );
@@ -230,10 +237,12 @@ int main(void)
   MX_USB_DEVICE_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_TIM4_Init();
+  MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
   ourInit();
   //HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_RESET);
-  //HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 1024);
+  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, 4095);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -248,10 +257,10 @@ int main(void)
 
 	  if(voltnum1 <= 0.00){
 		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_RESET);
+		  //HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_RESET);
 	  }
 	  if(chstat2 == 0){
-		  HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_RESET);
+		  //HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_RESET);
 	  }
 
 	  uint16_t vrefvalue = (uint16_t)*vrefptr;
@@ -336,10 +345,10 @@ int main(void)
 
 	  if(voltnum1 > 0.00){
 		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_SET);
+		  //HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_SET);
 	  }
 	  if(chstat2 == 1){
-		  HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_SET);
+		  //HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_SET);
 	  }
 
 	  HAL_Delay(1);
@@ -654,6 +663,96 @@ static void MX_TIM3_Init(void)
 }
 
 /**
+  * @brief TIM4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM4_Init(void)
+{
+
+  /* USER CODE BEGIN TIM4_Init 0 */
+
+  /* USER CODE END TIM4_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM4_Init 1 */
+
+  /* USER CODE END TIM4_Init 1 */
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 32000;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 10;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM4_Init 2 */
+
+  /* USER CODE END TIM4_Init 2 */
+
+}
+
+/**
+  * @brief TIM9 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM9_Init(void)
+{
+
+  /* USER CODE BEGIN TIM9_Init 0 */
+
+  /* USER CODE END TIM9_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM9_Init 1 */
+
+  /* USER CODE END TIM9_Init 1 */
+  htim9.Instance = TIM9;
+  htim9.Init.Prescaler = 32000;
+  htim9.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim9.Init.Period = 20;
+  htim9.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim9.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim9) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim9, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim9, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM9_Init 2 */
+
+  /* USER CODE END TIM9_Init 2 */
+
+}
+
+/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -746,25 +845,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Rot_CLK_Pin Rot_SW_Pin */
-  GPIO_InitStruct.Pin = Rot_CLK_Pin|Rot_SW_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  /*Configure GPIO pins : Rot_CLK_Pin Rot_SW_Pin Row_1_Pin Row_2_Pin
+                           Row_3_Pin Row_4_Pin Row_5_Pin */
+  GPIO_InitStruct.Pin = Rot_CLK_Pin|Rot_SW_Pin|Row_1_Pin|Row_2_Pin
+                          |Row_3_Pin|Row_4_Pin|Row_5_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : Rot_DT_Pin */
   GPIO_InitStruct.Pin = Rot_DT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(Rot_DT_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : Row_1_Pin Row_2_Pin Row_3_Pin Row_4_Pin
-                           Row_5_Pin */
-  GPIO_InitStruct.Pin = Row_1_Pin|Row_2_Pin|Row_3_Pin|Row_4_Pin
-                          |Row_5_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(Rot_DT_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
@@ -1799,8 +1892,25 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		}
 
 	// External Interrupts for the Rotary Encoder
-	} else if ((GPIO_Pin == Rot_CLK_Pin) || (GPIO_Pin== Rot_SW_Pin)) {
-		HAL_TIM_Base_Start_IT(&htim2);
+	} else if (GPIO_Pin == Rot_CLK_Pin) {
+		if (kpenum != WAIT) {
+			if (!Rot_interrupt) {
+				HAL_NVIC_DisableIRQ(Rot_CLK_EXTI_IRQn);
+				if (HAL_GPIO_ReadPin(Rot_CLK_GPIO_Port, Rot_CLK_Pin) == HAL_GPIO_ReadPin(Rot_DT_GPIO_Port, Rot_DT_Pin)) {
+					Rot_interrupt = 1;
+				} else {
+					Rot_interrupt = 2;
+				}
+				HAL_TIM_Base_Start_IT(&htim4);
+			}
+		}
+
+	} else if (GPIO_Pin == Rot_SW_Pin) {
+		if (kpenum != WAIT) {
+			HAL_NVIC_DisableIRQ(Rot_SW_EXTI_IRQn);
+			Rot_SW_state = HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin);
+			HAL_TIM_Base_Start_IT(&htim9);
+		}
 	}
 }
 
@@ -1816,7 +1926,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			//Col1
 			if(HAL_GPIO_ReadPin(Col_1_GPIO_Port, Col_1_Pin) == 0){
 				//Ch1
-				HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
+				//HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
 				firstmessage = 1;
 			}
 			//Col2
@@ -1832,7 +1942,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			//Col4
 			else if(HAL_GPIO_ReadPin(Col_4_GPIO_Port, Col_4_Pin) == 0){
 				//Ch2
-				HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
+				//HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
 			}
 			rowInput();
 		}
@@ -1925,16 +2035,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			rowInput();
 		}
 
-		// Timer Interrupts for the Rotary Encoder
-		else if (HAL_GPIO_ReadPin(Rot_CLK_GPIO_Port, Rot_CLK_Pin) == 0) {
-			if (HAL_GPIO_ReadPin(Rot_DT_GPIO_Port, Rot_DT_Pin)) {
-				// TODO: Rotary Left Turn Function
-			} else {
-				// TODO: Rotary Right Turn Function
-			}
-		} else if (HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin) == 0) {
-			//TODO: Rotary Button Function
-		}
 	}
 	else if(htim == &htim3){
 		//Disable timer now that we're in its interrupt
@@ -1943,6 +2043,60 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		lcd_psu_update();
 		//Start timer again
 		HAL_TIM_Base_Start_IT(&htim3);
+	}
+
+	else if (htim == &htim4) {
+		HAL_TIM_Base_Stop_IT(&htim4);
+		// Timer Interrupts for the Rotary Encoder
+		if (Rot_interrupt) {
+			if (Rot_Mode) {
+				if (Rot_interrupt == 1) {
+					if (keypaditerator < 4) {
+						keypaditerator++;
+						if (keypadarr[keypaditerator] == '.') {
+							keypaditerator++;
+						}
+					}
+				} else if (Rot_interrupt == 2){
+					if (keypaditerator > 0) {
+						keypaditerator--;
+						if (keypadarr[keypaditerator] == '.') {
+							keypaditerator--;
+						}
+					}
+				}
+			} else {
+				if (Rot_interrupt == 1) {
+					if (keypadarr[keypaditerator] < (9 + '0')) {
+						keypadarr[keypaditerator]++;
+					} else if (keypaditerator > 0) {
+						keypadarr[keypaditerator] = 0 + '0';
+						keypadarr[keypaditerator-1]++;
+					}
+				} else if (Rot_interrupt == 2) {
+					if (keypadarr[keypaditerator] > (0 + '0')) {
+						keypadarr[keypaditerator]--;
+					} else if (keypaditerator < 4) {
+						keypadarr[keypaditerator + 1]--;
+						keypadarr[keypaditerator] = (9 + '0');
+					}
+				}
+			}
+			Rot_interrupt = 0;
+			HAL_NVIC_EnableIRQ(Rot_CLK_EXTI_IRQn);
+		}
+	}
+
+	else if(htim == &htim9){
+		HAL_TIM_Base_Stop_IT(&htim9);
+		if (HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin) == Rot_SW_state) {
+			if (!Rot_SW_state) { // On Button Release
+				Rot_Mode = !Rot_Mode;
+			}
+		} else {
+			HAL_GPIO_EXTI_Callback(Rot_SW_Pin);
+		}
+		HAL_NVIC_EnableIRQ(Rot_SW_EXTI_IRQn);
 	}
 }
 

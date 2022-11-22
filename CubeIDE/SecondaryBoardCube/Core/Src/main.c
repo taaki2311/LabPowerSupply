@@ -146,6 +146,7 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   ourInit();
+  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, 4095);
   /* USER CODE END 2 */
 
   /* Infinite loop */
