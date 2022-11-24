@@ -29,9 +29,10 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-enum KEYPAD_ENUM { WAIT, V1, A1, V2, A2 };
-enum ROTARY_STATE { NOTURN, CWTURN, CCWTURN };
-enum ROTARY_MODE { VALUE, INDEX };
+typedef enum { WAIT, V1, A1, V2, A2 } KEYPAD_ENUM;
+typedef enum { NOTURN, CWTURN, CCWTURN } ROTARY_STATE;
+typedef enum { VALUE, INDEX } ROTARY_MODE;
+typedef enum { FALLING, RISING } EDGE;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -99,19 +100,19 @@ uint8_t rxbuffer[64]; // UART RX Buffer
 
 /* Keypad Section Begin ------------------------------------------------------*/
 volatile int8_t rowpin = -1;
-volatile uint8_t kpedge = 1; // 0 = falling edge, 1 = rising edge
+volatile EDGE kpedge = RISING; // 0 = falling edge, 1 = rising edge
 
 const uint8_t keypadlength = 5;
 volatile char keypadarr[5] = {'z','z','z','z','z'}; // 'z' is null
 volatile uint8_t keypaditerator = keypadlength - 1;
 volatile uint8_t keypaddecimal = 0;
-volatile enum KEYPAD_ENUM kpenum = WAIT;
+volatile KEYPAD_ENUM kpenum = WAIT;
 /* Keypad Section End --------------------------------------------------------*/
 
 /* Rotary Encoder Section Begin ----------------------------------------------*/
-volatile enum ROTARY_STATE Rot_State = NOTURN;
+volatile ROTARY_STATE Rot_State = NOTURN;
 volatile GPIO_PinState Rot_SW_State = RELEASED;
-volatile enum ROTARY_MODE Rot_Mode = VALUE;
+volatile ROTARY_MODE Rot_Mode = VALUE;
 /* Rotary Encoder End --------------------------------------------------------*/
 
 //Channel numbers
@@ -126,12 +127,12 @@ volatile uint8_t chstat2 = 0;
 
 //Array for the ADC values and the variables to hold them
 uint16_t adcvalues[5];
-uint16_t adc_current = 0;
-uint16_t adc_linear = 0;
-uint16_t adc_opamp = 0;
-uint16_t adc_switching = 0;
-uint16_t adc_vref = 0;
-uint16_t* vrefptr = ((uint16_t*)VREFINT_CAL_ADDR_CMSIS);
+uint16_t* adc_current = 0;
+uint16_t* adc_linear = 0;
+uint16_t* adc_opamp = 0;
+uint16_t* adc_switching = 0;
+uint16_t* adc_vref = 0;
+uint16_t* vrefptr = (uint16_t*)VREFINT_CAL_ADDR_CMSIS;
 
 //Globals for ADC values
 uint16_t v1;
@@ -173,10 +174,12 @@ void EXTI1_IRQHandler(void);
 void lcd_init (void);   // initialize LCD
 void lcd_send_cmd (char cmd);  // send command to the LCD
 void lcd_send_data (char data);  // send data to the LCD
-void lcd_send_string (char *str);  // send string to the LCD
+void lcd_send_string (char* str);  // send string to the LCD
 void lcd_put_cur(int row, int col);  // put cursor at the entered position row (0 or 1), col (0-15);
 void lcd_clear (void);
-void lcd_cursorblink_onoff( uint8_t cursor_status, uint8_t blink_status );
+void lcd_cursor_onoff(uint8_t status);
+void lcd_blink_onoff(uint8_t status);
+void lcd_cursorblink_onoff(uint8_t curaor_status, uint8_t blink_status);
 void lcd_createChar(void);
 void lcd_psu_init(void);
 void lcd_update_voltage(uint8_t channel, float num);
@@ -255,6 +258,12 @@ int main(void)
   float correction = 0;
   float correctedvoltnum1;
 
+  adc_current = &adcvalues[2];
+  adc_linear = &adcvalues[1];
+  adc_opamp = &adcvalues[0];
+  adc_switching = &adcvalues[3];
+  adc_vref = &adcvalues[4];
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -270,32 +279,32 @@ int main(void)
 		  HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_RESET);
 	  }
 
-	  uint16_t vrefvalue = (uint16_t)*vrefptr;
-	  float vddcalc = (float)3.0 * ((float)vrefvalue / (float)adc_vref);
+	  uint16_t vrefvalue = (uint16_t) *vrefptr;
+	  float vddcalc = (float)3.0 * ((float)vrefvalue / (float)*adc_vref);
 
-	  float cur_num_temp = ((((float)3.0 * (float)adc_current * (float)vrefvalue)/((float)adc_vref * (float)4095) / (float)20) / (float)0.15);
+	  float cur_num_temp = ((((float)3.0 * (float)*adc_current * (float)vrefvalue)/((float)*adc_vref * (float)4095) / (float)20) / (float)0.15);
 	  if (cur_num_temp >= 0.0000) {
 		  cur_num = cur_num_temp;
 	  } else {
 		  cur_num = 0.0000;
 	  }
 
-	  //float cur_num = (((float)vddcalc * (float)adc_current * (float)4095) / (float)20) / (float)0.3;
-	  float op_num_temp = ((float)3.0 * ((float)adc_opamp * (float)4.0) * (float)vrefvalue)/((float)adc_vref * (float)4095) - ((float)cur_num * (float)0.35);
+	  //float cur_num = (((float)vddcalc * (float)*adc_current * (float)4095) / (float)20) / (float)0.3;
+	  float op_num_temp = ((float)3.0 * ((float)*adc_opamp * (float)4.0) * (float)vrefvalue)/((float)*adc_vref * (float)4095) - ((float)cur_num * (float)0.35);
 	  if (op_num_temp >= 0.0000) {
 		  op_num = op_num_temp;
 	  } else {
 		  op_num = 0.0000;
 	  }
 
-	  float lin_num_temp = ((float)3.0 * ((float)adc_linear * (float)4.0) * (float)vrefvalue)/((float)adc_vref * (float)4095) - ((float)cur_num * (float)0.35);
+	  float lin_num_temp = ((float)3.0 * ((float)*adc_linear * (float)4.0) * (float)vrefvalue)/((float)*adc_vref * (float)4095) - ((float)cur_num * (float)0.35);
 	  if (lin_num_temp >= 0.0000) {
 		  lin_num = lin_num_temp;
 	  } else {
 		  lin_num = 0.0000;
 	  }
-	  //float lin_num = ((float)vddcalc * (float)adc_linear * (float)4095) * (float)4;
-	  float swi_num_temp = ((float)3.0 * ((float)adc_switching * (float)5.0) * (float)vrefvalue)/((float)adc_vref * (float)4095);
+	  //float lin_num = ((float)vddcalc * (float)*adc_linear * (float)4095) * (float)4;
+	  float swi_num_temp = ((float)3.0 * ((float)*adc_switching * (float)5.0) * (float)vrefvalue)/((float)*adc_vref * (float)4095);
 	  if(swi_num_temp >= 0.0000){
 		  swi_num = swi_num_temp;
 	  } else {
@@ -312,8 +321,6 @@ int main(void)
 		  first_shot = 0;
 	  }
 
-
-
 /*
 	  else { // Bang-Bang Controller
 		  //Try really hard to get the voltage right
@@ -328,11 +335,14 @@ int main(void)
 	  }
 */
 
-
-
 	  else {
 		  error = lin_num - voltnum1;
 		  integral += error;
+		  if (integral > (float)4095.0) {
+			  integral = (float)4095;
+		  } else if (integral < (float)-4095.0) {
+			  integral = (float)-4095.0;
+		  }
 		  derivative = error - error_previous;
 		  error_previous = error;
 		  correction = P * error + I * integral + D * derivative;
@@ -353,8 +363,6 @@ int main(void)
 	  if(chstat2 == 1){
 		  HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_SET);
 	  }
-
-	  HAL_Delay(1);
   }
   /* USER CODE END 3 */
 }
@@ -952,7 +960,8 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void our_init(void){
+void our_init(void)
+{
 	HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);	//Ensure shutdown is enabled
 	/*
 	 * The HAL library is dumb and tries to init the adc before the DMA which does not work
@@ -1030,7 +1039,7 @@ void lcd_send_cmd (char cmd)
 	data_t[1] = data_u|0x08;  //en=0, rs=0
 	data_t[2] = data_l|0x0C;  //en=1, rs=0
 	data_t[3] = data_l|0x08;  //en=0, rs=0
-	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD,(uint8_t *) data_t, 4, 100);
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD,(uint8_t*) data_t, 4, 100);
 }
 
 void lcd_send_data (char data)
@@ -1043,25 +1052,30 @@ void lcd_send_data (char data)
 	data_t[1] = data_u|0x09;  //en=0, rs=0
 	data_t[2] = data_l|0x0D;  //en=1, rs=0
 	data_t[3] = data_l|0x09;  //en=0, rs=0
-	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD,(uint8_t *) data_t, 4, 100);
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD,(uint8_t*) data_t, 4, 100);
 }
 
-void lcd_cursorblink_onoff( uint8_t cursor_status, uint8_t blink_status)
+void lcd_cursor_onoff(uint8_t status)
 {
-	if (blink_status == 1 && cursor_status == 1) {
-		lcd_send_cmd(0x0F);
-	} else if (blink_status == 0 && cursor_status == 1) {
-		lcd_send_cmd(0x0E);
-	} else if (blink_status == 1 && cursor_status == 0) {
-		lcd_send_cmd(0x0D);
-	} else if (blink_status == 0 && cursor_status == 0) {
-		lcd_send_cmd(0x0C);
-	}
+	(status) ? lcd_send_cmd(0x0E) : lcd_send_cmd(0x0C);
 }
 
-void lcd_blink_onoff( uint8_t status )
+void lcd_blink_onoff(uint8_t status)
 {
 	(status) ? lcd_send_cmd(0x0D) : lcd_send_cmd(0x0C);
+}
+
+void lcd_cursorblink_onoff(uint8_t cursor_status, uint8_t blink_status)
+{
+	if ((cursor_status == 0) && (blink_status == 0)) {
+		lcd_send_cmd(0x0C);
+	} else if ((cursor_status == 0) && (blink_status == 1)) {
+		lcd_send_cmd(0x0D);
+	} else if ((cursor_status == 1) && (blink_status == 0)) {
+		lcd_send_cmd(0x0E);
+	} else if ((cursor_status == 1) && (blink_status == 1)) {
+		lcd_send_cmd(0x0F);
+	}
 }
 
 void lcd_clear (void)
@@ -1115,7 +1129,7 @@ void lcd_init (void)
 	lcd_clear();
 }
 
-void lcd_send_string (char *str)
+void lcd_send_string (char* str)
 {
 	while (*str) lcd_send_data (*str++);
 }
@@ -1138,7 +1152,8 @@ void lcd_createChar(void)
 	//*** Loading custom char complete***//////
 }
 
-void lcd_psu_init(void){
+void lcd_psu_init(void)
+{
 	lcd_init();
 
 	lcd_put_cur(0, 0);
@@ -1170,9 +1185,10 @@ void lcd_psu_init(void){
 	lcd_send_string("0.00A");
 }
 
-void lcd_psu_update(void){
+void lcd_psu_update(void)
+{
 	lcd_cursorblink_onoff(0,0);
-	switch(kpedge) {
+	switch(kpenum) {
 
 	case WAIT:
 		lcd_update_voltage(1,voltnum2);
@@ -1278,7 +1294,8 @@ void lcd_psu_update(void){
 /* LCD Section End -----------------------------------------------------------*/
 
 /* Keypad Section Begin ------------------------------------------------------*/
-void lcd_update_voltage(uint8_t channel, float num){
+void lcd_update_voltage(uint8_t channel, float num)
+{
 	char kpbuff[8];
 	snprintf(kpbuff, 6, "%.2f", num);
 
@@ -1321,7 +1338,8 @@ void lcd_update_voltage(uint8_t channel, float num){
 	}
 }
 
-void lcd_update_amperage(uint8_t channel, float num) {
+void lcd_update_amperage(uint8_t channel, float num)
+{
 	char kpbuff[8];
 	snprintf(kpbuff, 5, "%.2f", num);
 
@@ -1373,7 +1391,8 @@ void lcd_update_amperage(uint8_t channel, float num) {
  * Passing a number ('1' not 1) to this function will shift in that number but will only
  * allow up to 2 numbers before a decimal and up to 2 numbers after a decimal.
  */
-void update_keypad(char num){
+void update_keypad(char num)
+{
 	if (num == 'z') {
 		if(keypaditerator < keypadlength-1){
 			//Update decimal "bool" if we remove a decimal
@@ -1462,7 +1481,7 @@ float translate_keypad(void)
 			int count = 1;
 			for (int i = keypadlength-1; i >= 0; i--) {
 				if (keypadarr[i] >= '0' && keypadarr[i] <= '9') {
-					num += ( (int)keypadarr[i] - (int)'0' ) * (count);
+					num += ((int)keypadarr[i] - (int)'0') * (count);
 					count = count * 10;
 				}
 			}
@@ -1471,7 +1490,7 @@ float translate_keypad(void)
 			int count = 1;
 			for (int i = decimallocation-1; i >=0; i--) {
 				if (keypadarr[i] >= '0' && keypadarr[i] <= '9') {
-					num += ( (int)keypadarr[i] - (int)'0' ) * (count);
+					num += ((int)keypadarr[i] - (int)'0') * (count);
 					count = count * 10;
 				}
 			}
@@ -1689,7 +1708,8 @@ void keypad_sm(char num)
 	}
 }
 
-void row_input(void) {
+void row_input(void)
+{
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	//Deinit
@@ -1728,7 +1748,8 @@ void row_input(void) {
 	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
-void column_input(void) {
+void column_input(void)
+{
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	//Disable interrupts
@@ -1767,13 +1788,14 @@ void column_input(void) {
 	HAL_GPIO_WritePin(Col_1_GPIO_Port, Row_1_Pin|Row_2_Pin|Row_3_Pin|Row_4_Pin|Row_5_Pin, GPIO_PIN_RESET);
 }
 
-void keypad_decode(uint8_t row_pin) {
+void keypad_decode(uint8_t row_pin)
+{
 	static GPIO_TypeDef *col_ports[4] = { Col_1_GPIO_Port, Col_2_GPIO_Port, Col_3_GPIO_Port, Col_4_GPIO_Port };
 	static uint16_t col_pins[4] = { Col_1_Pin, Col_2_Pin, Col_3_Pin, Col_4_Pin };
-	static char keypad_labels[4][4] = {{ '1', '4', '7', '.' },
-									   { '2', '5', '8', '0' },
-									   { '3', '6', '9', '#' },
-									   { 'C', 'D', 'A', 'B' }};
+	static const char keypad_labels[4][4] = {{ '1', '4', '7', '.' },
+										     { '2', '5', '8', '0' },
+										     { '3', '6', '9', '#' },
+										     { 'C', 'D', 'A', 'B' }};
 	if (row_pin) {
 		for (uint8_t i = 0; i < 4; i++) {
 			if (HAL_GPIO_ReadPin(col_ports[i], col_pins[i]) == PRESSED) {
@@ -1783,7 +1805,7 @@ void keypad_decode(uint8_t row_pin) {
 		}
 	} else {
 		if (HAL_GPIO_ReadPin(Col_1_GPIO_Port, Col_1_Pin) == PRESSED) {
-			HAL_GPIO_TogglePin(GPIOB, Status_LED_1_Pin);
+			HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
 		} else if (HAL_GPIO_ReadPin(Col_2_GPIO_Port, Col_2_Pin) == PRESSED) {
 			keypad_sm('+'); // Confirm
 		} else if (HAL_GPIO_ReadPin(Col_3_GPIO_Port, Col_3_Pin) == PRESSED) {
@@ -1794,13 +1816,14 @@ void keypad_decode(uint8_t row_pin) {
 	}
 }
 
-void set_rowpin(uint8_t row_num) {
-	static GPIO_TypeDef *row_ports[5] = { Row_1_GPIO_Port, Row_2_GPIO_Port, Row_3_GPIO_Port, Row_4_GPIO_Port, Row_5_GPIO_Port };
+void set_rowpin(uint8_t row_num)
+{
+	static GPIO_TypeDef* row_ports[5] = { Row_1_GPIO_Port, Row_2_GPIO_Port, Row_3_GPIO_Port, Row_4_GPIO_Port, Row_5_GPIO_Port };
 	static uint16_t row_pins[5] = {Row_1_Pin, Row_2_Pin, Row_3_Pin, Row_4_Pin, Row_5_Pin};
 	if (HAL_GPIO_ReadPin(row_ports[row_num], row_pins[row_num]) == PRESSED) {
 		//Make sure we didn't interrupt on falling edge already
-		if (kpedge != 0) {
-			kpedge = 0;
+		if (kpedge ==  RISING) {
+			kpedge = FALLING;
 			//Save rowpin
 			rowpin = row_num;
 			//start debounce
@@ -1810,8 +1833,8 @@ void set_rowpin(uint8_t row_num) {
 	//Rising edge
 	else {
 		//Make sure we didn't interrupt on rising edge already
-		if (kpedge != 1) {
-			kpedge = 1;
+		if (kpedge ==  FALLING) {
+			kpedge = RISING;
 			//Reset keypad detection vars
 			rowpin = -1;
 		}
@@ -1871,7 +1894,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	}
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 {
 	if (htim == &htim2) {
 		//Disable timer now that we're in its interrupt
@@ -1922,7 +1945,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 					break;
 				}
 
-				volatile float *modifying_output = NULL;
+				volatile float* modifying_output = NULL;
 				switch (kpenum) {
 				case WAIT:
 					// Error
@@ -2024,11 +2047,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	} else if (htim == &htim11) {
 		// TODO: Use cursor to indicate what digit is currently selected (Keypad and Rotary Encoder)
 		static uint8_t cursor = 0;
-		lcd_cursorblink_onoff(cursor, 0);
+		lcd_cursor_onoff(cursor);
 		cursor = !cursor;
 	}
 }
 
+/*
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 	adc_current = adcvalues[2];
 	adc_linear = adcvalues[1];
@@ -2038,11 +2062,12 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 }
 
 
-void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart){
+void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef* huart){
   //do nothing cause we're a lazy receiver
 }
+*/
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart){
   /*
    * Messages are structured as follows *STRT,00.00,0.000,0,FNSH!
    * Here we will search for the unique start character * and check that the
@@ -2116,13 +2141,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	HAL_UART_Receive_DMA (&huart1, rxbuffer, 64);  // Receive 64 Bytes of data
 }
 
-
-void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart)
+/*
+void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef* huart)
 {
 
 }
+*/
 
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart)
 {
 	memset (txbuffer, '\0', 64);  // clear the buffer
 	snprintf((char*)txbuffer, 32, "*STRT,%05.2f,%5.3f,%d,FNSH!", voltnum2, ampnum2, chstat2);
