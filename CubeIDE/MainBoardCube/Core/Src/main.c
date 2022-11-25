@@ -63,6 +63,14 @@ const uint8_t customChar[64] = {
 #define RELEASED GPIO_PIN_SET
 /* Button States Section End -------------------------------------------------*/
 
+/* ADC Section Begin ---------------------------------------------------------*/
+#define ADC_OPAMP adc_values[0]
+#define ADC_LINEAR adc_values[1]
+#define ADC_CURRENT adc_values[2]
+#define ADC_SWITCHING adc_values[3]
+#define ADC_VREF adc_values[4]
+/* ADC Section End -----------------------------------------------------------*/
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -126,12 +134,7 @@ volatile uint8_t first_shot = 0;
 volatile uint8_t chstat2 = 0;
 
 //Array for the ADC values and the variables to hold them
-uint16_t adcvalues[5];
-uint16_t* adc_current = 0;
-uint16_t* adc_linear = 0;
-uint16_t* adc_opamp = 0;
-uint16_t* adc_switching = 0;
-uint16_t* adc_vref = 0;
+uint16_t adc_values[5];
 uint16_t* vrefptr = (uint16_t*)VREFINT_CAL_ADDR_CMSIS;
 
 //Globals for ADC values
@@ -257,13 +260,13 @@ int main(void)
   float error_previous = 0;
   float correction = 0;
   float correctedvoltnum1;
-
+ /*
   adc_current = &adcvalues[2];
   adc_linear = &adcvalues[1];
   adc_opamp = &adcvalues[0];
   adc_switching = &adcvalues[3];
   adc_vref = &adcvalues[4];
-
+*/
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -280,36 +283,23 @@ int main(void)
 	  }
 
 	  uint16_t vrefvalue = (uint16_t) *vrefptr;
-	  float vddcalc = (float)3.0 * ((float)vrefvalue / (float)*adc_vref);
+	  float vddcalc = (float)3.0 * ((float)vrefvalue / (float)ADC_VREF);
 
-	  float cur_num_temp = ((((float)3.0 * (float)*adc_current * (float)vrefvalue)/((float)*adc_vref * (float)4095) / (float)20) / (float)0.15);
-	  if (cur_num_temp >= 0.0000) {
-		  cur_num = cur_num_temp;
-	  } else {
-		  cur_num = 0.0000;
-	  }
+	  float cur_num_temp = ((((float)3.0 * (float)ADC_CURRENT * (float)vrefvalue)/((float)ADC_VREF * (float)4095) / (float)20) / (float)0.15);
+	  cut_num  = (cur_num_temp >= 0.0000) ? cur_num_temp : 0.0000;
+
 
 	  //float cur_num = (((float)vddcalc * (float)*adc_current * (float)4095) / (float)20) / (float)0.3;
-	  float op_num_temp = ((float)3.0 * ((float)*adc_opamp * (float)4.0) * (float)vrefvalue)/((float)*adc_vref * (float)4095) - ((float)cur_num * (float)0.35);
-	  if (op_num_temp >= 0.0000) {
-		  op_num = op_num_temp;
-	  } else {
-		  op_num = 0.0000;
-	  }
+	  float op_num_temp = ((float)3.0 * ((float)ADC_OPAMP * (float)4.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095) - ((float)cur_num * (float)0.35);
+	  op_num  = (op_num_temp >= 0.0000) ? op_num_temp : 0.0000;
 
-	  float lin_num_temp = ((float)3.0 * ((float)*adc_linear * (float)4.0) * (float)vrefvalue)/((float)*adc_vref * (float)4095) - ((float)cur_num * (float)0.35);
-	  if (lin_num_temp >= 0.0000) {
-		  lin_num = lin_num_temp;
-	  } else {
-		  lin_num = 0.0000;
-	  }
+
+	  float lin_num_temp = ((float)3.0 * ((float)ADC_LINEAR * (float)4.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095) - ((float)cur_num * (float)0.35);
+	  lin_num  = (lin_num_temp >= 0.0000) ? lin_num_temp : 0.0000;
+
 	  //float lin_num = ((float)vddcalc * (float)*adc_linear * (float)4095) * (float)4;
-	  float swi_num_temp = ((float)3.0 * ((float)*adc_switching * (float)5.0) * (float)vrefvalue)/((float)*adc_vref * (float)4095);
-	  if(swi_num_temp >= 0.0000){
-		  swi_num = swi_num_temp;
-	  } else {
-		  swi_num = 0.0000;
-	  }
+	  float swi_num_temp = ((float)3.0 * ((float)ADC_SWITCHING * (float)5.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095);
+	  swi_num  = (swi_num_temp >= 0.0000) ? swi_num_temp : 0.0000;
 
 	  if (first_shot) {
 		  v1 = (uint16_t)((( (((float)voltnum1) / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
@@ -602,7 +592,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 32000;
+  htim2.Init.Prescaler = 32000-1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 10;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -613,6 +603,10 @@ static void MX_TIM2_Init(void)
   }
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
   if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OnePulse_Init(&htim2, TIM_OPMODE_SINGLE) != HAL_OK)
   {
     Error_Handler();
   }
@@ -647,7 +641,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 32000;
+  htim3.Init.Prescaler = 32000-1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 500;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -692,7 +686,7 @@ static void MX_TIM4_Init(void)
 
   /* USER CODE END TIM4_Init 1 */
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 32000;
+  htim4.Init.Prescaler = 32000-1;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim4.Init.Period = 10;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -703,6 +697,10 @@ static void MX_TIM4_Init(void)
   }
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
   if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OnePulse_Init(&htim4, TIM_OPMODE_SINGLE) != HAL_OK)
   {
     Error_Handler();
   }
@@ -737,7 +735,7 @@ static void MX_TIM9_Init(void)
 
   /* USER CODE END TIM9_Init 1 */
   htim9.Instance = TIM9;
-  htim9.Init.Prescaler = 32000;
+  htim9.Init.Prescaler = 32000-1;
   htim9.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim9.Init.Period = 20;
   htim9.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -748,6 +746,10 @@ static void MX_TIM9_Init(void)
   }
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
   if (HAL_TIM_ConfigClockSource(&htim9, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OnePulse_Init(&htim9, TIM_OPMODE_SINGLE) != HAL_OK)
   {
     Error_Handler();
   }
@@ -781,7 +783,7 @@ static void MX_TIM10_Init(void)
 
   /* USER CODE END TIM10_Init 1 */
   htim10.Instance = TIM10;
-  htim10.Init.Prescaler = 32000;
+  htim10.Init.Prescaler = 32000-1;
   htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim10.Init.Period = 500;
   htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -819,7 +821,7 @@ static void MX_TIM11_Init(void)
 
   /* USER CODE END TIM11_Init 1 */
   htim11.Instance = TIM11;
-  htim11.Init.Prescaler = 32000;
+  htim11.Init.Prescaler = 32000-1;
   htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim11.Init.Period = 500;
   htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -974,7 +976,7 @@ void our_init(void)
 	MX_ADC_Init();
 
 	//Actually our init now
-	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&adcvalues, 5);// start the adc in dma mode
+	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&adc_values, 5);// start the adc in dma mode
 	HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
 	HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
 	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0);
@@ -1792,10 +1794,12 @@ void keypad_decode(uint8_t row_pin)
 {
 	static GPIO_TypeDef *col_ports[4] = { Col_1_GPIO_Port, Col_2_GPIO_Port, Col_3_GPIO_Port, Col_4_GPIO_Port };
 	static uint16_t col_pins[4] = { Col_1_Pin, Col_2_Pin, Col_3_Pin, Col_4_Pin };
-	static const char keypad_labels[4][4] = {{ '1', '4', '7', '.' },
-										     { '2', '5', '8', '0' },
-										     { '3', '6', '9', '#' },
-										     { 'C', 'D', 'A', 'B' }};
+	static const char keypad_labels[4][4] = {
+		{ '1', '4', '7', '.' },
+		{ '2', '5', '8', '0' },
+		{ '3', '6', '9', '#' },
+		{ 'C', 'D', 'A', 'B' }
+	};
 	if (row_pin) {
 		for (uint8_t i = 0; i < 4; i++) {
 			if (HAL_GPIO_ReadPin(col_ports[i], col_pins[i]) == PRESSED) {
@@ -1898,21 +1902,21 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 {
 	if (htim == &htim2) {
 		//Disable timer now that we're in its interrupt
-		HAL_TIM_Base_Stop_IT(&htim2);
+		//HAL_TIM_Base_Stop_IT(&htim2);
 		column_input();
 		keypad_decode(rowpin);
 		row_input();
 
 	} else if (htim == &htim3) {
 		//Disable timer now that we're in its interrupt
-		HAL_TIM_Base_Stop_IT(&htim3);
+		//HAL_TIM_Base_Stop_IT(&htim3);
 		//Update Display
 		lcd_psu_update();
 		//Start timer again
-		HAL_TIM_Base_Start_IT(&htim3);
+		//HAL_TIM_Base_Start_IT(&htim3);
 
 	} else if (htim == &htim4) {
-		HAL_TIM_Base_Stop_IT(&htim4);
+		//HAL_TIM_Base_Stop_IT(&htim4);
 
 		if (Rot_State != NOTURN) {
 			switch (Rot_Mode) {
@@ -2010,7 +2014,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 		}
 
 	} else if (htim == &htim9) {
-		HAL_TIM_Base_Stop_IT(&htim9);
+		//HAL_TIM_Base_Stop_IT(&htim9);
 		if (HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin) == Rot_SW_State) {
 			switch (Rot_SW_State) {
 			case PRESSED:

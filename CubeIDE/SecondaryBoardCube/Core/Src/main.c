@@ -32,9 +32,19 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+/* PID Control Section Begin -------------------------------------------------*/
 #define P 0.1
 #define I 0.1
 #define D 0.1
+/* PID Control Section End ---------------------------------------------------*/
+
+/* ADC Section Begin ---------------------------------------------------------*/
+#define ADC_OPAMP adc_values[0]
+#define ADC_LINEAR adc_values[1]
+#define ADC_CURRENT adc_values[2]
+#define ADC_SWITCHING adc_values[3]
+#define ADC_VREF adc_values[4]
+/* ADC Section End -----------------------------------------------------------*/
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -68,12 +78,14 @@ float correctedvoltnum1;
 uint8_t first_shot = 1;
 
 //Array for the adc values and vars to hold them
-uint16_t adcvalues[5];
+uint16_t adc_values[5];
+/*
 uint16_t* adc_current;
 uint16_t* adc_linear;
 uint16_t* adc_opamp;
 uint16_t* adc_switching;
 uint16_t* adc_vref;
+*/
 uint16_t* vrefptr = ((uint16_t*)VREFINT_CAL_ADDR_CMSIS);
 int chstat = 0;
 
@@ -147,11 +159,13 @@ int main(void)
   our_init();
   HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, 4095);
 
-  adc_current = &adcvalues[2];
-  adc_linear = &adcvalues[1];
-  adc_opamp = &adcvalues[0];
-  adc_switching = &adcvalues[3];
-  adc_vref = &adcvalues[4];
+  /*
+  adc_current = &adc_values[2];
+  adc_linear = &adc_values[1];
+  adc_opamp = &adc_values[0];
+  adc_switching = &adc_values[3];
+  adc_vref = &adc_values[4];
+  */
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -171,38 +185,21 @@ int main(void)
 	  }
 
 	  uint16_t vrefvalue = (uint16_t)*vrefptr;
-	  float vddcalc = (float)3.0 * ((float)vrefvalue / (float)*adc_vref);
+	  float vddcalc = (float)3.0 * ((float)vrefvalue / (float)ADC_VREF);
 
-	  float cur_num_temp = ((((float)3.0 * (float)*adc_current * (float)vrefvalue)/((float)*adc_vref * (float)4095) / (float)20) / (float)0.15);
-	  if(cur_num_temp >= 0.0000){
-		  cur_num = cur_num_temp;
-	  }
-	  else{
-		  cur_num = 0.0000;
-	  }
+	  float cur_num_temp = ((((float)3.0 * (float)ADC_CURRENT * (float)vrefvalue)/((float)ADC_VREF * (float)4095) / (float)20) / (float)0.15);
+	  cur_num  = (cur_num_temp >= 0.0000) ? cur_num_temp : 0.0000;
+
 	  //float cur_num = (((float)vddcalc * (float)*adc_current * (float)4095) / (float)20) / (float)0.3;
-	  float op_num_temp = ((float)3.0 * ((float)*adc_opamp * (float)4.0) * (float)vrefvalue)/((float)*adc_vref * (float)4095) - ((float)cur_num * (float)0.35);
-	  if(op_num_temp >= 0.0000){
-		  op_num = op_num_temp;
-	  }
-	  else{
-		  op_num = 0.0000;
-	  }
-	  float lin_num_temp = ((float)3.0 * ((float)*adc_linear * (float)4.0) * (float)vrefvalue)/((float)*adc_vref * (float)4095) - ((float)cur_num * (float)0.35);
-	  if(lin_num_temp >= 0.0000){
-		  lin_num = lin_num_temp;
-	  }
-	  else{
-		  lin_num = 0.0000;
-	  }
+	  float op_num_temp = ((float)3.0 * ((float)ADC_OPAMP * (float)4.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095) - ((float)cur_num * (float)0.35);
+	  op_num  = (op_num_temp >= 0.0000) ? op_num_temp : 0.0000;
+
+	  float lin_num_temp = ((float)3.0 * ((float)ADC_LINEAR * (float)4.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095) - ((float)cur_num * (float)0.35);
+	  lin_num  = (lin_num_temp >= 0.0000) ? lin_num_temp : 0.0000;
+
 	  //float lin_num = ((float)vddcalc * (float)*adc_linear * (float)4095) * (float)4;
-	  float swi_num_temp = ((float)3.0 * ((float)*adc_switching * (float)5.0) * (float)vrefvalue)/((float)*adc_vref * (float)4095);
-	  if(swi_num_temp >= 0.0000){
-		  swi_num = swi_num_temp;
-	  }
-	  else{
-		  swi_num = 0.0000;
-	  }
+	  float swi_num_temp = ((float)3.0 * ((float)ADC_SWITCHING * (float)5.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095);
+	  swi_num  = (swi_num_temp >= 0.0000) ? swi_num_temp : 0.0000;
 
 	  if(first_shot){
 		  v1 = (uint16_t)((( (((float)voltnum1) / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
@@ -536,7 +533,7 @@ void our_init(void){
 	MX_ADC_Init();
 
 	//Actually our init now
-	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&adcvalues, 5);// start the adc in dma mode
+	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&adc_values, 5);// start the adc in dma mode
 	HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
 	HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
 	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0);
@@ -555,7 +552,7 @@ void our_init(void){
 
 	//strncpy((char*)txbuffer, "Hello World From Second MCU\n", 64);
 
-	snprintf((char*)txbuffer, 26, "*STRT,%5.2f,%5.3f,%d,FNSH!", lin_num, cur_num, chstat);
+	snprintf((char*)txbuffer, 32, "*STRT,%5.2f,%5.3f,%d,FNSH!", lin_num, cur_num, chstat);
 
 	HAL_UART_Transmit_DMA(&huart1, txbuffer, 64);
 
@@ -578,7 +575,7 @@ void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart){
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 	memset (txbuffer, '\0', 64);  // clear the buffer
-	snprintf((char*)txbuffer, 26, "*STRT,%05.2f,%5.3f,%d,FNSH!", lin_num, cur_num, chstat);
+	snprintf((char*)txbuffer, 32, "*STRT,%05.2f,%5.3f,%d,FNSH!", lin_num, cur_num, chstat);
 	HAL_UART_Transmit_DMA(&huart1, txbuffer, 64);
 }
 
