@@ -84,9 +84,9 @@ I2C_HandleTypeDef hi2c1;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
-TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim9;
 TIM_HandleTypeDef htim10;
+TIM_HandleTypeDef htim11;
 
 UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_rx;
@@ -131,6 +131,7 @@ const char keypad_labels[5][4] = {
 /* Rotary Encoder Section Begin ----------------------------------------------*/
 ROTARY_STATE Rot_State = NOTURN;
 GPIO_PinState Rot_SW_State;
+volatile uint8_t swedge = 1;//0== falling edge 1== rising edge
 /* Rotary Encoder Section End ------------------------------------------------*/
 
 //Channel numbers
@@ -166,6 +167,7 @@ volatile uint16_t v1;//dac channel 1 is linear
 volatile uint16_t v2;//dac channel 2 is switching
 
 volatile uint8_t timercounter = 0;
+volatile uint8_t blink = 1;
 
 /* USER CODE END PV */
 
@@ -180,7 +182,7 @@ static void MX_USART1_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM10_Init(void);
-static void MX_TIM4_Init(void);
+static void MX_TIM11_Init(void);
 static void MX_TIM9_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -265,7 +267,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_TIM10_Init();
-  MX_TIM4_Init();
+  MX_TIM11_Init();
   MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
   ourInit();
@@ -672,7 +674,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 32000;
+  htim2.Init.Prescaler = 32000-1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 10;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -717,7 +719,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 32000;
+  htim3.Init.Prescaler = 32000-1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 500;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -740,55 +742,6 @@ static void MX_TIM3_Init(void)
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
-
-}
-
-/**
-  * @brief TIM4 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM4_Init(void)
-{
-
-  /* USER CODE BEGIN TIM4_Init 0 */
-
-  /* USER CODE END TIM4_Init 0 */
-
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-
-  /* USER CODE BEGIN TIM4_Init 1 */
-
-  /* USER CODE END TIM4_Init 1 */
-  htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 32000-1;
-  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 10;
-  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_OnePulse_Init(&htim4, TIM_OPMODE_SINGLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM4_Init 2 */
-
-  /* USER CODE END TIM4_Init 2 */
 
 }
 
@@ -825,10 +778,6 @@ static void MX_TIM9_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_OnePulse_Init(&htim9, TIM_OPMODE_SINGLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim9, &sMasterConfig) != HAL_OK)
@@ -861,7 +810,7 @@ static void MX_TIM10_Init(void)
   htim10.Instance = TIM10;
   htim10.Init.Prescaler = 32000-1;
   htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim10.Init.Period = 100;
+  htim10.Init.Period = 20;
   htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
@@ -876,6 +825,44 @@ static void MX_TIM10_Init(void)
   /* USER CODE BEGIN TIM10_Init 2 */
 
   /* USER CODE END TIM10_Init 2 */
+
+}
+
+/**
+  * @brief TIM11 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM11_Init(void)
+{
+
+  /* USER CODE BEGIN TIM11_Init 0 */
+
+  /* USER CODE END TIM11_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+
+  /* USER CODE BEGIN TIM11_Init 1 */
+
+  /* USER CODE END TIM11_Init 1 */
+  htim11.Instance = TIM11;
+  htim11.Init.Prescaler = 32000-1;
+  htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim11.Init.Period = 100;
+  htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim11, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM11_Init 2 */
+
+  /* USER CODE END TIM11_Init 2 */
 
 }
 
@@ -972,9 +959,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Rot_CLK_Pin Rot_SW_Pin */
-  GPIO_InitStruct.Pin = Rot_CLK_Pin|Rot_SW_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  /*Configure GPIO pins : Rot_CLK_Pin Rot_SW_Pin Row_1_Pin Row_2_Pin
+                           Row_3_Pin Row_4_Pin Row_5_Pin */
+  GPIO_InitStruct.Pin = Rot_CLK_Pin|Rot_SW_Pin|Row_1_Pin|Row_2_Pin
+                          |Row_3_Pin|Row_4_Pin|Row_5_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
@@ -983,14 +972,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(Rot_DT_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : Row_1_Pin Row_2_Pin Row_3_Pin Row_4_Pin
-                           Row_5_Pin */
-  GPIO_InitStruct.Pin = Row_1_Pin|Row_2_Pin|Row_3_Pin|Row_4_Pin
-                          |Row_5_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
@@ -1033,7 +1014,7 @@ void ourInit(void){
 	//Start display timer
 	HAL_TIM_Base_Start_IT(&htim3);
 	//Start LED timer
-	HAL_TIM_Base_Start_IT(&htim10);
+	//HAL_TIM_Base_Start_IT(&htim11);
 
 	memset (usbbuffer, '\0', 128);  // clear the buffer
 	memset (txbuffer, '\0', 64);  // clear the buffer
@@ -1955,18 +1936,19 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		}
 	}
 	else if (GPIO_Pin == Rot_CLK_Pin) {
-		if ((kpenum != WAIT) && (Rot_State != NOTURN)) {
+		if (Rot_State == NOTURN) {
 			HAL_NVIC_DisableIRQ(Rot_CLK_EXTI_IRQn);
-			Rot_State = (HAL_GPIO_ReadPin(Rot_CLK_GPIO_Port, Rot_CLK_Pin) == HAL_GPIO_ReadPin(Rot_DT_GPIO_Port, Rot_DT_Pin)) ? CWTURN : CCWTURN;
-			HAL_TIM_Base_Start_IT(&htim4);
+			//Rot_State = (HAL_GPIO_ReadPin(Rot_CLK_GPIO_Port, Rot_CLK_Pin) == HAL_GPIO_ReadPin(Rot_DT_GPIO_Port, Rot_DT_Pin)) ? CWTURN : CCWTURN;
+			Rot_State = (HAL_GPIO_ReadPin(Rot_DT_GPIO_Port, Rot_DT_Pin)) ? CWTURN : CCWTURN;
+			HAL_TIM_Base_Start_IT(&htim9);
 		}
 	}
 	else if (GPIO_Pin == Rot_SW_Pin) {
-		if (kpenum != WAIT) {
-			HAL_NVIC_DisableIRQ(Rot_SW_EXTI_IRQn);
-			Rot_SW_State = HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin);
-			HAL_TIM_Base_Start_IT(&htim9);
-		}
+		//HAL_NVIC_DisableIRQ(Rot_SW_EXTI_IRQn);
+		//Rot_SW_State = HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin);
+		//HAL_TIM_Base_Start_IT(&htim10);
+		HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
+		HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
 	}
 }
 
@@ -2001,7 +1983,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		//Start timer again
 		HAL_TIM_Base_Start_IT(&htim3);
 	}
-	else if(htim == &htim4) {
+	else if(htim == &htim9) {
+		//Disable timer now that we're in its interrupt
+		HAL_TIM_Base_Stop_IT(&htim9);
 		if (Rot_State != NOTURN) {
 			switch (Rot_State) {
 			case NOTURN:
@@ -2009,24 +1993,29 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				break;
 			case CWTURN:
 				// This is where to put code to execute on a CW turn
+				HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
 				break;
 			case CCWTURN:
 				// This is where to put code to execute on a CCW turn
+				HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
 				break;
 			default:
 				// Error
 				break;
 			}
-			Rot_State = NOTURN;
-			HAL_NVIC_EnableIRQ(Rot_CLK_EXTI_IRQn);
 		}
-
-	} else if (htim == &htim9) {
-		//HAL_TIM_Base_Stop_IT(&htim9);
+		HAL_NVIC_EnableIRQ(Rot_CLK_EXTI_IRQn);
+		Rot_State = NOTURN;
+	}
+	else if(htim == &htim10) {
+		//Disable timer now that we're in its interrupt
+		HAL_TIM_Base_Stop_IT(&htim10);
 		if (HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin) == Rot_SW_State) {
 			switch (Rot_SW_State) {
 			case GPIO_PIN_RESET:
 				// This is where to put code to execute on a button press
+				HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
+				HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
 				break;
 			case GPIO_PIN_SET:
 				// This is where to put code to execute on a button release
@@ -2040,9 +2029,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		}
 		HAL_NVIC_EnableIRQ(Rot_SW_EXTI_IRQn);
 	}
-	else if(htim == &htim10){
+	else if(htim == &htim11){
 		//Disable timer now that we're in its interrupt
-		HAL_TIM_Base_Stop_IT(&htim10);
+		HAL_TIM_Base_Stop_IT(&htim11);
 		if(chstat_main == 0){
 			//Since we have a delay in updating the LED for channel 1 from UART, lets introduce a dumb fake delay on channel 2
 			if(!timercounter){
@@ -2052,6 +2041,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			if(timercounter >= 7){
 				timercounter = 0;
 			}
+			blink = 1;
 		}
 		else if(chstat_main == 1){
 			if(!timercounter){
@@ -2061,9 +2051,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			if(timercounter >= 7){
 				timercounter = 0;
 			}
+			blink = 1;
 		}
 		else if(chstat_main == 2){
-			HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
+			if(!timercounter){
+				HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
+			}
+			if(blink){
+				timercounter++;
+			}
+			if(timercounter >= 7){
+				timercounter = 0;
+				blink = 0;
+			}
 		}
 
 		if(chstat_aux_rx == 0){
@@ -2075,7 +2075,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		else if(chstat_aux_rx == 2){
 			HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
 		}
-		HAL_TIM_Base_Start_IT(&htim10);
+		HAL_TIM_Base_Start_IT(&htim11);
 	}
 }
 
@@ -2095,6 +2095,7 @@ void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc)
 {
 	if(chstat_main == 1){
 		chstat_main = 2;
+		HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
 	}
 }
 
