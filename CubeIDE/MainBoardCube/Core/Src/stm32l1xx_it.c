@@ -60,6 +60,8 @@ extern DMA_HandleTypeDef hdma_adc;
 extern ADC_HandleTypeDef hadc;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
+extern TIM_HandleTypeDef htim9;
 extern TIM_HandleTypeDef htim10;
 extern DMA_HandleTypeDef hdma_usart1_rx;
 extern DMA_HandleTypeDef hdma_usart1_tx;
@@ -207,6 +209,34 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles EXTI line0 interrupt.
+  */
+void EXTI0_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI0_IRQn 0 */
+
+  /* USER CODE END EXTI0_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(Rot_CLK_Pin);
+  /* USER CODE BEGIN EXTI0_IRQn 1 */
+
+  /* USER CODE END EXTI0_IRQn 1 */
+}
+
+/**
+  * @brief This function handles EXTI line2 interrupt.
+  */
+void EXTI2_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI2_IRQn 0 */
+
+  /* USER CODE END EXTI2_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(Rot_SW_Pin);
+  /* USER CODE BEGIN EXTI2_IRQn 1 */
+
+  /* USER CODE END EXTI2_IRQn 1 */
+}
+
+/**
   * @brief This function handles DMA1 channel1 global interrupt.
   */
 void DMA1_Channel1_IRQHandler(void)
@@ -277,6 +307,20 @@ void USB_LP_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles TIM9 global interrupt.
+  */
+void TIM9_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM9_IRQn 0 */
+
+  /* USER CODE END TIM9_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim9);
+  /* USER CODE BEGIN TIM9_IRQn 1 */
+
+  /* USER CODE END TIM9_IRQn 1 */
+}
+
+/**
   * @brief This function handles TIM10 global interrupt.
   */
 void TIM10_IRQHandler(void)
@@ -316,6 +360,20 @@ void TIM3_IRQHandler(void)
   /* USER CODE BEGIN TIM3_IRQn 1 */
 
   /* USER CODE END TIM3_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM4 global interrupt.
+  */
+void TIM4_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM4_IRQn 0 */
+
+  /* USER CODE END TIM4_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim4);
+  /* USER CODE BEGIN TIM4_IRQn 1 */
+
+  /* USER CODE END TIM4_IRQn 1 */
 }
 
 /**

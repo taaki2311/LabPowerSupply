@@ -29,7 +29,8 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+typedef enum {WAIT, V1, A1, V2, A2} KEYPAD_ENUM;
+typedef enum { NOTURN, CWTURN, CCWTURN } ROTARY_STATE;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -83,6 +84,8 @@ I2C_HandleTypeDef hi2c1;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim9;
 TIM_HandleTypeDef htim10;
 
 UART_HandleTypeDef huart1;
@@ -110,14 +113,13 @@ const uint8_t keypadlength = 5;
 volatile char keypadarr[5] = {'z','z','z','z','z'};//z is null
 volatile int8_t keypaditerator = 4;
 volatile uint8_t keypaddecimal = 0;
-enum KEYPAD_ENUM {WAIT, V1, A1, V2, A2};
-enum KEYPAD_ENUM kpenum = WAIT;
+KEYPAD_ENUM kpenum = WAIT;
 
 //static GPIO_TypeDef* row_ports[5] = { Row_1_GPIO_Port, Row_2_GPIO_Port, Row_3_GPIO_Port, Row_4_GPIO_Port, Row_5_GPIO_Port };
-static uint16_t row_pins[5] = {Row_1_Pin, Row_2_Pin, Row_3_Pin, Row_4_Pin, Row_5_Pin};
-static GPIO_TypeDef *col_ports[4] = { Col_1_GPIO_Port, Col_2_GPIO_Port, Col_3_GPIO_Port, Col_4_GPIO_Port };
-static uint16_t col_pins[4] = { Col_1_Pin, Col_2_Pin, Col_3_Pin, Col_4_Pin };
-static const char keypad_labels[5][4] = {
+const uint16_t row_pins[5] = {Row_1_Pin, Row_2_Pin, Row_3_Pin, Row_4_Pin, Row_5_Pin};
+GPIO_TypeDef* col_ports[4] = { Col_1_GPIO_Port, Col_2_GPIO_Port, Col_3_GPIO_Port, Col_4_GPIO_Port };
+const uint16_t col_pins[4] = { Col_1_Pin, Col_2_Pin, Col_3_Pin, Col_4_Pin };
+const char keypad_labels[5][4] = {
 	{ '*', '+', '-', '/' },
 	{ '1', '4', '7', '.' },
 	{ '2', '5', '8', '0' },
@@ -125,6 +127,11 @@ static const char keypad_labels[5][4] = {
 	{ 'A', 'B', 'C', 'D' }
 };
 /* Keypad Section End --------------------------------------------------------*/
+
+/* Rotary Encoder Section Begin ----------------------------------------------*/
+ROTARY_STATE Rot_State = NOTURN;
+GPIO_PinState Rot_SW_State;
+/* Rotary Encoder Section End ------------------------------------------------*/
 
 //Channel numbers
 volatile float volt_set_main = 0.0;
@@ -173,6 +180,8 @@ static void MX_USART1_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM10_Init(void);
+static void MX_TIM4_Init(void);
+static void MX_TIM9_Init(void);
 /* USER CODE BEGIN PFP */
 
 void ourInit(void);//Runs several Inits
@@ -256,14 +265,18 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_TIM10_Init();
+  MX_TIM4_Init();
+  MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
   ourInit();
+  /*
   volatile float error = 0;
   volatile float derivative = 0;
   volatile float integral = 0;
   volatile float error_previous = 0;
   volatile float correction = 0;
   volatile float corrected_volt_set_main;
+  */
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -731,6 +744,104 @@ static void MX_TIM3_Init(void)
 }
 
 /**
+  * @brief TIM4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM4_Init(void)
+{
+
+  /* USER CODE BEGIN TIM4_Init 0 */
+
+  /* USER CODE END TIM4_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM4_Init 1 */
+
+  /* USER CODE END TIM4_Init 1 */
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 32000-1;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 10;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OnePulse_Init(&htim4, TIM_OPMODE_SINGLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM4_Init 2 */
+
+  /* USER CODE END TIM4_Init 2 */
+
+}
+
+/**
+  * @brief TIM9 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM9_Init(void)
+{
+
+  /* USER CODE BEGIN TIM9_Init 0 */
+
+  /* USER CODE END TIM9_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM9_Init 1 */
+
+  /* USER CODE END TIM9_Init 1 */
+  htim9.Instance = TIM9;
+  htim9.Init.Prescaler = 32000-1;
+  htim9.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim9.Init.Period = 10;
+  htim9.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim9.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim9) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim9, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OnePulse_Init(&htim9, TIM_OPMODE_SINGLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim9, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM9_Init 2 */
+
+  /* USER CODE END TIM9_Init 2 */
+
+}
+
+/**
   * @brief TIM10 Initialization Function
   * @param None
   * @retval None
@@ -882,6 +993,12 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
@@ -1019,8 +1136,8 @@ void LCD_CursorBlinkOnOff( uint8_t cursor_status, uint8_t blink_status){
 	}
 }
 
-void LCD_BlinkOnOff( uint8_t status ){
-
+void LCD_BlinkOnOff( uint8_t status )
+{
 	if( status == 1 ){
 		lcd_send_cmd(0x0D);
 	}
@@ -1084,6 +1201,7 @@ void lcd_send_string (char *str)
 {
 	while (*str) lcd_send_data (*str++);
 }
+
 void lcd_createChar(void)
 {
 	//*** Load custom char into the CGROM***//////
@@ -1102,7 +1220,8 @@ void lcd_createChar(void)
 	//*** Loading custom char complete***//////
 }
 
-void lcd_psu_init(void){
+void lcd_psu_init(void)
+{
 	lcd_init();
 
 	lcd_put_cur(0, 0);
@@ -1835,6 +1954,20 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 			}
 		}
 	}
+	else if (GPIO_Pin == Rot_CLK_Pin) {
+		if ((kpenum != WAIT) && (Rot_State != NOTURN)) {
+			HAL_NVIC_DisableIRQ(Rot_CLK_EXTI_IRQn);
+			Rot_State = (HAL_GPIO_ReadPin(Rot_CLK_GPIO_Port, Rot_CLK_Pin) == HAL_GPIO_ReadPin(Rot_DT_GPIO_Port, Rot_DT_Pin)) ? CWTURN : CCWTURN;
+			HAL_TIM_Base_Start_IT(&htim4);
+		}
+	}
+	else if (GPIO_Pin == Rot_SW_Pin) {
+		if (kpenum != WAIT) {
+			HAL_NVIC_DisableIRQ(Rot_SW_EXTI_IRQn);
+			Rot_SW_State = HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin);
+			HAL_TIM_Base_Start_IT(&htim9);
+		}
+	}
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
@@ -1867,6 +2000,45 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		lcd_psu_update();
 		//Start timer again
 		HAL_TIM_Base_Start_IT(&htim3);
+	}
+	else if(htim == &htim4) {
+		if (Rot_State != NOTURN) {
+			switch (Rot_State) {
+			case NOTURN:
+				// Error
+				break;
+			case CWTURN:
+				// This is where to put code to execute on a CW turn
+				break;
+			case CCWTURN:
+				// This is where to put code to execute on a CCW turn
+				break;
+			default:
+				// Error
+				break;
+			}
+			Rot_State = NOTURN;
+			HAL_NVIC_EnableIRQ(Rot_CLK_EXTI_IRQn);
+		}
+
+	} else if (htim == &htim9) {
+		//HAL_TIM_Base_Stop_IT(&htim9);
+		if (HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin) == Rot_SW_State) {
+			switch (Rot_SW_State) {
+			case GPIO_PIN_RESET:
+				// This is where to put code to execute on a button press
+				break;
+			case GPIO_PIN_SET:
+				// This is where to put code to execute on a button release
+				break;
+			default:
+				// Error
+				break;
+			}
+		} else {
+			HAL_GPIO_EXTI_Callback(Rot_SW_Pin);
+		}
+		HAL_NVIC_EnableIRQ(Rot_SW_EXTI_IRQn);
 	}
 	else if(htim == &htim10){
 		//Disable timer now that we're in its interrupt
