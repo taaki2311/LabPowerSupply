@@ -128,6 +128,9 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
 
     __HAL_LINKDMA(hadc,DMA_Handle,hdma_adc);
 
+    /* ADC1 interrupt Init */
+    HAL_NVIC_SetPriority(ADC1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(ADC1_IRQn);
   /* USER CODE BEGIN ADC1_MspInit 1 */
 
   /* USER CODE END ADC1_MspInit 1 */
@@ -161,6 +164,9 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 
     /* ADC1 DMA DeInit */
     HAL_DMA_DeInit(hadc->DMA_Handle);
+
+    /* ADC1 interrupt DeInit */
+    HAL_NVIC_DisableIRQ(ADC1_IRQn);
   /* USER CODE BEGIN ADC1_MspDeInit 1 */
 
   /* USER CODE END ADC1_MspDeInit 1 */
@@ -334,34 +340,6 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
 
   /* USER CODE END TIM3_MspInit 1 */
   }
-  else if(htim_base->Instance==TIM4)
-  {
-  /* USER CODE BEGIN TIM4_MspInit 0 */
-
-  /* USER CODE END TIM4_MspInit 0 */
-    /* Peripheral clock enable */
-    __HAL_RCC_TIM4_CLK_ENABLE();
-    /* TIM4 interrupt Init */
-    HAL_NVIC_SetPriority(TIM4_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(TIM4_IRQn);
-  /* USER CODE BEGIN TIM4_MspInit 1 */
-
-  /* USER CODE END TIM4_MspInit 1 */
-  }
-  else if(htim_base->Instance==TIM9)
-  {
-  /* USER CODE BEGIN TIM9_MspInit 0 */
-
-  /* USER CODE END TIM9_MspInit 0 */
-    /* Peripheral clock enable */
-    __HAL_RCC_TIM9_CLK_ENABLE();
-    /* TIM9 interrupt Init */
-    HAL_NVIC_SetPriority(TIM9_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(TIM9_IRQn);
-  /* USER CODE BEGIN TIM9_MspInit 1 */
-
-  /* USER CODE END TIM9_MspInit 1 */
-  }
   else if(htim_base->Instance==TIM10)
   {
   /* USER CODE BEGIN TIM10_MspInit 0 */
@@ -375,20 +353,6 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
   /* USER CODE BEGIN TIM10_MspInit 1 */
 
   /* USER CODE END TIM10_MspInit 1 */
-  }
-  else if(htim_base->Instance==TIM11)
-  {
-  /* USER CODE BEGIN TIM11_MspInit 0 */
-
-  /* USER CODE END TIM11_MspInit 0 */
-    /* Peripheral clock enable */
-    __HAL_RCC_TIM11_CLK_ENABLE();
-    /* TIM11 interrupt Init */
-    HAL_NVIC_SetPriority(TIM11_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(TIM11_IRQn);
-  /* USER CODE BEGIN TIM11_MspInit 1 */
-
-  /* USER CODE END TIM11_MspInit 1 */
   }
 
 }
@@ -429,34 +393,6 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base)
 
   /* USER CODE END TIM3_MspDeInit 1 */
   }
-  else if(htim_base->Instance==TIM4)
-  {
-  /* USER CODE BEGIN TIM4_MspDeInit 0 */
-
-  /* USER CODE END TIM4_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_TIM4_CLK_DISABLE();
-
-    /* TIM4 interrupt DeInit */
-    HAL_NVIC_DisableIRQ(TIM4_IRQn);
-  /* USER CODE BEGIN TIM4_MspDeInit 1 */
-
-  /* USER CODE END TIM4_MspDeInit 1 */
-  }
-  else if(htim_base->Instance==TIM9)
-  {
-  /* USER CODE BEGIN TIM9_MspDeInit 0 */
-
-  /* USER CODE END TIM9_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_TIM9_CLK_DISABLE();
-
-    /* TIM9 interrupt DeInit */
-    HAL_NVIC_DisableIRQ(TIM9_IRQn);
-  /* USER CODE BEGIN TIM9_MspDeInit 1 */
-
-  /* USER CODE END TIM9_MspDeInit 1 */
-  }
   else if(htim_base->Instance==TIM10)
   {
   /* USER CODE BEGIN TIM10_MspDeInit 0 */
@@ -470,20 +406,6 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base)
   /* USER CODE BEGIN TIM10_MspDeInit 1 */
 
   /* USER CODE END TIM10_MspDeInit 1 */
-  }
-  else if(htim_base->Instance==TIM11)
-  {
-  /* USER CODE BEGIN TIM11_MspDeInit 0 */
-
-  /* USER CODE END TIM11_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_TIM11_CLK_DISABLE();
-
-    /* TIM11 interrupt DeInit */
-    HAL_NVIC_DisableIRQ(TIM11_IRQn);
-  /* USER CODE BEGIN TIM11_MspDeInit 1 */
-
-  /* USER CODE END TIM11_MspDeInit 1 */
   }
 
 }
@@ -541,7 +463,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     hdma_usart1_tx.Init.MemInc = DMA_MINC_ENABLE;
     hdma_usart1_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     hdma_usart1_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    hdma_usart1_tx.Init.Mode = DMA_NORMAL;
+    hdma_usart1_tx.Init.Mode = DMA_CIRCULAR;
     hdma_usart1_tx.Init.Priority = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(&hdma_usart1_tx) != HAL_OK)
     {

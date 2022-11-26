@@ -29,10 +29,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef enum { WAIT, V1, A1, V2, A2 } KEYPAD_ENUM;
-typedef enum { NOTURN, CWTURN, CCWTURN } ROTARY_STATE;
-typedef enum { VALUE, INDEX } ROTARY_MODE;
-typedef enum { FALLING, RISING } EDGE;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -40,36 +37,34 @@ typedef enum { FALLING, RISING } EDGE;
 
 /* LCD Section Begin ---------------------------------------------------------*/
 #define SLAVE_ADDRESS_LCD 0x4E // change this according to your setup
+
+//Char 0 = Right Arrow
+//Char 1 = Vertical Line
 const uint8_t customChar[64] = {
-	0x08,0x04,0x02,0x1F,0x02,0x04,0x08,0x00, // Right Arrow
-	0x04,0x04,0x04,0x4,0x04,0x04,0x04,0x04,  //	Vertical Line
-	0x00,0x00,0x00,0x0,0x00,0x00,0x00,0x00,  // Custom Char 2
-	0x00,0x00,0x00,0x0,0x00,0x00,0x00,0x00,  // Custom Char 3
-	0x00,0x00,0x00,0x0,0x00,0x00,0x00,0x00,  // Custom Char 4
-	0x00,0x00,0x00,0x0,0x00,0x00,0x00,0x00,  // Custom Char 5
-	0x00,0x00,0x00,0x0,0x00,0x00,0x00,0x00,  // Custom Char 6
-	0x00,0x00,0x00,0x0,0x00,0x00,0x00,0x00   // Custom Char 7
+	0x08,0x04,0x02,0x1F,0x02,0x04,0x08,0x00, //Custom Char 0
+	0x04,0x04,0x04,0x4,0x04,0x04,0x04,0x04,  //Custom Char 1
+	0x00,0x00,0x00,0x0,0x00,0x00,0x00,0x00,  //Custom Char 2
+	0x00,0x00,0x00,0x0,0x00,0x00,0x00,0x00,  //Custom Char 3
+	0x00,0x00,0x00,0x0,0x00,0x00,0x00,0x00,  //Custom Char 4
+	0x00,0x00,0x00,0x0,0x00,0x00,0x00,0x00,  //Custom Char 5
+	0x00,0x00,0x00,0x0,0x00,0x00,0x00,0x00,  //Custom Char 6
+	0x00,0x00,0x00,0x0,0x00,0x00,0x00,0x00   //Custom Char 7
 };
 /* LCD Section End -----------------------------------------------------------*/
+
+/* ADC Section Begin ---------------------------------------------------------*/
+#define ADC_OPAMP adc_values_cpy[0]
+#define ADC_LINEAR adc_values_cpy[1]
+#define ADC_CURRENT adc_values_cpy[2]
+#define ADC_SWITCHING adc_values_cpy[3]
+#define ADC_VREF adc_values_cpy[4]
+/* ADC Section End -----------------------------------------------------------*/
 
 /* PID Control for the Linear Voltage Regulator ------------------------------*/
 #define P 0.1
 #define I 0.1
 #define D 0.1
 /* PID Linear Section End ----------------------------------------------------*/
-
-/* Button States Section Begin -----------------------------------------------*/
-#define PRESSED GPIO_PIN_RESET
-#define RELEASED GPIO_PIN_SET
-/* Button States Section End -------------------------------------------------*/
-
-/* ADC Section Begin ---------------------------------------------------------*/
-#define ADC_OPAMP adc_values[0]
-#define ADC_LINEAR adc_values[1]
-#define ADC_CURRENT adc_values[2]
-#define ADC_SWITCHING adc_values[3]
-#define ADC_VREF adc_values[4]
-/* ADC Section End -----------------------------------------------------------*/
 
 /* USER CODE END PD */
 
@@ -88,10 +83,7 @@ I2C_HandleTypeDef hi2c1;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
-TIM_HandleTypeDef htim4;
-TIM_HandleTypeDef htim9;
 TIM_HandleTypeDef htim10;
-TIM_HandleTypeDef htim11;
 
 UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_rx;
@@ -101,51 +93,72 @@ DMA_HandleTypeDef hdma_usart1_tx;
 
 /* USB Section Begin ---------------------------------------------------------*/
 EXTI_HandleTypeDef hexti1;
-uint8_t usbbuffer[128]; // USB buffer
-uint8_t txbuffer[64]; // UART TX Buffer
-uint8_t rxbuffer[64]; // UART RX Buffer
+uint8_t usbbuffer[128];//Usb buffer
 /* USB Section End -----------------------------------------------------------*/
 
+/* UART Section Begin --------------------------------------------------------*/
+uint8_t txbuffer[64];//Uart TX Buffer
+uint8_t txbuffer_cpy[64];//Uart TX Buffer copy because transfer is circular
+uint8_t rxbuffer[64];//Uart RX Buffer
+/* UART Section End ----------------------------------------------------------*/
+
 /* Keypad Section Begin ------------------------------------------------------*/
-volatile int8_t rowpin = -1;
-volatile EDGE kpedge = RISING; // 0 = falling edge, 1 = rising edge
+volatile int rowpin = -1;
+volatile uint8_t kpedge = 1; //0== falling edge 1== rising edge
 
 const uint8_t keypadlength = 5;
-volatile char keypadarr[5] = {'z','z','z','z','z'}; // 'z' is null
-volatile uint8_t keypaditerator = keypadlength - 1;
+volatile char keypadarr[5] = {'z','z','z','z','z'};//z is null
+volatile int8_t keypaditerator = 4;
 volatile uint8_t keypaddecimal = 0;
-volatile KEYPAD_ENUM kpenum = WAIT;
+enum KEYPAD_ENUM {WAIT, V1, A1, V2, A2};
+enum KEYPAD_ENUM kpenum = WAIT;
+
+//static GPIO_TypeDef* row_ports[5] = { Row_1_GPIO_Port, Row_2_GPIO_Port, Row_3_GPIO_Port, Row_4_GPIO_Port, Row_5_GPIO_Port };
+static uint16_t row_pins[5] = {Row_1_Pin, Row_2_Pin, Row_3_Pin, Row_4_Pin, Row_5_Pin};
+static GPIO_TypeDef *col_ports[4] = { Col_1_GPIO_Port, Col_2_GPIO_Port, Col_3_GPIO_Port, Col_4_GPIO_Port };
+static uint16_t col_pins[4] = { Col_1_Pin, Col_2_Pin, Col_3_Pin, Col_4_Pin };
+static const char keypad_labels[5][4] = {
+	{ '*', '+', '-', '/' },
+	{ '1', '4', '7', '.' },
+	{ '2', '5', '8', '0' },
+	{ '3', '6', '9', '#' },
+	{ 'A', 'B', 'C', 'D' }
+};
 /* Keypad Section End --------------------------------------------------------*/
 
-/* Rotary Encoder Section Begin ----------------------------------------------*/
-volatile ROTARY_STATE Rot_State = NOTURN;
-volatile GPIO_PinState Rot_SW_State = RELEASED;
-volatile ROTARY_MODE Rot_Mode = VALUE;
-/* Rotary Encoder End --------------------------------------------------------*/
-
 //Channel numbers
-volatile float voltnum1 = 0.0;
-volatile float ampnum1 = 0.0;
-volatile float voltnum2 = 0.0;
-volatile float ampnum2 = 0.0;
+volatile float volt_set_main = 0.0;
+volatile float amp_set_main = 0.0;
+volatile float volt_set_aux = 0.0;
+volatile float amp_set_aux = 0.0;
 
-// Additional Control Variables
-volatile uint8_t first_shot = 0;
-volatile uint8_t chstat2 = 0;
+volatile float volt_set_main_old = 0.0;
+volatile float amp_set_main_old = 0.0;
+//volatile float volt_set_aux_old = 0.0;
+//volatile float amp_set_aux_old = 0.0;
 
-//Array for the ADC values and the variables to hold them
-uint16_t adc_values[5];
-uint16_t* vrefptr = (uint16_t*)VREFINT_CAL_ADDR_CMSIS;
+//Array for the adc values and vars to hold them
+volatile uint16_t adc_values[6];
+volatile uint16_t adc_values_cpy[6];
+uint16_t* vrefptr = ((uint16_t*)VREFINT_CAL_ADDR_CMSIS);
+volatile int8_t chstat_main = 0;
+volatile int8_t chstat_aux_tx = 0;
+volatile int8_t chstat_aux_rx = 0;
 
-//Globals for ADC values
-uint16_t v1;
-float lin_num = 0;
-float cur_num = 0;
-float op_num = 0;
-float swi_num = 0;
+//Globals for adc values
+volatile float lin_num = 0;
+volatile float cur_num = 0;
+volatile float op_num = 0;
+volatile float swi_num = 0;
 
-float slin_num = 0;
-float scur_num = 0;
+volatile float lin_num_aux = 0;
+volatile float cur_num_aux = 0;
+
+//Global for dac value
+volatile uint16_t v1;//dac channel 1 is linear
+volatile uint16_t v2;//dac channel 2 is switching
+
+volatile uint8_t timercounter = 0;
 
 /* USER CODE END PV */
 
@@ -159,13 +172,10 @@ static void MX_I2C1_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
-static void MX_TIM4_Init(void);
-static void MX_TIM9_Init(void);
 static void MX_TIM10_Init(void);
-static void MX_TIM11_Init(void);
 /* USER CODE BEGIN PFP */
 
-void our_init(void); //Runs several Inits
+void ourInit(void);//Runs several Inits
 
 /* USB Section Begin ---------------------------------------------------------*/
 void USB_EXTIinit(void);
@@ -173,16 +183,18 @@ void USB_Interrupt_Callback(void);
 void EXTI1_IRQHandler(void);
 /* USB Section End -----------------------------------------------------------*/
 
+/* ADC Section Begin ---------------------------------------------------------*/
+void update_ADC_watchdog(float val);
+/* ADC Section End -----------------------------------------------------------*/
+
 /* LCD Section Begin ---------------------------------------------------------*/
-void lcd_init (void);   // initialize LCD
-void lcd_send_cmd (char cmd);  // send command to the LCD
-void lcd_send_data (char data);  // send data to the LCD
-void lcd_send_string (char* str);  // send string to the LCD
+void lcd_init (void);   // initialize lcd
+void lcd_send_cmd (char cmd);  // send command to the lcd
+void lcd_send_data (char data);  // send data to the lcd
+void lcd_send_string (char *str);  // send string to the lcd
 void lcd_put_cur(int row, int col);  // put cursor at the entered position row (0 or 1), col (0-15);
 void lcd_clear (void);
-void lcd_cursor_onoff(uint8_t status);
-void lcd_blink_onoff(uint8_t status);
-void lcd_cursorblink_onoff(uint8_t curaor_status, uint8_t blink_status);
+void LCD_CursorBlinkOnOff( uint8_t cursor_status, uint8_t blink_status );
 void lcd_createChar(void);
 void lcd_psu_init(void);
 void lcd_update_voltage(uint8_t channel, float num);
@@ -192,14 +204,12 @@ void lcd_psu_update(void);
 
 /* Keypad Section Begin ------------------------------------------------------*/
 void update_keypad(char num);
-void clear_keypad(void);
+void clearkeypad(void);
 float translate_keypad(void);
 uint8_t check_keypad(uint8_t which);
 void keypad_sm(char num);
 void row_input(void);
 void column_input(void);
-void keypad_decode(uint8_t row_pin);
-void set_rowpin(uint8_t row_num);
 /* Keypad Section End --------------------------------------------------------*/
 
 /* USER CODE END PFP */
@@ -245,28 +255,15 @@ int main(void)
   MX_USB_DEVICE_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
-  MX_TIM4_Init();
-  MX_TIM9_Init();
   MX_TIM10_Init();
-  MX_TIM11_Init();
   /* USER CODE BEGIN 2 */
-  our_init();
-  //HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_RESET);
-  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, 4095);
-
-  float error = 0;
-  float derivative = 0;
-  float integral = 0;
-  float error_previous = 0;
-  float correction = 0;
-  float correctedvoltnum1;
- /*
-  adc_current = &adcvalues[2];
-  adc_linear = &adcvalues[1];
-  adc_opamp = &adcvalues[0];
-  adc_switching = &adcvalues[3];
-  adc_vref = &adcvalues[4];
-*/
+  ourInit();
+  volatile float error = 0;
+  volatile float derivative = 0;
+  volatile float integral = 0;
+  volatile float error_previous = 0;
+  volatile float correction = 0;
+  volatile float corrected_volt_set_main;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -277,19 +274,16 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  if(voltnum1 <= 0.00){
-		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_RESET);
-	  }
+	  //Control channel here
 
 	  uint16_t vrefvalue = (uint16_t) *vrefptr;
 	  float vddcalc = (float)3.0 * ((float)vrefvalue / (float)ADC_VREF);
 
 	  float cur_num_temp = ((((float)3.0 * (float)ADC_CURRENT * (float)vrefvalue)/((float)ADC_VREF * (float)4095) / (float)20) / (float)0.15);
-	  cut_num  = (cur_num_temp >= 0.0000) ? cur_num_temp : 0.0000;
+	  cur_num  = (cur_num_temp >= 0.0000) ? cur_num_temp : 0.0000;
 
 
-	  //float cur_num = (((float)vddcalc * (float)*adc_current * (float)4095) / (float)20) / (float)0.3;
+	  //float cur_num = (((float)vddcalc * (float)*ADC_CURRENT * (float)4095) / (float)20) / (float)0.3;
 	  float op_num_temp = ((float)3.0 * ((float)ADC_OPAMP * (float)4.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095) - ((float)cur_num * (float)0.35);
 	  op_num  = (op_num_temp >= 0.0000) ? op_num_temp : 0.0000;
 
@@ -297,62 +291,113 @@ int main(void)
 	  float lin_num_temp = ((float)3.0 * ((float)ADC_LINEAR * (float)4.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095) - ((float)cur_num * (float)0.35);
 	  lin_num  = (lin_num_temp >= 0.0000) ? lin_num_temp : 0.0000;
 
-	  //float lin_num = ((float)vddcalc * (float)*adc_linear * (float)4095) * (float)4;
+	  //float lin_num = ((float)vddcalc * (float)*ADC_LINEAR * (float)4095) * (float)4;
 	  float swi_num_temp = ((float)3.0 * ((float)ADC_SWITCHING * (float)5.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095);
 	  swi_num  = (swi_num_temp >= 0.0000) ? swi_num_temp : 0.0000;
 
-	  if (first_shot) {
-		  v1 = (uint16_t)((( (((float)voltnum1) / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  correctedvoltnum1 = voltnum1;
-		  integral = 0;
-		  error = 0;
-		  derivative = 0;
-		  first_shot = 0;
+
+	  // Bang-Bang Controller
+	  //Try really hard to get the voltage right
+	  const float margin = 0.002;
+	  //If we are active watch the output adc
+	  if(chstat_main == 1){
+		  if(lin_num > volt_set_main + margin){
+			  if(v1 >= 1){
+				  v1--;
+			  }
+			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+		  }
+		  else if(lin_num < volt_set_main - margin){
+			  if(v1 <= 4094){
+				  v1++;
+			  }
+			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+		  }
 	  }
+	  //if we are inactive watch the opamp output
+	  else{
+		  if(op_num > volt_set_main + margin){
+			  if(v1 >= 1){
+				  v1--;
+			  }
+			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+		  }
+		  else if(op_num < volt_set_main - margin){
+			  if(v1 <= 4094){
+				  v1++;
+			  }
+			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+		  }
+	  }
+
 
 /*
-	  else { // Bang-Bang Controller
-		  //Try really hard to get the voltage right
-		  const float margin = 0.05;
-		  if (lin_num > (voltnum1 + margin)) {
-			  v1--;
-			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  } else if (lin_num < (voltnum1 - margin)) {
-			  v1++;
-			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  }
+	  //PID
+	  error = lin_num - volt_set_main;
+	  integral += error;
+	  if (integral > (float)4095.0) {
+		  integral = (float)4095;
+	  } else if (integral < (float)-4095.0) {
+		  integral = (float)-4095.0;
 	  }
+	  derivative = error - error_previous;
+	  error_previous = error;
+	  correction = P * error + I * integral + D * derivative;
+	  corrected_volt_set_main = volt_set_main - correction;
+	  if (corrected_volt_set_main > 12.0) {
+		  corrected_volt_set_main = 12.0;
+	  }
+	  else if(corrected_volt_set_main < 0.0) {
+		  corrected_volt_set_main = 0.0;
+	  }
+	  v1 = (uint16_t)(((((float)corrected_volt_set_main / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
 */
 
-	  else {
-		  error = lin_num - voltnum1;
-		  integral += error;
-		  if (integral > (float)4095.0) {
-			  integral = (float)4095;
-		  } else if (integral < (float)-4095.0) {
-			  integral = (float)-4095.0;
-		  }
-		  derivative = error - error_previous;
-		  error_previous = error;
-		  correction = P * error + I * integral + D * derivative;
-		  correctedvoltnum1 = voltnum1 - correction;
-		  if (correctedvoltnum1 > 12.0) {
-			  correctedvoltnum1 = 12.0;
-		  } else if(correctedvoltnum1 < 0.0) {
-			  correctedvoltnum1 = 0.0;
-		  }
-		  v1 = (uint16_t)((((correctedvoltnum1 / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+	  /*
+	   * The calculation we do to determine what we need to set the dac for the switching regulator to is determined by the following formula
+	   * 1.235 = (R3*R2*Vout + R1*R2Vdac) / (R3*R2 + R1*R3 + R1*R2) where R1 = 10k, R2 = 1.2k, R3 = 2.4K
+	   * This equation would be a little cumbersome to calculate every time we loop so I have simplified it on paper to the following formula
+	   * Vdac = 4.001400 - 0.240000*Vout
+	   */
+
+	  volatile float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.5))) * (float)4095 / (float)vddcalc);
+	  if(temp <= 0){
+		  v2 = 0;
+	  }
+	  else if(temp >= 4095){
+		  v2 = 4095;
+	  }
+	  else{
+		  v2 = (uint16_t)temp;
 	  }
 
-	  if(voltnum1 > 0.00){
+	  if(volt_set_main > volt_set_main_old){
+		  //If the new voltage is greater than the old voltage set we need to increase the switching regulators voltage first
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+	  }
+	  else if(volt_set_main < volt_set_main_old){
+		  //If the new voltage is lower than the old voltage set we need to decrease the switching regulators voltage last
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
+	  }
+	  else{
+		  //We shouldn't have to do anything in the case that the old voltage is equal to the new voltage but we can allow PID to keep going
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
+	  }
+
+	  if(chstat_main == 1 && ADC_OPAMP >= 5){
 		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_SET);
 	  }
-	  if(chstat2 == 1){
-		  HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_SET);
+	  else{
+		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
 	  }
+
+	  //Keep the watchdog threshold up to date with changes to vdd
+	  update_ADC_watchdog(amp_set_main);
+
+	  HAL_Delay(1);
   }
   /* USER CODE END 3 */
 }
@@ -413,6 +458,7 @@ static void MX_ADC_Init(void)
 
   /* USER CODE END ADC_Init 0 */
 
+  ADC_AnalogWDGConfTypeDef AnalogWDGConfig = {0};
   ADC_ChannelConfTypeDef sConfig = {0};
 
   /* USER CODE BEGIN ADC_Init 1 */
@@ -431,12 +477,24 @@ static void MX_ADC_Init(void)
   hadc.Init.LowPowerAutoPowerOff = ADC_AUTOPOWEROFF_DISABLE;
   hadc.Init.ChannelsBank = ADC_CHANNELS_BANK_A;
   hadc.Init.ContinuousConvMode = ENABLE;
-  hadc.Init.NbrOfConversion = 5;
+  hadc.Init.NbrOfConversion = 6;
   hadc.Init.DiscontinuousConvMode = DISABLE;
   hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc.Init.DMAContinuousRequests = ENABLE;
   if (HAL_ADC_Init(&hadc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure the analog watchdog
+  */
+  AnalogWDGConfig.WatchdogMode = ADC_ANALOGWATCHDOG_SINGLE_REG;
+  AnalogWDGConfig.Channel = ADC_CHANNEL_2;
+  AnalogWDGConfig.ITMode = ENABLE;
+  AnalogWDGConfig.HighThreshold = 0;
+  AnalogWDGConfig.LowThreshold = 0;
+  if (HAL_ADC_AnalogWDGConfig(&hadc, &AnalogWDGConfig) != HAL_OK)
   {
     Error_Handler();
   }
@@ -482,6 +540,15 @@ static void MX_ADC_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_VREFINT;
   sConfig.Rank = ADC_REGULAR_RANK_5;
+  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
+  sConfig.Rank = ADC_REGULAR_RANK_6;
   if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -592,7 +659,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 32000-1;
+  htim2.Init.Prescaler = 32000;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 10;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -603,10 +670,6 @@ static void MX_TIM2_Init(void)
   }
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
   if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_OnePulse_Init(&htim2, TIM_OPMODE_SINGLE) != HAL_OK)
   {
     Error_Handler();
   }
@@ -641,7 +704,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 32000-1;
+  htim3.Init.Prescaler = 32000;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 500;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -668,104 +731,6 @@ static void MX_TIM3_Init(void)
 }
 
 /**
-  * @brief TIM4 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM4_Init(void)
-{
-
-  /* USER CODE BEGIN TIM4_Init 0 */
-
-  /* USER CODE END TIM4_Init 0 */
-
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-
-  /* USER CODE BEGIN TIM4_Init 1 */
-
-  /* USER CODE END TIM4_Init 1 */
-  htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 32000-1;
-  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 10;
-  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_OnePulse_Init(&htim4, TIM_OPMODE_SINGLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM4_Init 2 */
-
-  /* USER CODE END TIM4_Init 2 */
-
-}
-
-/**
-  * @brief TIM9 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM9_Init(void)
-{
-
-  /* USER CODE BEGIN TIM9_Init 0 */
-
-  /* USER CODE END TIM9_Init 0 */
-
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-
-  /* USER CODE BEGIN TIM9_Init 1 */
-
-  /* USER CODE END TIM9_Init 1 */
-  htim9.Instance = TIM9;
-  htim9.Init.Prescaler = 32000-1;
-  htim9.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim9.Init.Period = 20;
-  htim9.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim9.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim9) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim9, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_OnePulse_Init(&htim9, TIM_OPMODE_SINGLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim9, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM9_Init 2 */
-
-  /* USER CODE END TIM9_Init 2 */
-
-}
-
-/**
   * @brief TIM10 Initialization Function
   * @param None
   * @retval None
@@ -785,7 +750,7 @@ static void MX_TIM10_Init(void)
   htim10.Instance = TIM10;
   htim10.Init.Prescaler = 32000-1;
   htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim10.Init.Period = 500;
+  htim10.Init.Period = 100;
   htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
@@ -800,44 +765,6 @@ static void MX_TIM10_Init(void)
   /* USER CODE BEGIN TIM10_Init 2 */
 
   /* USER CODE END TIM10_Init 2 */
-
-}
-
-/**
-  * @brief TIM11 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM11_Init(void)
-{
-
-  /* USER CODE BEGIN TIM11_Init 0 */
-
-  /* USER CODE END TIM11_Init 0 */
-
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-
-  /* USER CODE BEGIN TIM11_Init 1 */
-
-  /* USER CODE END TIM11_Init 1 */
-  htim11.Instance = TIM11;
-  htim11.Init.Prescaler = 32000-1;
-  htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim11.Init.Period = 500;
-  htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim11, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM11_Init 2 */
-
-  /* USER CODE END TIM11_Init 2 */
 
 }
 
@@ -857,7 +784,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 4800;
+  huart1.Init.BaudRate = 9600;
   huart1.Init.WordLength = UART_WORDLENGTH_9B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_ODD;
@@ -915,7 +842,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, Status_LED_1_Pin|Status_LED_2_Pin|Col_1_Pin|Col_2_Pin
+  HAL_GPIO_WritePin(GPIOC, Status_LED_2_Pin|Status_LED_1_Pin|Col_1_Pin|Col_2_Pin
                           |Col_3_Pin|Col_4_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : Channel_Shutdown_Pin */
@@ -925,36 +852,36 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(Channel_Shutdown_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Status_LED_1_Pin Status_LED_2_Pin Col_1_Pin Col_2_Pin
+  /*Configure GPIO pins : Status_LED_2_Pin Status_LED_1_Pin Col_1_Pin Col_2_Pin
                            Col_3_Pin Col_4_Pin */
-  GPIO_InitStruct.Pin = Status_LED_1_Pin|Status_LED_2_Pin|Col_1_Pin|Col_2_Pin
+  GPIO_InitStruct.Pin = Status_LED_2_Pin|Status_LED_1_Pin|Col_1_Pin|Col_2_Pin
                           |Col_3_Pin|Col_4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Rot_CLK_Pin Rot_SW_Pin Row_1_Pin Row_2_Pin
-                           Row_3_Pin Row_4_Pin Row_5_Pin */
-  GPIO_InitStruct.Pin = Rot_CLK_Pin|Rot_SW_Pin|Row_1_Pin|Row_2_Pin
-                          |Row_3_Pin|Row_4_Pin|Row_5_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  /*Configure GPIO pins : Rot_CLK_Pin Rot_SW_Pin */
+  GPIO_InitStruct.Pin = Rot_CLK_Pin|Rot_SW_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : Rot_DT_Pin */
   GPIO_InitStruct.Pin = Rot_DT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(Rot_DT_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : Row_1_Pin Row_2_Pin Row_3_Pin Row_4_Pin
+                           Row_5_Pin */
+  GPIO_InitStruct.Pin = Row_1_Pin|Row_2_Pin|Row_3_Pin|Row_4_Pin
+                          |Row_5_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
-
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
@@ -962,8 +889,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void our_init(void)
-{
+void ourInit(void){
 	HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);	//Ensure shutdown is enabled
 	/*
 	 * The HAL library is dumb and tries to init the adc before the DMA which does not work
@@ -976,7 +902,7 @@ void our_init(void)
 	MX_ADC_Init();
 
 	//Actually our init now
-	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&adc_values, 5);// start the adc in dma mode
+	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&adc_values, 6);// start the adc in dma mode
 	HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
 	HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
 	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0);
@@ -989,14 +915,17 @@ void our_init(void)
 	lcd_psu_init();
 	//Start display timer
 	HAL_TIM_Base_Start_IT(&htim3);
+	//Start LED timer
+	HAL_TIM_Base_Start_IT(&htim10);
 
 	memset (usbbuffer, '\0', 128);  // clear the buffer
 	memset (txbuffer, '\0', 64);  // clear the buffer
+	memset (txbuffer_cpy, '\0', 64);  // clear the buffer
 	memset (rxbuffer, '\0', 64);  // clear the buffer
 
 	HAL_UART_Receive_DMA (&huart1, rxbuffer, 64);  // Receive 64 Bytes of data
 
-	snprintf((char*)txbuffer, 32, "*STRT,%05.2f,%5.3f,%d,FNSH!", voltnum2, ampnum2, chstat2);
+	snprintf((char*)txbuffer, 32, "*STRT,%05.2f,%5.3f,%d,FNSH!", volt_set_aux, amp_set_aux, chstat_aux_tx);
 	HAL_UART_Transmit_DMA(&huart1, txbuffer, 64);
 }
 
@@ -1024,6 +953,23 @@ void EXTI1_IRQHandler(void)
 }
 /* USB Section End -----------------------------------------------------------*/
 
+/* ADC Section Begin ---------------------------------------------------------*/
+void update_ADC_watchdog(float val){
+	//Don't want to stop the dma/adc and deinit/reinit it to change the watchdog, plus we need to calculate vdd to get a good value
+
+	uint16_t vrefvalue = (uint16_t) *vrefptr;
+	float vddcalc = (float)3.0 * ((float)vrefvalue / (float)ADC_VREF);
+	volatile uint16_t amp = (uint16_t)( ((float)val * (float)0.15 * (float)20.0) * (float)4095 / (float)vddcalc);
+
+	if(amp >= 4095){
+		ADC1->HTR = 4095;
+	}
+	else{
+		ADC1->HTR = amp;
+	}
+}
+/* ADC Section End -----------------------------------------------------------*/
+
 /* LCD Section Begin ---------------------------------------------------------*/
 /*
  * The code for every function here except for lcd_createChar was taken from
@@ -1041,7 +987,7 @@ void lcd_send_cmd (char cmd)
 	data_t[1] = data_u|0x08;  //en=0, rs=0
 	data_t[2] = data_l|0x0C;  //en=1, rs=0
 	data_t[3] = data_l|0x08;  //en=0, rs=0
-	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD,(uint8_t*) data_t, 4, 100);
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD,(uint8_t *) data_t, 4, 100);
 }
 
 void lcd_send_data (char data)
@@ -1054,59 +1000,62 @@ void lcd_send_data (char data)
 	data_t[1] = data_u|0x09;  //en=0, rs=0
 	data_t[2] = data_l|0x0D;  //en=1, rs=0
 	data_t[3] = data_l|0x09;  //en=0, rs=0
-	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD,(uint8_t*) data_t, 4, 100);
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD,(uint8_t *) data_t, 4, 100);
 }
 
-void lcd_cursor_onoff(uint8_t status)
-{
-	(status) ? lcd_send_cmd(0x0E) : lcd_send_cmd(0x0C);
-}
+void LCD_CursorBlinkOnOff( uint8_t cursor_status, uint8_t blink_status){
 
-void lcd_blink_onoff(uint8_t status)
-{
-	(status) ? lcd_send_cmd(0x0D) : lcd_send_cmd(0x0C);
-}
-
-void lcd_cursorblink_onoff(uint8_t cursor_status, uint8_t blink_status)
-{
-	if ((cursor_status == 0) && (blink_status == 0)) {
-		lcd_send_cmd(0x0C);
-	} else if ((cursor_status == 0) && (blink_status == 1)) {
-		lcd_send_cmd(0x0D);
-	} else if ((cursor_status == 1) && (blink_status == 0)) {
-		lcd_send_cmd(0x0E);
-	} else if ((cursor_status == 1) && (blink_status == 1)) {
+	if( blink_status == 1 && cursor_status == 1){
 		lcd_send_cmd(0x0F);
+	}
+	else if(blink_status == 0 && cursor_status == 1){
+		lcd_send_cmd(0x0E);
+	}
+	else if(blink_status == 1 && cursor_status == 0){
+		lcd_send_cmd(0x0D);
+	}
+	else {
+		lcd_send_cmd(0x0C);
+	}
+}
+
+void LCD_BlinkOnOff( uint8_t status ){
+
+	if( status == 1 ){
+		lcd_send_cmd(0x0D);
+	}
+	else {
+		lcd_send_cmd(0x0C);
 	}
 }
 
 void lcd_clear (void)
 {
 	lcd_send_cmd (0x00);
-	for (int i=0; i<100; i++) {
+	for (int i=0; i<100; i++)
+	{
 		lcd_send_data (' ');
 	}
 }
 
 void lcd_put_cur(int row, int col)
 {
-    switch (row) {
+    switch (row)
+    {
 		case 0:
             col += 0x80;
             break;
         case 1:
-            col += 0xC0; //C0
+            col += 0xC0;  //C0
             break;
         case 2:
-            col += 0x94; //0x80|0x14 for row 3 col 2
+            col += 0x94;	//0x80|0x14 for row 3 col 2
             break;
         case 3:
             col += 0xD4;
             break;
-        default:
-        	// Error
-        	break;
     }
+
     lcd_send_cmd (col);
 }
 
@@ -1115,7 +1064,7 @@ void lcd_init (void)
 {
 	uint8_t i=0;
 	HAL_Delay(100);
-	for(i=0;i<3;i++){ //sending 3 times: select 4-bit mode
+	for(i=0;i<3;i++){//sending 3 times: select 4-bit mode
 		lcd_send_cmd(0x03);
 		HAL_Delay(45);
 	}
@@ -1131,11 +1080,10 @@ void lcd_init (void)
 	lcd_clear();
 }
 
-void lcd_send_string (char* str)
+void lcd_send_string (char *str)
 {
 	while (*str) lcd_send_data (*str++);
 }
-
 void lcd_createChar(void)
 {
 	//*** Load custom char into the CGROM***//////
@@ -1143,7 +1091,7 @@ void lcd_createChar(void)
 	HAL_Delay(1);
 	lcd_send_cmd(0x00);   // .. set CGRAM Address
 	HAL_Delay(1);
-	for(int i = 0; i < 64 ; i++){
+	for(int i = 0; i <= 63 ; i++){
 		lcd_send_data(customChar[i]);
 		HAL_Delay(1);
 	}
@@ -1154,233 +1102,253 @@ void lcd_createChar(void)
 	//*** Loading custom char complete***//////
 }
 
-void lcd_psu_init(void)
-{
+void lcd_psu_init(void){
 	lcd_init();
 
 	lcd_put_cur(0, 0);
 	lcd_send_string("V1:0.00V ");
-	lcd_send_data((uint8_t)1); // Vertical Line
-	lcd_send_string(" V1");
-	lcd_send_data((uint8_t)0); // Right Arrow
-	lcd_send_string("0.00V");
+	lcd_send_data((uint8_t)1);//Custom Char 1
+	lcd_send_string("V1");
+	lcd_send_data((uint8_t)0);//Custom Char 0
+	lcd_send_string(":0.00V");
 
 	lcd_put_cur(1, 0);
-	lcd_send_string("A1:0.00A ");
+	lcd_send_string("A1:0.000A");
 	lcd_send_data((uint8_t)1);
-	lcd_send_string(" A1");
+	lcd_send_string("A1");
 	lcd_send_data((uint8_t)0);
-	lcd_send_string("0.00A");
+	lcd_send_string(":0.000A");
 
 	lcd_put_cur(2, 0);
 	lcd_send_string("V2:0.00V ");
 	lcd_send_data((uint8_t)1);
-	lcd_send_string(" V2");
+	lcd_send_string("V2");
 	lcd_send_data((uint8_t)0);
-	lcd_send_string("0.00V");
+	lcd_send_string(":0.00V");
 
 	lcd_put_cur(3, 0);
-	lcd_send_string("A2:0.00A ");
+	lcd_send_string("A2:0.000A");
 	lcd_send_data((uint8_t)1);
-	lcd_send_string(" A2");
+	lcd_send_string("A2");
 	lcd_send_data((uint8_t)0);
-	lcd_send_string("0.00A");
+	lcd_send_string(":0.000A");
 }
 
-void lcd_psu_update(void)
-{
-	lcd_cursorblink_onoff(0,0);
-	switch(kpenum) {
-
-	case WAIT:
-		lcd_update_voltage(1,voltnum2);
-		lcd_update_amperage(1,ampnum2);
-		lcd_update_voltage(2,slin_num);
-		lcd_update_amperage(2,scur_num);
-		lcd_update_voltage(3,voltnum1);
-		lcd_update_amperage(3,ampnum1);
+void lcd_psu_update(void){
+	LCD_CursorBlinkOnOff(0,0);
+	if(kpenum == WAIT){
+		lcd_update_voltage(1,volt_set_aux);
+		lcd_update_amperage(1,amp_set_aux);
+		lcd_update_voltage(2,lin_num_aux);
+		lcd_update_amperage(2,cur_num_aux);
+		lcd_update_voltage(3,volt_set_main);
+		lcd_update_amperage(3,amp_set_main);
 		lcd_update_voltage(4,lin_num);
 		lcd_update_amperage(4,cur_num);
-		break;
-
-	case V2:
-		//lcd_update_voltage(1,voltnum2);
-		lcd_update_amperage(1,ampnum2);
-		lcd_update_voltage(2,slin_num);
-		lcd_update_amperage(2,scur_num);
-		lcd_update_voltage(3,voltnum1);
-		lcd_update_amperage(3,ampnum1);
+	}
+	else if(kpenum == V1){
+		//lcd_update_voltage(1,volt_set_aux);
+		lcd_update_amperage(1,amp_set_aux);
+		lcd_update_voltage(2,lin_num_aux);
+		lcd_update_amperage(2,cur_num_aux);
+		lcd_update_voltage(3,volt_set_main);
+		lcd_update_amperage(3,amp_set_main);
 		lcd_update_voltage(4,lin_num);
 		lcd_update_amperage(4,cur_num);
 		lcd_put_cur(0,3);
 		lcd_send_string("      ");
 		lcd_put_cur(0,3);
-		lcd_cursorblink_onoff(1,1);
+		LCD_CursorBlinkOnOff(1,1);
 		//Print the keypad array
-		for (uint8_t i = 0; i < keypadlength; i++) {
-			if (keypadarr[i] != 'z') {
-				lcd_send_data(keypadarr[i]);
-			}
+		if(keypadarr[0] != 'z'){
+			lcd_send_data(keypadarr[0]);
 		}
-		break;
-
-	case V1:
-		lcd_update_voltage(1,voltnum2);
-		lcd_update_amperage(1,ampnum2);
-		lcd_update_voltage(2,slin_num);
-		lcd_update_amperage(2,scur_num);
-		//lcd_update_voltage(3,voltnum1);
-		lcd_update_amperage(3,ampnum1);
+		if(keypadarr[1] != 'z'){
+			lcd_send_data(keypadarr[1]);
+		}
+		if(keypadarr[2] != 'z'){
+			lcd_send_data(keypadarr[2]);
+		}
+		if(keypadarr[3] != 'z'){
+			lcd_send_data(keypadarr[3]);
+		}
+		if(keypadarr[4] != 'z'){
+			lcd_send_data(keypadarr[4]);
+		}
+	}
+	else if(kpenum == V2){
+		lcd_update_voltage(1,volt_set_aux);
+		lcd_update_amperage(1,amp_set_aux);
+		lcd_update_voltage(2,lin_num_aux);
+		lcd_update_amperage(2,cur_num_aux);
+		//lcd_update_voltage(3,volt_set_main);
+		lcd_update_amperage(3,amp_set_main);
 		lcd_update_voltage(4,lin_num);
 		lcd_update_amperage(4,cur_num);
 		lcd_put_cur(2,3);
 		lcd_send_string("      ");
 		lcd_put_cur(2,3);
-		lcd_cursorblink_onoff(1,1);
+		LCD_CursorBlinkOnOff(1,1);
 		//Print the keypad array
-		for (uint8_t i = 0; i < keypadlength; i++) {
-			if (keypadarr[i] != 'z') {
-				lcd_send_data(keypadarr[i]);
-			}
+		if(keypadarr[0] != 'z'){
+			lcd_send_data(keypadarr[0]);
 		}
-		break;
-
-	case A2:
-		lcd_update_voltage(1,voltnum2);
-		//lcd_update_amperage(1,ampnum2);
-		lcd_update_voltage(2,slin_num);
-		lcd_update_amperage(2,scur_num);
-		lcd_update_voltage(3,voltnum1);
-		lcd_update_amperage(3,ampnum1);
+		if(keypadarr[1] != 'z'){
+			lcd_send_data(keypadarr[1]);
+		}
+		if(keypadarr[2] != 'z'){
+			lcd_send_data(keypadarr[2]);
+		}
+		if(keypadarr[3] != 'z'){
+			lcd_send_data(keypadarr[3]);
+		}
+		if(keypadarr[4] != 'z'){
+			lcd_send_data(keypadarr[4]);
+		}
+	}
+	else if(kpenum == A1){
+		lcd_update_voltage(1,volt_set_aux);
+		//lcd_update_amperage(1,amp_set_aux);
+		lcd_update_voltage(2,lin_num_aux);
+		lcd_update_amperage(2,cur_num_aux);
+		lcd_update_voltage(3,volt_set_main);
+		lcd_update_amperage(3,amp_set_main);
 		lcd_update_voltage(4,lin_num);
 		lcd_update_amperage(4,cur_num);
 		lcd_put_cur(1,3);
 		lcd_send_string("      ");
 		lcd_put_cur(1,3);
-		lcd_cursorblink_onoff(1,1);
+		LCD_CursorBlinkOnOff(1,1);
 		//Print the keypad array
-		for (uint8_t i = 0; i < keypadlength; i++) {
-			if (keypadarr[i] != 'z') {
-				lcd_send_data(keypadarr[i]);
-			}
+		if(keypadarr[0] != 'z'){
+			lcd_send_data(keypadarr[0]);
 		}
-		break;
-
-	case A1:
-		lcd_update_voltage(1,voltnum2);
-		lcd_update_amperage(1,ampnum2);
-		lcd_update_voltage(2,slin_num);
-		lcd_update_amperage(2,scur_num);
-		lcd_update_voltage(3,voltnum1);
-		//lcd_update_amperage(3,ampnum1);
+		if(keypadarr[1] != 'z'){
+			lcd_send_data(keypadarr[1]);
+		}
+		if(keypadarr[2] != 'z'){
+			lcd_send_data(keypadarr[2]);
+		}
+		if(keypadarr[3] != 'z'){
+			lcd_send_data(keypadarr[3]);
+		}
+		if(keypadarr[4] != 'z'){
+			lcd_send_data(keypadarr[4]);
+		}
+	}
+	else if(kpenum == A2){
+		lcd_update_voltage(1,volt_set_aux);
+		lcd_update_amperage(1,amp_set_aux);
+		lcd_update_voltage(2,lin_num_aux);
+		lcd_update_amperage(2,cur_num_aux);
+		lcd_update_voltage(3,volt_set_main);
+		//lcd_update_amperage(3,amp_set_main);
 		lcd_update_voltage(4,lin_num);
 		lcd_update_amperage(4,cur_num);
 		lcd_put_cur(3,3);
 		lcd_send_string("      ");
 		lcd_put_cur(3,3);
-		lcd_cursorblink_onoff(1,1);
+		LCD_CursorBlinkOnOff(1,1);
 		//Print the keypad array
-		for (uint8_t i = 0; i < keypadlength; i++) {
-			if (keypadarr[i] != 'z') {
-				lcd_send_data(keypadarr[i]);
-			}
+		if(keypadarr[0] != 'z'){
+			lcd_send_data(keypadarr[0]);
 		}
-		break;
-
-	default:
-		//Error
-		break;
+		if(keypadarr[1] != 'z'){
+			lcd_send_data(keypadarr[1]);
+		}
+		if(keypadarr[2] != 'z'){
+			lcd_send_data(keypadarr[2]);
+		}
+		if(keypadarr[3] != 'z'){
+			lcd_send_data(keypadarr[3]);
+		}
+		if(keypadarr[4] != 'z'){
+			lcd_send_data(keypadarr[4]);
+		}
 	}
 }
 
 /* LCD Section End -----------------------------------------------------------*/
 
 /* Keypad Section Begin ------------------------------------------------------*/
-void lcd_update_voltage(uint8_t channel, float num)
-{
+void lcd_update_voltage(uint8_t channel, float num){
 	char kpbuff[8];
 	snprintf(kpbuff, 6, "%.2f", num);
-
-	switch (channel) {
-	case 1: // V1 Set
+	//V1 Set
+	if(channel == 1){
 		lcd_put_cur(0,3);
 		lcd_send_string("      ");//Clear current number
 		lcd_put_cur(0,3);
 		lcd_send_string(kpbuff);
 		lcd_send_string("V");
-		break;
 
-	case 2: // V1 Out
+	}
+	//V1 Out
+	else if(channel == 2){
 		lcd_put_cur(0,14);
 		lcd_send_string("      ");//Clear current number
 		lcd_put_cur(0,14);
 		lcd_send_string(kpbuff);
 		lcd_send_string("V");
-		break;
-
-	case 3: // V2 Set
+	}
+	//V2 Set
+	else if(channel == 3){
 		lcd_put_cur(2,3);
 		lcd_send_string("      ");//Clear current number
 		lcd_put_cur(2,3);
 		lcd_send_string(kpbuff);
 		lcd_send_string("V");
-		break;
-
-	case 4: // V2 Out
+	}
+	//V2 Out
+	else if(channel == 4){
 		lcd_put_cur(2,14);
 		lcd_send_string("      ");//Clear current number
 		lcd_put_cur(2,14);
 		lcd_send_string(kpbuff);
 		lcd_send_string("V");
-		break;
-
-	default:
+	}
+	else{
 		//Error
-		break;
 	}
 }
-
-void lcd_update_amperage(uint8_t channel, float num)
-{
+void lcd_update_amperage(uint8_t channel, float num){
 	char kpbuff[8];
-	snprintf(kpbuff, 5, "%.2f", num);
-
-	switch (channel) {
-	case 1: // A1 Set
+	snprintf(kpbuff, 6, "%.3f", num);
+	//A1 Set
+	if(channel == 1){
 		lcd_put_cur(1,3);
 		lcd_send_string("      ");//Clear current number
 		lcd_put_cur(1,3);
 		lcd_send_string(kpbuff);
 		lcd_send_string("A");
-		break;
 
-	case 2: // A1 Out
+	}
+	//A1 Out
+	else if(channel == 2){
 		lcd_put_cur(1,14);
 		lcd_send_string("      ");//Clear current number
 		lcd_put_cur(1,14);
 		lcd_send_string(kpbuff);
 		lcd_send_string("A");
-		break;
-
-	case 3: // A2 Set
+	}
+	//A2 Set
+	else if(channel == 3){
 		lcd_put_cur(3,3);
 		lcd_send_string("      ");//Clear current number
 		lcd_put_cur(3,3);
 		lcd_send_string(kpbuff);
 		lcd_send_string("A");
-		break;
-
-	case 4: // A2 Out
+	}
+	//A2 Out
+	else if(channel == 4){
 		lcd_put_cur(3,14);
 		lcd_send_string("      ");//Clear current number
 		lcd_put_cur(3,14);
 		lcd_send_string(kpbuff);
 		lcd_send_string("A");
-		break;
-
-	default:
-		// Error
-		break;
+	}
+	else{
+		//Error
 	}
 }
 
@@ -1393,9 +1361,8 @@ void lcd_update_amperage(uint8_t channel, float num)
  * Passing a number ('1' not 1) to this function will shift in that number but will only
  * allow up to 2 numbers before a decimal and up to 2 numbers after a decimal.
  */
-void update_keypad(char num)
-{
-	if (num == 'z') {
+void update_keypad(char num){
+	if(num == 'z'){
 		if(keypaditerator < keypadlength-1){
 			//Update decimal "bool" if we remove a decimal
 			if(keypadarr[4] == '.'){
@@ -1408,10 +1375,11 @@ void update_keypad(char num)
 			keypadarr[0] = num;
 			keypaditerator++;
 		}
-	} else if(num == '.') {
-		if (keypaditerator >= keypadlength-3 && keypaddecimal == 0) {
-			//shift in new entry with up to two numbers preceding it
-			for (int i = 1; i < keypadlength; i++) {
+	}
+	else if(num == '.'){
+		if(keypaditerator >= keypadlength-3 && keypaddecimal == 0){
+			//shift in new entry with up to two numbers preceeding it
+			for(int i = 1; i < keypadlength; i++){
 				keypadarr[i-1] = keypadarr[i];
 			}
 			keypadarr[keypadlength-1] = num;
@@ -1421,36 +1389,44 @@ void update_keypad(char num)
 	}
 	else if(num >= '0' && num <= '9'){
 		//Allow entries if only up to one number has been entered
-		if (keypaditerator > 2) {
+		if(keypaditerator > 2){
 			//shift in new entry
-			for (int i = 1; i < keypadlength; i++) {
-				keypadarr[i-1] = keypadarr[i];
-			}
-			keypadarr[keypadlength-1] = num;
-			keypaditerator--;
-		} else if(keypaditerator <= 1 && keypaddecimal == 1 && keypadarr[1] == 'z' && keypadarr[2] != '.') {
-			//shift in new entry
-			for (int i = 1; i < keypadlength; i++) {
+			for(int i = 1; i < keypadlength; i++){
 				keypadarr[i-1] = keypadarr[i];
 			}
 			keypadarr[keypadlength-1] = num;
 			keypaditerator--;
 		}
-		//Disallow third decimal place
-		else if (keypaditerator <= 1 && keypaddecimal == 1 && keypadarr[1] == 'z') {
-			//Do nothing
+		else if(keypaditerator <= 1 && keypaddecimal == 1 && keypadarr[1] == 'z' && keypadarr[2] != '.'){
+			//shift in new entry
+			for(int i = 1; i < keypadlength; i++){
+				keypadarr[i-1] = keypadarr[i];
+			}
+			keypadarr[keypadlength-1] = num;
+			keypaditerator--;
+		}
+		//Disallow third decimal place for voltage
+		else if(keypaditerator <= 1 && keypaddecimal == 1 && keypadarr[1] == 'z'){
+			if(kpenum == A1 || kpenum == A2){
+				//shift in new entry
+				for(int i = 1; i < keypadlength; i++){
+					keypadarr[i-1] = keypadarr[i];
+				}
+				keypadarr[keypadlength-1] = num;
+				keypaditerator--;
+			}
 		}
 		//Allow numbers after decimal place
-		else if (keypaditerator > 0 && keypaddecimal == 1) {
+		else if(keypaditerator > 0 && keypaddecimal == 1){
 			//shift in new entry
-			for (int i = 1; i < keypadlength; i++) {
+			for(int i = 1; i < keypadlength; i++){
 				keypadarr[i-1] = keypadarr[i];
 			}
 			keypadarr[keypadlength-1] = num;
 			keypaditerator--;
 		}
 		//Allow second decimal place when num > 10
-		else if ((keypaditerator >= 0) && (keypaddecimal == 1) && (translate_keypad() >= 10.0)) {
+		else if(keypaditerator >= 0 && keypaddecimal == 1 && translate_keypad() >= 10.0){
 			//shift in new entry
 			for(int i = 1; i < keypadlength; i++){
 				keypadarr[i-1] = keypadarr[i];
@@ -1461,257 +1437,298 @@ void update_keypad(char num)
 	}
 }
 
-void clear_keypad(void)
-{
-	for (uint8_t i = 0; i < keypadlength; i++) {
-		keypadarr[i] = 'z';
+void clearkeypad(void){
+	while(keypaditerator < 4){
+		update_keypad('z');
 	}
 }
 
-float translate_keypad(void)
-{
+float translate_keypad(void){
 	float num = 0;
 	int decimallocation = -1;
 
-	for (int i = 0; i < keypadlength; i++) {
-		if (keypadarr[i] == '.') {
+	for(int i = 0; i < keypadlength; i++){
+		if(keypadarr[i] == '.'){
 			decimallocation = i;
 		}
+	}
 
-		if (decimallocation == -1) {
-			//No decimal in array
-			int count = 1;
-			for (int i = keypadlength-1; i >= 0; i--) {
-				if (keypadarr[i] >= '0' && keypadarr[i] <= '9') {
-					num += ((int)keypadarr[i] - (int)'0') * (count);
-					count = count * 10;
-				}
-			}
-		} else {
-			//First do numbers to the left of the decimal
-			int count = 1;
-			for (int i = decimallocation-1; i >=0; i--) {
-				if (keypadarr[i] >= '0' && keypadarr[i] <= '9') {
-					num += ((int)keypadarr[i] - (int)'0') * (count);
-					count = count * 10;
-				}
-			}
-			//Next do numbers to the right of the decimal
-			count = 10;
-			for (int i = decimallocation+1; i < keypadlength; i++) {
-				if (keypadarr[i] >= '0' && keypadarr[i] <= '9') {
-					num += ( (float)(int)keypadarr[i] - (int)'0' ) / (float)(count);
-					count = count * 10;
-				}
+	if(decimallocation == -1){
+		//No decimal in array
+		int count = 1;
+		for(int i = keypadlength-1; i >=0; i--){
+			if(keypadarr[i] >= '0' && keypadarr[i] <= '9'){
+				num += ( (int)keypadarr[i] - (int)'0' ) * (count);
+				count = count * 10;
 			}
 		}
 	}
+	else{
+		//First do numbers to the left of the decimal
+		int count = 1;
+		for(int i = decimallocation-1; i >=0; i--){
+			if(keypadarr[i] >= '0' && keypadarr[i] <= '9'){
+				num += ( (int)keypadarr[i] - (int)'0' ) * (count);
+				count = count * 10;
+			}
+		}
+		//Next do numbers to the right of the decimal
+		count = 10;
+		for(int i = decimallocation+1; i < keypadlength; i++){
+			if(keypadarr[i] >= '0' && keypadarr[i] <= '9'){
+				num += ( (float)(int)keypadarr[i] - (int)'0' ) / (float)(count);
+				count = count * 10;
+			}
+		}
+	}
+
 	return num;
 }
 
-uint8_t check_keypad(uint8_t which)
-{
+uint8_t check_keypad(uint8_t which){
 	//which=0 for voltage which=1 for amperage
 	float temp = translate_keypad();
-	return (which) ? (temp >= 0 && temp <= 0.5) : (temp >= 0 && temp <= 12.00);
+	return (which) ? (temp >= 0 && temp <= 0.8001) : (temp >= 0 && temp <= 12.00);
 }
 
-void keypad_sm(char num)
-{
+void keypad_sm(char num){
 	//A=V1;B=A1;C=V2;D=A2;
-	switch (kpenum) {
-	case WAIT:
+	if(kpenum == WAIT){
 		//While in wait we only listen to letters for channel number and type
-		switch(num) {
-		case 'A':
+		if(num == 'A'){
 			kpenum = V1;
-			break;
-		case 'B':
+			clearkeypad();
+		}
+		else if(num == 'B'){
 			kpenum = A1;
-			break;
-		case 'C':
+			clearkeypad();
+		}
+		else if(num == 'C'){
 			kpenum = V2;
-			break;
-		case 'D':
+			clearkeypad();
+		}
+		else if(num == 'D'){
 			kpenum = A2;
-			break;
-		default:
-			// Error
-			break;
+			clearkeypad();
 		}
-		clear_keypad();
-		break;
-
-	case V1:
+		else if(num == '*'){
+			if(chstat_aux_rx){
+				chstat_aux_tx = 0;
+			}
+			else{
+				chstat_aux_tx = 1;
+			}
+		}
+		else if(num == '/'){
+			if(chstat_main){
+				chstat_main = 0;
+			}
+			else{
+				chstat_main = 1;
+			}
+		}
+	}
+	else if(kpenum == V1){
 		//While in channel listen to numbers/decimal and letters for ENTER
-		if (num == 'A') {
-			if (check_keypad(0)) {
+		if(num == 'A'){
+			uint8_t test = check_keypad(0);
+			if(test){
 				//Only update the value if valid
-				voltnum1 = translate_keypad();
+				volt_set_aux = translate_keypad();
 			}
 			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == 'B') {
+			clearkeypad();
+		}
+		else if(num == 'B'){
 			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == 'C') {
+			clearkeypad();
+		}
+		else if(num == 'C'){
 			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == 'D') {
+			clearkeypad();
+		}
+		else if(num == 'D'){
 			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == '.') {
+			clearkeypad();
+		}
+		else if(num == '.'){
 			//It "should" be impossible to pass in a bad decimal and we can ignore bad calls
 			update_keypad(num);
-		} else if (num >= '0' && num <= '9') {
+		}
+		else if(num >= '0' && num <= '9'){
 			//It "should" be impossible to overfill the array but we could do additional checks here for valid numbers
 			update_keypad(num);
-			// TODO: Display keypad array on LCD
-		} else if (num == '#') {
-			update_keypad('z');
-		} else if (num == '+') {
-			if (check_keypad(0)) {
-				//Only update the value if valid
-				voltnum1 = translate_keypad();
-			}
-			kpenum = WAIT;
-			clear_keypad();
-			first_shot = 1;
-		} else if(num == '-') {
-			kpenum = WAIT;
-			clear_keypad();
 		}
-		break;
-
-	case A1:
-		//While in channel listen to numbers/decimal and letters for ENTER
-		if (num == 'A') {
-			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == 'B') {
-			if (check_keypad(1)) {
+		else if(num == '#'){
+			update_keypad('z');
+		}
+		else if(num == '+'){
+			uint8_t test = check_keypad(0);
+			if(test){
 				//Only update the value if valid
-				ampnum1 = translate_keypad();
+				volt_set_aux = translate_keypad();
 			}
-			// TODO: Display set number on LCD
 			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == 'C') {
+			clearkeypad();
+		}
+		else if(num == '-'){
 			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == 'D') {
+			clearkeypad();
+		}
+	}
+	else if(kpenum == A1){
+		//While in channel listen to numbers/decimal and letters for ENTER
+		if(num == 'A'){
 			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == '.') {
+			clearkeypad();
+		}
+		else if(num == 'B'){
+			uint8_t test = check_keypad(1);
+			if(test){
+				//Only update the value if valid
+				amp_set_aux = translate_keypad();
+			}
+			kpenum = WAIT;
+			clearkeypad();
+		}
+		else if(num == 'C'){
+			kpenum = WAIT;
+			clearkeypad();
+		}
+		else if(num == 'D'){
+			kpenum = WAIT;
+			clearkeypad();
+		}
+		else if(num == '.'){
 			//It "should" be impossible to pass in a bad decimal and we can ignore bad calls
 			update_keypad(num);
-		} else if (num >= '0' && num <= '9') {
+		}
+		else if(num >= '0' && num <= '9'){
 			//It "should" be impossible to overfill the array but we could do additional checks here for valid numbers
 			update_keypad(num);
-		} else if (num == '#') {
-			update_keypad('z');
-		} else if (num == '+') {
-			if (check_keypad(1)) {
-				//Only update the value if valid
-				ampnum1 = translate_keypad();
-			}
-			// TODO: Display set number on LCD
-			kpenum = WAIT;
-			clear_keypad();
-		} else if(num == '-') {
-			kpenum = WAIT;
-			clear_keypad();
 		}
-		break;
-
-	case V2:
-		//While in channel listen to numbers/decimal and letters for ENTER
-		if (num == 'A') {
-			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == 'B') {
-			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == 'C') {
-			if (check_keypad(0)) {
+		else if(num == '#'){
+			update_keypad('z');
+		}
+		else if(num == '+'){
+			uint8_t test = check_keypad(1);
+			if(test){
 				//Only update the value if valid
-				voltnum2 = translate_keypad();
+				amp_set_aux = translate_keypad();
 			}
 			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == 'D') {
+			clearkeypad();
+		}
+		else if(num == '-'){
 			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == '.') {
+			clearkeypad();
+		}
+	}
+	else if(kpenum == V2){
+		//While in channel listen to numbers/decimal and letters for ENTER
+		if(num == 'A'){
+			kpenum = WAIT;
+			clearkeypad();
+		}
+		else if(num == 'B'){
+			kpenum = WAIT;
+			clearkeypad();
+		}
+		else if(num == 'C'){
+			uint8_t test = check_keypad(0);
+			if(test){
+				//Only update the value if valid
+				volt_set_main_old = volt_set_main;
+				volt_set_main = translate_keypad();
+			}
+			kpenum = WAIT;
+			clearkeypad();
+		}
+		else if(num == 'D'){
+			kpenum = WAIT;
+			clearkeypad();
+		}
+		else if(num == '.'){
 			//It "should" be impossible to pass in a bad decimal and we can ignore bad calls
 			update_keypad(num);
-		} else if (num >= '0' && num <= '9') {
+		}
+		else if(num >= '0' && num <= '9'){
 			//It "should" be impossible to overfill the array but we could do additional checks here for valid numbers
 			update_keypad(num);
-			// TODO: Display keypad array on LCD
-		} else if (num == '#') {
-			update_keypad('z');
-		} else if (num == '+') {
-			if(check_keypad(0)){
-				//Only update the value if valid
-				voltnum2 = translate_keypad();
-			}
-			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == '-') {
-			kpenum = WAIT;
-			clear_keypad();
 		}
-		break;
-
-	case A2:
-		//While in channel listen to numbers/decimal and letters for ENTER
-		if (num == 'A') {
-			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == 'B') {
-			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == 'C') {
-			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == 'D') {
-			if (check_keypad(1)) {
+		else if(num == '#'){
+			update_keypad('z');
+		}
+		else if(num == '+'){
+			uint8_t test = check_keypad(0);
+			if(test){
 				//Only update the value if valid
-				ampnum2 = translate_keypad();
+				volt_set_main_old = volt_set_main;
+				volt_set_main = translate_keypad();
 			}
 			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == '.') {
+			clearkeypad();
+		}
+		else if(num == '-'){
+			kpenum = WAIT;
+			clearkeypad();
+		}
+	}
+	else if(kpenum == A2){
+		//While in channel listen to numbers/decimal and letters for ENTER
+		if(num == 'A'){
+			kpenum = WAIT;
+			clearkeypad();
+		}
+		else if(num == 'B'){
+			kpenum = WAIT;
+			clearkeypad();
+		}
+		else if(num == 'C'){
+			kpenum = WAIT;
+			clearkeypad();
+		}
+		else if(num == 'D'){
+			uint8_t test = check_keypad(1);
+			if(test){
+				//Only update the value if valid
+				amp_set_main_old = amp_set_main;
+				amp_set_main = translate_keypad();
+				update_ADC_watchdog(amp_set_main);
+			}
+			kpenum = WAIT;
+			clearkeypad();
+		}
+		else if(num == '.'){
 			//It "should" be impossible to pass in a bad decimal and we can ignore bad calls
 			update_keypad(num);
-		} else if (num >= '0' && num <= '9') {
+		}
+		else if(num >= '0' && num <= '9'){
 			//It "should" be impossible to overfill the array but we could do additional checks here for valid numbers
 			update_keypad(num);
-			// TODO: Display keypad array on LCD
-		} else if (num == '#') {
+		}
+		else if(num == '#'){
 			update_keypad('z');
-		} else if (num == '+') {
-			if (check_keypad(1)) {
+		}
+		else if(num == '+'){
+			uint8_t test = check_keypad(1);
+			if(test){
 				//Only update the value if valid
-				ampnum2 = translate_keypad();
+				amp_set_main_old = amp_set_main;
+				amp_set_main = translate_keypad();
+				update_ADC_watchdog(amp_set_main);
 			}
 			kpenum = WAIT;
-			clear_keypad();
-		} else if (num == '-') {
-			kpenum = WAIT;
-			clear_keypad();
+			clearkeypad();
 		}
-		break;
-
-	default:
-		// Error
-		break;
+		else if(num == '-'){
+			kpenum = WAIT;
+			clearkeypad();
+		}
 	}
 }
 
-void row_input(void)
-{
+void row_input(void){
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	//Deinit
@@ -1750,8 +1767,7 @@ void row_input(void)
 	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
-void column_input(void)
-{
+void column_input(void){
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	//Disable interrupts
@@ -1789,289 +1805,134 @@ void column_input(void)
 	//Write zeros to outputs, should be by default but just in case
 	HAL_GPIO_WritePin(Col_1_GPIO_Port, Row_1_Pin|Row_2_Pin|Row_3_Pin|Row_4_Pin|Row_5_Pin, GPIO_PIN_RESET);
 }
-
-void keypad_decode(uint8_t row_pin)
-{
-	static GPIO_TypeDef *col_ports[4] = { Col_1_GPIO_Port, Col_2_GPIO_Port, Col_3_GPIO_Port, Col_4_GPIO_Port };
-	static uint16_t col_pins[4] = { Col_1_Pin, Col_2_Pin, Col_3_Pin, Col_4_Pin };
-	static const char keypad_labels[4][4] = {
-		{ '1', '4', '7', '.' },
-		{ '2', '5', '8', '0' },
-		{ '3', '6', '9', '#' },
-		{ 'C', 'D', 'A', 'B' }
-	};
-	if (row_pin) {
-		for (uint8_t i = 0; i < 4; i++) {
-			if (HAL_GPIO_ReadPin(col_ports[i], col_pins[i]) == PRESSED) {
-				keypad_sm(keypad_labels[row_pin - 1][i]);
-				break;
-			}
-		}
-	} else {
-		if (HAL_GPIO_ReadPin(Col_1_GPIO_Port, Col_1_Pin) == PRESSED) {
-			HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
-		} else if (HAL_GPIO_ReadPin(Col_2_GPIO_Port, Col_2_Pin) == PRESSED) {
-			keypad_sm('+'); // Confirm
-		} else if (HAL_GPIO_ReadPin(Col_3_GPIO_Port, Col_3_Pin) == PRESSED) {
-			keypad_sm('-'); // Cancel
-		} else if (HAL_GPIO_ReadPin(Col_4_GPIO_Port, Col_4_Pin) == PRESSED) {
-			HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
-		}
-	}
-}
-
-void set_rowpin(uint8_t row_num)
-{
-	static GPIO_TypeDef* row_ports[5] = { Row_1_GPIO_Port, Row_2_GPIO_Port, Row_3_GPIO_Port, Row_4_GPIO_Port, Row_5_GPIO_Port };
-	static uint16_t row_pins[5] = {Row_1_Pin, Row_2_Pin, Row_3_Pin, Row_4_Pin, Row_5_Pin};
-	if (HAL_GPIO_ReadPin(row_ports[row_num], row_pins[row_num]) == PRESSED) {
-		//Make sure we didn't interrupt on falling edge already
-		if (kpedge ==  RISING) {
-			kpedge = FALLING;
-			//Save rowpin
-			rowpin = row_num;
-			//start debounce
-			HAL_TIM_Base_Start_IT(&htim2);
-		}
-	}
-	//Rising edge
-	else {
-		//Make sure we didn't interrupt on rising edge already
-		if (kpedge ==  FALLING) {
-			kpedge = RISING;
-			//Reset keypad detection vars
-			rowpin = -1;
-		}
-	}
-}
-
 /* Keypad Section End --------------------------------------------------------*/
 
 /* Interrupt Callback Section Begin ------------------------------------------*/
-void USB_Interrupt_Callback(void)
-{
-	memset (usbbuffer, '\0', 128);  // clear the buffer
+void USB_Interrupt_Callback(void){
+	// Checking USBbuffer
+	memset (usbbuffer, '\0', 128); // clear the buffer
 }
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	switch(GPIO_Pin) {
-	case Row_1_Pin:
-		set_rowpin(0);
-		break;
-
-	case Row_2_Pin:
-		set_rowpin(1);
-		break;
-
-	case Row_3_Pin:
-		set_rowpin(2);
-		break;
-
-	case Row_4_Pin:
-		set_rowpin(3);
-		break;
-
-	case Row_5_Pin:
-		set_rowpin(4);
-		break;
-
-	case Rot_CLK_Pin:
-		if ((kpenum != WAIT) && (Rot_State != NOTURN)) {
-			HAL_NVIC_DisableIRQ(Rot_CLK_EXTI_IRQn);
-			Rot_State = (HAL_GPIO_ReadPin(Rot_CLK_GPIO_Port, Rot_CLK_Pin) == HAL_GPIO_ReadPin(Rot_DT_GPIO_Port, Rot_DT_Pin)) ? CWTURN : CCWTURN;
-			HAL_TIM_Base_Start_IT(&htim4);
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	//Row 1
+	if( (GPIO_Pin == Row_1_Pin) || (GPIO_Pin == Row_2_Pin) || (GPIO_Pin == Row_3_Pin) || (GPIO_Pin == Row_4_Pin) || (GPIO_Pin == Row_5_Pin)){
+		//Falling edge
+		if(HAL_GPIO_ReadPin(Row_1_GPIO_Port, GPIO_Pin) == 0){
+			//Make sure we didn't interrupt on falling edge already
+			if(kpedge != 0){
+				kpedge = 0;
+				//Save rowpin
+				rowpin = GPIO_Pin;
+				//start debounce
+				HAL_TIM_Base_Start_IT(&htim2);
+			}
 		}
-		break;
-
-	case Rot_SW_Pin:
-		if (kpenum != WAIT) {
-			HAL_NVIC_DisableIRQ(Rot_SW_EXTI_IRQn);
-			Rot_SW_State = HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin);
-			HAL_TIM_Base_Start_IT(&htim9);
+		//Rising edge
+		else{
+			//Make sure we didn't interrupt on rising edge already
+			if(kpedge != 1){
+				kpedge = 1;
+			}
 		}
-		break;
-
-	default:
-		// Error
-		break;
 	}
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	if (htim == &htim2) {
+	if(htim == &htim2){
 		//Disable timer now that we're in its interrupt
-		//HAL_TIM_Base_Stop_IT(&htim2);
+		HAL_TIM_Base_Stop_IT(&htim2);
 		column_input();
-		keypad_decode(rowpin);
+		//Detect which column is held low (pressed)
+		for(int i = 0; i < 4; i++){
+			if(HAL_GPIO_ReadPin(col_ports[i], col_pins[i]) == 0){
+				//Find rowpin value based on array of pins declared globally
+				for(int j = 0; j < 5; j++){
+					if(rowpin == row_pins[j]){
+						//Call keypad state machine based on rowpin and colpin array declared globally
+						keypad_sm(keypad_labels[j][i]);
+						rowpin = -1;
+						break;
+					}
+				}
+				break;
+			}
+		}
 		row_input();
-
-	} else if (htim == &htim3) {
+	}
+	else if(htim == &htim3){
 		//Disable timer now that we're in its interrupt
-		//HAL_TIM_Base_Stop_IT(&htim3);
+		HAL_TIM_Base_Stop_IT(&htim3);
 		//Update Display
 		lcd_psu_update();
 		//Start timer again
-		//HAL_TIM_Base_Start_IT(&htim3);
-
-	} else if (htim == &htim4) {
-		//HAL_TIM_Base_Stop_IT(&htim4);
-
-		if (Rot_State != NOTURN) {
-			switch (Rot_Mode) {
-			case VALUE:
-				switch(Rot_State) {
-				case NOTURN:
-					// Error
-					break;
-
-				case CWTURN:
-					if ((uint8_t)keypadarr[keypaditerator] < (uint8_t)('9')) {
-						(uint8_t)keypadarr[keypaditerator]++;
-					} else if (keypaditerator > 0) {
-						keypadarr[keypaditerator] = '0';
-						(uint8_t)keypadarr[keypaditerator-1]++;
-					}
-					break;
-
-				case CCWTURN:
-					if ((uint8_t)keypadarr[keypaditerator] > (uint8_t)('0')) {
-						(uint8_t)keypadarr[keypaditerator]--;
-					} else if (keypaditerator < (keypadlength - 1)) {
-						(uint8_t)keypadarr[keypaditerator + 1]--;
-						keypadarr[keypaditerator] = '9';
-					}
-					break;
-
-				default:
-					//Error
-					break;
-				}
-
-				volatile float* modifying_output = NULL;
-				switch (kpenum) {
-				case WAIT:
-					// Error
-					break;
-				case V1:
-					modifying_output = &voltnum1;
-					break;
-				case A1:
-					modifying_output = &ampnum1;
-					break;
-				case V2:
-					modifying_output = &voltnum2;
-					break;
-				case A2:
-					modifying_output = &ampnum2;
-					break;
-				default:
-					// Error
-					break;
-				}
-				if (modifying_output != NULL) {
-					*modifying_output = translate_keypad();
-				}
-				break;
-
-			case INDEX:
-				switch (Rot_State) {
-				case NOTURN:
-					// Error
-					break;
-
-				case CWTURN:
-					if (keypaditerator < (keypadlength - 1)) {
-						keypaditerator++;
-						if (keypadarr[keypaditerator] == '.') {
-							keypaditerator++;
-						}
-					}
-					break;
-
-				case CCWTURN:
-					if (keypaditerator > 0) {
-						keypaditerator--;
-						if (keypadarr[keypaditerator] == '.') {
-							keypaditerator--;
-						}
-					}
-					break;
-
-				default:
-					//Error
-					break;
-				}
-				break;
-
-			default:
-				// Error
-				break;
+		HAL_TIM_Base_Start_IT(&htim3);
+	}
+	else if(htim == &htim10){
+		//Disable timer now that we're in its interrupt
+		HAL_TIM_Base_Stop_IT(&htim10);
+		if(chstat_main == 0){
+			//Since we have a delay in updating the LED for channel 1 from UART, lets introduce a dumb fake delay on channel 2
+			if(!timercounter){
+				HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_RESET);
 			}
-			Rot_State = NOTURN;
-			HAL_NVIC_EnableIRQ(Rot_CLK_EXTI_IRQn);
-		}
-
-	} else if (htim == &htim9) {
-		//HAL_TIM_Base_Stop_IT(&htim9);
-		if (HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin) == Rot_SW_State) {
-			switch (Rot_SW_State) {
-			case PRESSED:
-				Rot_Mode = !Rot_Mode;
-				break;
-			case RELEASED:
-				break;
-			default:
-				// Error
-				break;
+			timercounter++;
+			if(timercounter >= 7){
+				timercounter = 0;
 			}
-		} else {
-			HAL_GPIO_EXTI_Callback(Rot_SW_Pin);
+		}
+		else if(chstat_main == 1){
+			if(!timercounter){
+				HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_SET);
+			}
+			timercounter++;
+			if(timercounter >= 7){
+				timercounter = 0;
+			}
+		}
+		else if(chstat_main == 2){
+			HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
 		}
 
-		switch (Rot_Mode) {
-		case VALUE:
-			HAL_TIM_Base_Stop_IT(&htim10);
-			break;
-		case INDEX:
-			HAL_TIM_Base_Start_IT(&htim10);
-			break;
-		default:
-			// Error
-			break;
+		if(chstat_aux_rx == 0){
+			HAL_GPIO_WritePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_RESET);
 		}
-		HAL_NVIC_EnableIRQ(Rot_SW_EXTI_IRQn);
+		else if(chstat_aux_rx == 1){
+			HAL_GPIO_WritePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_SET);
+		}
+		else if(chstat_aux_rx == 2){
+			HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
+		}
+		HAL_TIM_Base_Start_IT(&htim10);
+	}
+}
 
-	} else if (htim == &htim10) {
-		static uint8_t cursor_blink = 0;
-		lcd_cursorblink_onoff(cursor_blink, cursor_blink);
-		cursor_blink = !cursor_blink;
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc){
+	adc_values_cpy[0] = adc_values[0];
+	adc_values_cpy[1] = adc_values[1];
+	adc_values_cpy[2] = adc_values[2];
+}
 
-	} else if (htim == &htim11) {
-		// TODO: Use cursor to indicate what digit is currently selected (Keypad and Rotary Encoder)
-		static uint8_t cursor = 0;
-		lcd_cursor_onoff(cursor);
-		cursor = !cursor;
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+	adc_values_cpy[3] = adc_values[3];
+	adc_values_cpy[4] = adc_values[4];
+	adc_values_cpy[5] = adc_values[5];
+}
+
+void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc)
+{
+	if(chstat_main == 1){
+		chstat_main = 2;
 	}
 }
 
 /*
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
-	adc_current = adcvalues[2];
-	adc_linear = adcvalues[1];
-	adc_opamp = adcvalues[0];
-	adc_switching = adcvalues[3];
-	adc_vref = adcvalues[4];
-}
-
-
-void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef* huart){
+void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart){
   //do nothing cause we're a lazy receiver
 }
 */
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart){
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
   /*
    * Messages are structured as follows *STRT,00.00,0.000,0,FNSH!
    * Here we will search for the unique start character * and check that the
@@ -2082,7 +1943,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart){
 	//CDC_Transmit_FS(rxbuffer,64);
 	uint8_t rxiter = 0;
 	for(int i = 0; i < 64; i++){
-		if (rxbuffer[i] == '*') {
+		if(rxbuffer[i] == '*'){
 			rxiter = i;//Found start condition
 			break;
 		}
@@ -2090,17 +1951,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart){
 	uint8_t rxbuffercpy[32];
 	memset (rxbuffercpy, '\0', 32);  // clear the buffer
 	//Copy our message into a buffer that isn't offset
-	for (int i = 0; i < 25; i++) {
+	for(int i = 0; i < 25; i++){
 		rxbuffercpy[i] = rxbuffer[rxiter];
 		rxiter++;
-		if (rxiter > 64) {
+		if(rxiter >= 64){
 			rxiter = 0;
 		}
 	}
 
 	//CDC_Transmit_FS(rxbuffercpy,32);
 
-	if (//Check start condition
+	if( //Check start condition
 		(rxbuffercpy[0] == '*' && rxbuffercpy[1] == 'S' && rxbuffercpy[2] == 'T' && rxbuffercpy[3] == 'R' && rxbuffercpy[4] == 'T') &&
 		//Check finish condition
 		(rxbuffercpy[20] == 'F' && rxbuffercpy[21] == 'N' && rxbuffercpy[22] == 'S' && rxbuffercpy[23] == 'H' && rxbuffercpy[24] == '!') &&
@@ -2114,7 +1975,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart){
 		(rxbuffercpy[15] >= '0' && rxbuffercpy[15] <= '9') && (rxbuffercpy[16] >= '0' && rxbuffercpy[16] <= '9')) &&
 		//Check chstat
 		(rxbuffercpy[18] == '0' || rxbuffercpy[18] == '1' || rxbuffercpy[18] == '2')
-			) {
+			){
 		//Valid message
 		float tempv2 = 0;
 		float tempa2 = 0;
@@ -2129,9 +1990,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart){
 		tempa2 += (float)(rxbuffercpy[15]-48) / (float)100.0;
 		tempa2 += (float)(rxbuffercpy[16]-48) / (float)1000.0;
 
-		slin_num = tempv2;
-		scur_num = tempa2;
-		chstat2 = rxbuffercpy[18]-48;
+		lin_num_aux = tempv2;
+		cur_num_aux = tempa2;
+		chstat_aux_rx = rxbuffercpy[18]-48;
 
 		//strcat((char*)rxbuffercpy, "\n");
 		//CDC_Transmit_FS(rxbuffercpy,32);
@@ -2145,18 +2006,31 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart){
 	HAL_UART_Receive_DMA (&huart1, rxbuffer, 64);  // Receive 64 Bytes of data
 }
 
-/*
-void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef* huart)
-{
-
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
+	HAL_UART_Receive_DMA (&huart1, rxbuffer, 64); //Try again!
 }
-*/
 
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart)
-{
-	memset (txbuffer, '\0', 64);  // clear the buffer
-	snprintf((char*)txbuffer, 32, "*STRT,%05.2f,%5.3f,%d,FNSH!", voltnum2, ampnum2, chstat2);
-	HAL_UART_Transmit_DMA(&huart1, txbuffer, 64);
+void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart){
+	/*
+	 * The buffer is 64 bytes wide, the message is 32 bytes wide, this allows us to do some processing between messages
+	 * as well as catch messages we are receiving if they aren't synchronized
+	 * When half complete we have just sent out the message we want to send and the remaining 32 bytes are all 0
+	 * During this stage of sending 0's we can copy the next message into our buffer because we don't care about
+	 * overwriting 0s
+	 */
+	memcpy(txbuffer, txbuffer_cpy, 64);  // copy the data to the buffer
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
+	/*
+	 * The buffer is 64 bytes wide, the message is 32 bytes wide, this allows us to do some processing between messages
+	 * as well as catch messages we are receiving if they aren't synchronized
+	 * When complete we have just sent out a bunch of 0s and are preparing to send out the next message
+	 * During this stage we don't want to overwrite the first half of the buffer because we are currently sending it
+	 * but we can prepare the next message to send
+	 */
+	memset (txbuffer_cpy, '\0', 64);  // clear the buffer
+	snprintf((char*)txbuffer_cpy, 32, "*STRT,%05.2f,%5.3f,%d,FNSH!", volt_set_aux, amp_set_aux, chstat_aux_tx);
 }
 
 /* USER CODE END 4 */

@@ -32,19 +32,11 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-/* PID Control Section Begin -------------------------------------------------*/
-#define P 0.1
-#define I 0.1
-#define D 0.1
-/* PID Control Section End ---------------------------------------------------*/
-
-/* ADC Section Begin ---------------------------------------------------------*/
-#define ADC_OPAMP adc_values[0]
-#define ADC_LINEAR adc_values[1]
-#define ADC_CURRENT adc_values[2]
-#define ADC_SWITCHING adc_values[3]
-#define ADC_VREF adc_values[4]
-/* ADC Section End -----------------------------------------------------------*/
+#define ADC_OPAMP adc_values_cpy[0]
+#define ADC_LINEAR adc_values_cpy[1]
+#define ADC_CURRENT adc_values_cpy[2]
+#define ADC_SWITCHING adc_values_cpy[3]
+#define ADC_VREF adc_values_cpy[4]
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -64,44 +56,45 @@ DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USER CODE BEGIN PV */
 
+float P = 0.1;
+float I = 0.1;
+float D = 0.1;
+
 uint8_t txbuffer[64];//Uart TX Buffer
+uint8_t txbuffer_cpy[64];//Uart TX Buffer copy because transfer is circular
 uint8_t rxbuffer[64];//Uart RX Buffer
 
 //Channel numbers
-float voltnum1 = 0.0;
-float ampnum1 = 0.0;
-//float voltnum2 = 0.0;
-//float ampnum2 = 0.0;
+volatile float volt_set_main = 0.0;
+volatile float amp_set_main = 0.0;
+//volatile float volt_set_aux = 0.0;
+//volatile float amp_set_aux = 0.0;
 
-float correctedvoltnum1;
-
-uint8_t first_shot = 1;
+volatile float volt_set_main_old = 0.0;
+volatile float amp_set_main_old = 0.0;
+//volatile float volt_set_aux_old = 0.0;
+//volatile float amp_set_aux_old = 0.0;
 
 //Array for the adc values and vars to hold them
-uint16_t adc_values[5];
-/*
-uint16_t* adc_current;
-uint16_t* adc_linear;
-uint16_t* adc_opamp;
-uint16_t* adc_switching;
-uint16_t* adc_vref;
-*/
+volatile uint16_t adc_values[6];
+volatile uint16_t adc_values_cpy[6];
 uint16_t* vrefptr = ((uint16_t*)VREFINT_CAL_ADDR_CMSIS);
-int chstat = 0;
+volatile int8_t chstat_main = 0;
+//volatile int8_t chstat_aux_tx = 0;
+//volatile int8_t chstat_aux_rx = 0;
 
 //Globals for adc values
-uint16_t v1;
-float lin_num;
-float cur_num;
-float op_num;
-float swi_num;
+volatile float lin_num = 0;
+volatile float cur_num = 0;
+volatile float op_num = 0;
+volatile float swi_num = 0;
 
-// The value for the Intgral part of the PID controller
-float error = 0;
-float derivative = 0;
-float integral = 0;
-float error_previous = 0;
-float correction = 0;
+//volatile float lin_num_aux = 0;
+//volatile float cur_num_aux = 0;
+
+//Global for dac value
+volatile uint16_t v1;//dac channel 1 is linear
+volatile uint16_t v2;//dac channel 2 is switching
 
 /* USER CODE END PV */
 
@@ -114,7 +107,11 @@ static void MX_DAC_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
-void our_init(void);//Runs several Inits
+void ourInit(void);//Runs several Inits
+
+/* ADC Section Begin ---------------------------------------------------------*/
+void update_ADC_watchdog(float val);
+/* ADC Section End -----------------------------------------------------------*/
 
 /* USER CODE END PFP */
 
@@ -156,16 +153,13 @@ int main(void)
   MX_DAC_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  our_init();
-  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, 4095);
-
-  /*
-  adc_current = &adc_values[2];
-  adc_linear = &adc_values[1];
-  adc_opamp = &adc_values[0];
-  adc_switching = &adc_values[3];
-  adc_vref = &adc_values[4];
-  */
+  ourInit();
+  volatile float error = 0;
+  volatile float derivative = 0;
+  volatile float integral = 0;
+  volatile float error_previous = 0;
+  volatile float correction = 0;
+  volatile float corrected_volt_set_main;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -178,81 +172,128 @@ int main(void)
 
 	  //Control channel here
 
-	  if(voltnum1 <= 0.00){
-		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
-		  chstat = 0;
-		  //HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_RESET);
-	  }
-
-	  uint16_t vrefvalue = (uint16_t)*vrefptr;
+	  uint16_t vrefvalue = (uint16_t) *vrefptr;
 	  float vddcalc = (float)3.0 * ((float)vrefvalue / (float)ADC_VREF);
 
 	  float cur_num_temp = ((((float)3.0 * (float)ADC_CURRENT * (float)vrefvalue)/((float)ADC_VREF * (float)4095) / (float)20) / (float)0.15);
 	  cur_num  = (cur_num_temp >= 0.0000) ? cur_num_temp : 0.0000;
 
-	  //float cur_num = (((float)vddcalc * (float)*adc_current * (float)4095) / (float)20) / (float)0.3;
+
+	  //float cur_num = (((float)vddcalc * (float)*ADC_CURRENT * (float)4095) / (float)20) / (float)0.3;
 	  float op_num_temp = ((float)3.0 * ((float)ADC_OPAMP * (float)4.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095) - ((float)cur_num * (float)0.35);
 	  op_num  = (op_num_temp >= 0.0000) ? op_num_temp : 0.0000;
+
 
 	  float lin_num_temp = ((float)3.0 * ((float)ADC_LINEAR * (float)4.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095) - ((float)cur_num * (float)0.35);
 	  lin_num  = (lin_num_temp >= 0.0000) ? lin_num_temp : 0.0000;
 
-	  //float lin_num = ((float)vddcalc * (float)*adc_linear * (float)4095) * (float)4;
+	  //float lin_num = ((float)vddcalc * (float)*ADC_LINEAR * (float)4095) * (float)4;
 	  float swi_num_temp = ((float)3.0 * ((float)ADC_SWITCHING * (float)5.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095);
 	  swi_num  = (swi_num_temp >= 0.0000) ? swi_num_temp : 0.0000;
 
-	  if(first_shot){
-		  v1 = (uint16_t)((( (((float)voltnum1) / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  correctedvoltnum1 = voltnum1;
-		  integral = 0;
-		  error = 0;
-		  derivative = 0;
-		  first_shot = 0;
-	  }
 
-/*
-	  else{ // Bang-Bang Controller
-		  //Try really hard to get the voltage right
-		  const float margin = 0.05;
-		  if(lin_num > voltnum1 + margin){
-			  v1--;
+	  // Bang-Bang Controller
+	  //Try really hard to get the voltage right
+	  const float margin = 0.002;
+	  //If we are active watch the output adc
+	  if(chstat_main == 1){
+		  if(lin_num > volt_set_main + margin){
+			  if(v1 >= 1){
+				  v1--;
+			  }
 			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
-		  else if(lin_num < voltnum1 - margin){
-			  v1++;
+		  else if(lin_num < volt_set_main - margin){
+			  if(v1 <= 4094){
+				  v1++;
+			  }
 			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
 	  }
-*/
-
-	  else {
-		  error = lin_num - voltnum1;
-		  integral += error;
-		  if (integral > (float)4095.0) {
-			  integral = (float)4095;
-		  } else if (integral < (float)-4095.0) {
-			  integral = (float)-4095.0;
+	  //if we are inactive watch the opamp output
+	  else{
+		  if(op_num > volt_set_main + margin){
+			  if(v1 >= 1){
+				  v1--;
+			  }
+			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
-		  derivative = error - error_previous;
-		  error_previous = error;
-		  correction = P * error + I * integral + D * derivative;
-		  correctedvoltnum1 = voltnum1 - correction;
-		  if(correctedvoltnum1 > 12.0){
-			  correctedvoltnum1 = 12.0;
+		  else if(op_num < volt_set_main - margin){
+			  if(v1 <= 4094){
+				  v1++;
+			  }
+			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
-		  else if(correctedvoltnum1 < 0.0){
-			  correctedvoltnum1 = 0.0;
-		  }
-		  v1 = (uint16_t)((( (correctedvoltnum1 / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 	  }
 
-	  if(voltnum1 > 0.00){
+
+  /*
+	  //PID
+	  error = lin_num - volt_set_main;
+	  integral += error;
+	  if (integral > (float)4095.0) {
+		  integral = (float)4095;
+	  } else if (integral < (float)-4095.0) {
+		  integral = (float)-4095.0;
+	  }
+	  derivative = error - error_previous;
+	  error_previous = error;
+	  correction = P * error + I * integral + D * derivative;
+	  corrected_volt_set_main = volt_set_main - correction;
+	  if (corrected_volt_set_main > 12.0) {
+		  corrected_volt_set_main = 12.0;
+	  }
+	  else if(corrected_volt_set_main < 0.0) {
+		  corrected_volt_set_main = 0.0;
+	  }
+	  v1 = (uint16_t)(((((float)corrected_volt_set_main / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
+  */
+
+	  /*
+	   * The calculation we do to determine what we need to set the dac for the switching regulator to is determined by the following formula
+	   * 1.235 = (R3*R2*Vout + R1*R2Vdac) / (R3*R2 + R1*R3 + R1*R2) where R1 = 10k, R2 = 1.2k, R3 = 2.4K
+	   * This equation would be a little cumbersome to calculate every time we loop so I have simplified it on paper to the following formula
+	   * Vdac = 4.001400 - 0.240000*Vout
+	   */
+
+	  volatile float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.5))) * (float)4095 / (float)vddcalc);
+	  if(temp <= 0){
+		  v2 = 0;
+	  }
+	  else if(temp >= 4095){
+		  v2 = 4095;
+	  }
+	  else{
+		  v2 = (uint16_t)temp;
+	  }
+
+	  if(volt_set_main > volt_set_main_old){
+		  //If the new voltage is greater than the old voltage set we need to increase the switching regulators voltage first
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+	  }
+	  else if(volt_set_main < volt_set_main_old){
+		  //If the new voltage is lower than the old voltage set we need to decrease the switching regulators voltage last
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
+	  }
+	  else{
+		  //We shouldn't have to do anything in the case that the old voltage is equal to the new voltage but we can allow PID to keep going
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
+	  }
+
+	  if(chstat_main == 1 && ADC_OPAMP >= 5){
 		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_RESET);
-		  chstat = 1;
-		  //HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_SET);
 	  }
+	  else{
+		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
+	  }
+
+	  //Keep the watchdog threshold up to date with changes to vdd
+	  update_ADC_watchdog(amp_set_main);
+
+	  HAL_Delay(1);
   }
   /* USER CODE END 3 */
 }
@@ -312,6 +353,7 @@ static void MX_ADC_Init(void)
 
   /* USER CODE END ADC_Init 0 */
 
+  ADC_AnalogWDGConfTypeDef AnalogWDGConfig = {0};
   ADC_ChannelConfTypeDef sConfig = {0};
 
   /* USER CODE BEGIN ADC_Init 1 */
@@ -330,12 +372,24 @@ static void MX_ADC_Init(void)
   hadc.Init.LowPowerAutoPowerOff = ADC_AUTOPOWEROFF_DISABLE;
   hadc.Init.ChannelsBank = ADC_CHANNELS_BANK_A;
   hadc.Init.ContinuousConvMode = ENABLE;
-  hadc.Init.NbrOfConversion = 5;
+  hadc.Init.NbrOfConversion = 6;
   hadc.Init.DiscontinuousConvMode = DISABLE;
   hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc.Init.DMAContinuousRequests = ENABLE;
   if (HAL_ADC_Init(&hadc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure the analog watchdog
+  */
+  AnalogWDGConfig.WatchdogMode = ADC_ANALOGWATCHDOG_SINGLE_REG;
+  AnalogWDGConfig.Channel = ADC_CHANNEL_2;
+  AnalogWDGConfig.ITMode = ENABLE;
+  AnalogWDGConfig.HighThreshold = 0;
+  AnalogWDGConfig.LowThreshold = 0;
+  if (HAL_ADC_AnalogWDGConfig(&hadc, &AnalogWDGConfig) != HAL_OK)
   {
     Error_Handler();
   }
@@ -381,6 +435,15 @@ static void MX_ADC_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_VREFINT;
   sConfig.Rank = ADC_REGULAR_RANK_5;
+  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
+  sConfig.Rank = ADC_REGULAR_RANK_6;
   if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -454,7 +517,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 4800;
+  huart1.Init.BaudRate = 9600;
   huart1.Init.WordLength = UART_WORDLENGTH_9B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_ODD;
@@ -520,7 +583,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void our_init(void){
+void ourInit(void){
 	HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);	//Ensure shutdown is enabled
 	/*
 	 * The HAL library is dumb and tries to init the adc before the DMA which does not work
@@ -533,7 +596,7 @@ void our_init(void){
 	MX_ADC_Init();
 
 	//Actually our init now
-	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&adc_values, 5);// start the adc in dma mode
+	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&adc_values, 6);// start the adc in dma mode
 	HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
 	HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
 	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0);
@@ -548,42 +611,82 @@ void our_init(void){
 	//HAL_TIM_Base_Start_IT(&htim3);
 
 	memset (txbuffer, '\0', 64);  // clear the buffer
+	memset (txbuffer_cpy, '\0', 64);  // clear the buffer
 	memset (rxbuffer, '\0', 64);  // clear the buffer
 
 	//strncpy((char*)txbuffer, "Hello World From Second MCU\n", 64);
 
-	snprintf((char*)txbuffer, 32, "*STRT,%5.2f,%5.3f,%d,FNSH!", lin_num, cur_num, chstat);
+	snprintf((char*)txbuffer, 32, "*STRT,%5.2f,%5.3f,%d,FNSH!", lin_num, cur_num, chstat_main);
 
 	HAL_UART_Transmit_DMA(&huart1, txbuffer, 64);
 
 	HAL_UART_Receive_DMA (&huart1, rxbuffer, 64);  // Receive 64 Bytes of data
 }
- /*
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
-	adc_current = adcvalues[2];
-	adc_linear = adcvalues[1];
-	adc_opamp = adcvalues[0];
-	adc_switching = adcvalues[3];
-	adc_vref = adcvalues[4];
+
+/* ADC Section Begin ---------------------------------------------------------*/
+void update_ADC_watchdog(float val){
+	//Don't want to stop the dma/adc and deinit/reinit it to change the watchdog, plus we need to calculate vdd to get a good value
+
+	uint16_t vrefvalue = (uint16_t) *vrefptr;
+	float vddcalc = (float)3.0 * ((float)vrefvalue / (float)ADC_VREF);
+	volatile uint16_t amp = (uint16_t)( ((float)val * (float)0.15 * (float)20.0) * (float)4095 / (float)vddcalc);
+
+	if(amp >= 4095){
+		ADC1->HTR = 4095;
+	}
+	else{
+		ADC1->HTR = amp;
+	}
+}
+/* ADC Section End -----------------------------------------------------------*/
+
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc){
+	adc_values_cpy[0] = adc_values[0];
+	adc_values_cpy[1] = adc_values[1];
+	adc_values_cpy[2] = adc_values[2];
 }
 
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+	adc_values_cpy[3] = adc_values[3];
+	adc_values_cpy[4] = adc_values[4];
+	adc_values_cpy[5] = adc_values[5];
+}
+
+void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc)
+{
+	if(chstat_main == 1){
+		chstat_main = 2;
+	}
+}
+
+/* Interrupt Callback Section Begin ------------------------------------------*/
 
 void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart){
-
+	/*
+	 * The buffer is 64 bytes wide, the message is 32 bytes wide, this allows us to do some processing between messages
+	 * as well as catch messages we are receiving if they aren't synchronized
+	 * When half complete we have just sent out the message we want to send and the remaining 32 bytes are all 0
+	 * During this stage of sending 0's we can copy the next message into our buffer because we don't care about
+	 * overwriting 0s
+	 */
+	memcpy(txbuffer, txbuffer_cpy, 64);  // copy the data to the buffer
 }
-*/
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
-	memset (txbuffer, '\0', 64);  // clear the buffer
-	snprintf((char*)txbuffer, 32, "*STRT,%05.2f,%5.3f,%d,FNSH!", lin_num, cur_num, chstat);
-	HAL_UART_Transmit_DMA(&huart1, txbuffer, 64);
+	/*
+	 * The buffer is 64 bytes wide, the message is 32 bytes wide, this allows us to do some processing between messages
+	 * as well as catch messages we are receiving if they aren't synchronized
+	 * When complete we have just sent out a bunch of 0s and are preparing to send out the next message
+	 * During this stage we don't want to overwrite the first half of the buffer because we are currently sending it
+	 * but we can prepare the next message to send
+	 */
+	memset (txbuffer_cpy, '\0', 64);  // clear the buffer
+	snprintf((char*)txbuffer_cpy, 32, "*STRT,%05.2f,%5.3f,%d,FNSH!", lin_num, cur_num, chstat_main);
 }
 
-/*
 void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart){
   //do nothing cause we're a lazy receiver
 }
-*/
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
   /*
@@ -622,7 +725,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 		//Check amperage
 		((rxbuffercpy[12] >= '0' && rxbuffercpy[12] <= '9') && rxbuffercpy[13] == '.' && (rxbuffercpy[14] >= '0' && rxbuffercpy[14] <= '9') &&
 		(rxbuffercpy[15] >= '0' && rxbuffercpy[15] <= '9') && (rxbuffercpy[16] >= '0' && rxbuffercpy[16] <= '9')) &&
-		//Check chstat
+		//Check chstat_main
 		(rxbuffercpy[18] == '0' || rxbuffercpy[18] == '1' || rxbuffercpy[18] == '2')
 			){
 		//Valid message
@@ -640,19 +743,43 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 		tempa2 += (float)(rxbuffercpy[16]-48) / (float)1000.0;
 
 		if(tempv2 >= 0.00 && tempv2 <= 12.00){
-			first_shot = 1;
-			voltnum1 = tempv2;
+			volt_set_main_old = volt_set_main;
+			volt_set_main = tempv2;
 		}
-		if(tempa2 >= 0.00 && tempa2 <= 0.800){
-			ampnum1 = tempa2;
+		if(tempa2 >= 0.00 && tempa2 <= 0.8001){
+			amp_set_main_old = amp_set_main;
+			amp_set_main = tempa2;
 		}
-		//chstat = rxbuffercpy[18]-48;
+
+		int8_t chstat_temp = rxbuffercpy[18]-48;
+		//If we are shutdown we can accept a channel enable request
+		if(chstat_main == 0){
+			if(chstat_temp == 1){
+				chstat_main = chstat_temp;
+			}
+		}
+		//If we are active we can accept a channel shutdown request
+		else if(chstat_main == 1){
+			if(chstat_temp == 0){
+				chstat_main = 0;
+			}
+		}
+		//If we are current limited we can accept a channel shutdown request
+		else if(chstat_main == 2){
+			if(chstat_temp == 0){
+				chstat_main = 0;
+			}
+		}
 	}
 
 	memset (rxbuffer, '\0', 64);  // clear the buffer
 	HAL_UART_Receive_DMA (&huart1, rxbuffer, 64);  // Receive 64 Bytes of data
 }
 
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
+	HAL_UART_Receive_DMA (&huart1, rxbuffer, 64); //Try again!
+}
+/* Interrupt Callback Section End ----------------------------------------*/
 
 /* USER CODE END 4 */
 
