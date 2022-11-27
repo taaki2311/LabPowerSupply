@@ -29,8 +29,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef enum {WAIT, V1, A1, V2, A2} KEYPAD_ENUM;
-typedef enum { NOTURN, CWTURN, CCWTURN } ROTARY_STATE;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -107,19 +106,25 @@ uint8_t rxbuffer[64];//Uart RX Buffer
 
 /* Keypad Section Begin ------------------------------------------------------*/
 volatile int rowpin = -1;
-volatile uint8_t kpedge = 1; //0== falling edge 1== rising edge
+volatile uint8_t kpedge = 1;	//0 == falling edge 1 == rising edge
+volatile uint8_t swedge = 1;	//0 == falling edge 1 == rising edge
 
 const uint8_t keypadlength = 5;
 volatile char keypadarr[5] = {'z','z','z','z','z'};//z is null
 volatile int8_t keypaditerator = 4;
 volatile uint8_t keypaddecimal = 0;
-KEYPAD_ENUM kpenum = WAIT;
+enum KEYPAD_ENUM {WAIT, V1, A1, V2, A2};
+enum KEYPAD_ENUM kpenum = WAIT;
+enum ROTARY_STATE {NOTURN, CWTURN, CCWTURN};
+enum ROTARY_STATE rotenum = NOTURN;
+volatile uint8_t encmode = 0;
+volatile uint8_t encpos = 0;
 
 //static GPIO_TypeDef* row_ports[5] = { Row_1_GPIO_Port, Row_2_GPIO_Port, Row_3_GPIO_Port, Row_4_GPIO_Port, Row_5_GPIO_Port };
-const uint16_t row_pins[5] = {Row_1_Pin, Row_2_Pin, Row_3_Pin, Row_4_Pin, Row_5_Pin};
-GPIO_TypeDef* col_ports[4] = { Col_1_GPIO_Port, Col_2_GPIO_Port, Col_3_GPIO_Port, Col_4_GPIO_Port };
-const uint16_t col_pins[4] = { Col_1_Pin, Col_2_Pin, Col_3_Pin, Col_4_Pin };
-const char keypad_labels[5][4] = {
+static uint16_t row_pins[5] = {Row_1_Pin, Row_2_Pin, Row_3_Pin, Row_4_Pin, Row_5_Pin};
+static GPIO_TypeDef *col_ports[4] = { Col_1_GPIO_Port, Col_2_GPIO_Port, Col_3_GPIO_Port, Col_4_GPIO_Port };
+static uint16_t col_pins[4] = { Col_1_Pin, Col_2_Pin, Col_3_Pin, Col_4_Pin };
+static const char keypad_labels[5][4] = {
 	{ '*', '+', '-', '/' },
 	{ '1', '4', '7', '.' },
 	{ '2', '5', '8', '0' },
@@ -127,12 +132,6 @@ const char keypad_labels[5][4] = {
 	{ 'A', 'B', 'C', 'D' }
 };
 /* Keypad Section End --------------------------------------------------------*/
-
-/* Rotary Encoder Section Begin ----------------------------------------------*/
-ROTARY_STATE Rot_State = NOTURN;
-GPIO_PinState Rot_SW_State;
-volatile uint8_t swedge = 1;//0== falling edge 1== rising edge
-/* Rotary Encoder Section End ------------------------------------------------*/
 
 //Channel numbers
 volatile float volt_set_main = 0.0;
@@ -167,7 +166,7 @@ volatile uint16_t v1;//dac channel 1 is linear
 volatile uint16_t v2;//dac channel 2 is switching
 
 volatile uint8_t timercounter = 0;
-volatile uint8_t blink = 1;
+volatile uint8_t blink = 0;
 
 /* USER CODE END PV */
 
@@ -181,9 +180,9 @@ static void MX_I2C1_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
-static void MX_TIM10_Init(void);
 static void MX_TIM11_Init(void);
 static void MX_TIM9_Init(void);
+static void MX_TIM10_Init(void);
 /* USER CODE BEGIN PFP */
 
 void ourInit(void);//Runs several Inits
@@ -203,7 +202,7 @@ void lcd_init (void);   // initialize lcd
 void lcd_send_cmd (char cmd);  // send command to the lcd
 void lcd_send_data (char data);  // send data to the lcd
 void lcd_send_string (char *str);  // send string to the lcd
-void lcd_put_cur(int row, int col);  // put cursor at the entered position row (0 or 1), col (0-15);
+void lcd_put_cur(int row, int col);  // put cursor at the entered position row (0-3), col (0-19);
 void lcd_clear (void);
 void LCD_CursorBlinkOnOff( uint8_t cursor_status, uint8_t blink_status );
 void lcd_createChar(void);
@@ -215,9 +214,10 @@ void lcd_psu_update(void);
 
 /* Keypad Section Begin ------------------------------------------------------*/
 void update_keypad(char num);
-void clearkeypad(void);
+void clear_keypad(void);
 float translate_keypad(void);
 uint8_t check_keypad(uint8_t which);
+void fill_keypad(uint8_t va, float num);
 void keypad_sm(char num);
 void row_input(void);
 void column_input(void);
@@ -266,19 +266,17 @@ int main(void)
   MX_USB_DEVICE_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
-  MX_TIM10_Init();
   MX_TIM11_Init();
   MX_TIM9_Init();
+  MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
   ourInit();
-  /*
   volatile float error = 0;
   volatile float derivative = 0;
   volatile float integral = 0;
   volatile float error_previous = 0;
   volatile float correction = 0;
   volatile float corrected_volt_set_main;
-  */
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -674,7 +672,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 32000-1;
+  htim2.Init.Prescaler = 32000;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 10;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -719,7 +717,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 32000-1;
+  htim3.Init.Prescaler = 32000;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 500;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -764,9 +762,9 @@ static void MX_TIM9_Init(void)
 
   /* USER CODE END TIM9_Init 1 */
   htim9.Instance = TIM9;
-  htim9.Init.Prescaler = 32000-1;
+  htim9.Init.Prescaler = 32000;
   htim9.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim9.Init.Period = 10;
+  htim9.Init.Period = 100;
   htim9.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim9.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim9) != HAL_OK)
@@ -808,9 +806,9 @@ static void MX_TIM10_Init(void)
 
   /* USER CODE END TIM10_Init 1 */
   htim10.Instance = TIM10;
-  htim10.Init.Prescaler = 32000-1;
+  htim10.Init.Prescaler = 32000;
   htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim10.Init.Period = 20;
+  htim10.Init.Period = 10;
   htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
@@ -846,7 +844,7 @@ static void MX_TIM11_Init(void)
 
   /* USER CODE END TIM11_Init 1 */
   htim11.Instance = TIM11;
-  htim11.Init.Prescaler = 32000-1;
+  htim11.Init.Prescaler = 32000;
   htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim11.Init.Period = 100;
   htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -913,10 +911,10 @@ static void MX_DMA_Init(void)
   HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   /* DMA1_Channel4_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
   /* DMA1_Channel5_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 
 }
@@ -940,7 +938,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, Status_LED_2_Pin|Status_LED_1_Pin|Col_1_Pin|Col_2_Pin
+  HAL_GPIO_WritePin(GPIOC, Status_LED_1_Pin|Status_LED_2_Pin|Col_1_Pin|Col_2_Pin
                           |Col_3_Pin|Col_4_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : Channel_Shutdown_Pin */
@@ -950,9 +948,9 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(Channel_Shutdown_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Status_LED_2_Pin Status_LED_1_Pin Col_1_Pin Col_2_Pin
+  /*Configure GPIO pins : Status_LED_1_Pin Status_LED_2_Pin Col_1_Pin Col_2_Pin
                            Col_3_Pin Col_4_Pin */
-  GPIO_InitStruct.Pin = Status_LED_2_Pin|Status_LED_1_Pin|Col_1_Pin|Col_2_Pin
+  GPIO_InitStruct.Pin = Status_LED_1_Pin|Status_LED_2_Pin|Col_1_Pin|Col_2_Pin
                           |Col_3_Pin|Col_4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -970,17 +968,17 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : Rot_DT_Pin */
   GPIO_InitStruct.Pin = Rot_DT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(Rot_DT_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 13, 0);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 11, 0);
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 12, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
@@ -1014,7 +1012,7 @@ void ourInit(void){
 	//Start display timer
 	HAL_TIM_Base_Start_IT(&htim3);
 	//Start LED timer
-	//HAL_TIM_Base_Start_IT(&htim11);
+	HAL_TIM_Base_Start_IT(&htim11);
 
 	memset (usbbuffer, '\0', 128);  // clear the buffer
 	memset (txbuffer, '\0', 64);  // clear the buffer
@@ -1117,8 +1115,8 @@ void LCD_CursorBlinkOnOff( uint8_t cursor_status, uint8_t blink_status){
 	}
 }
 
-void LCD_BlinkOnOff( uint8_t status )
-{
+void LCD_BlinkOnOff( uint8_t status ){
+
 	if( status == 1 ){
 		lcd_send_cmd(0x0D);
 	}
@@ -1182,7 +1180,6 @@ void lcd_send_string (char *str)
 {
 	while (*str) lcd_send_data (*str++);
 }
-
 void lcd_createChar(void)
 {
 	//*** Load custom char into the CGROM***//////
@@ -1201,8 +1198,7 @@ void lcd_createChar(void)
 	//*** Loading custom char complete***//////
 }
 
-void lcd_psu_init(void)
-{
+void lcd_psu_init(void){
 	lcd_init();
 
 	lcd_put_cur(0, 0);
@@ -1275,6 +1271,9 @@ void lcd_psu_update(void){
 		if(keypadarr[4] != 'z'){
 			lcd_send_data(keypadarr[4]);
 		}
+		if(encmode){
+			lcd_put_cur(0, 3 + encpos);
+		}
 	}
 	else if(kpenum == V2){
 		lcd_update_voltage(1,volt_set_aux);
@@ -1304,6 +1303,9 @@ void lcd_psu_update(void){
 		}
 		if(keypadarr[4] != 'z'){
 			lcd_send_data(keypadarr[4]);
+		}
+		if(encmode){
+			lcd_put_cur(2, 3 + encpos);
 		}
 	}
 	else if(kpenum == A1){
@@ -1335,6 +1337,9 @@ void lcd_psu_update(void){
 		if(keypadarr[4] != 'z'){
 			lcd_send_data(keypadarr[4]);
 		}
+		if(encmode){
+			lcd_put_cur(1, 3 + encpos);
+		}
 	}
 	else if(kpenum == A2){
 		lcd_update_voltage(1,volt_set_aux);
@@ -1364,6 +1369,9 @@ void lcd_psu_update(void){
 		}
 		if(keypadarr[4] != 'z'){
 			lcd_send_data(keypadarr[4]);
+		}
+		if(encmode){
+			lcd_put_cur(3, 3 + encpos);
 		}
 	}
 }
@@ -1488,26 +1496,64 @@ void update_keypad(char num){
 		}
 	}
 	else if(num >= '0' && num <= '9'){
-		//Allow entries if only up to one number has been entered
-		if(keypaditerator > 2){
-			//shift in new entry
-			for(int i = 1; i < keypadlength; i++){
-				keypadarr[i-1] = keypadarr[i];
+		//Voltage allows xx.xx
+		if(kpenum == V1 || kpenum == V2){
+			//Allow entries if only up to one number has been entered
+			if(keypaditerator > 2){
+				//shift in new entry
+				for(int i = 1; i < keypadlength; i++){
+					keypadarr[i-1] = keypadarr[i];
+				}
+				keypadarr[keypadlength-1] = num;
+				keypaditerator--;
 			}
-			keypadarr[keypadlength-1] = num;
-			keypaditerator--;
-		}
-		else if(keypaditerator <= 1 && keypaddecimal == 1 && keypadarr[1] == 'z' && keypadarr[2] != '.'){
-			//shift in new entry
-			for(int i = 1; i < keypadlength; i++){
-				keypadarr[i-1] = keypadarr[i];
+			//Allow first number after decimal place with no leading number
+			else if(keypaditerator == 3 && keypadarr[4] == '.'){
+				//shift in new entry
+				for(int i = 1; i < keypadlength; i++){
+					keypadarr[i-1] = keypadarr[i];
+				}
+				keypadarr[keypadlength-1] = num;
+				keypaditerator--;
 			}
-			keypadarr[keypadlength-1] = num;
-			keypaditerator--;
-		}
-		//Disallow third decimal place for voltage
-		else if(keypaditerator <= 1 && keypaddecimal == 1 && keypadarr[1] == 'z'){
-			if(kpenum == A1 || kpenum == A2){
+			//Allow second number after decimal place with no leading number
+			else if(keypaditerator == 2 && keypadarr[3] == '.'){
+				//shift in new entry
+				for(int i = 1; i < keypadlength; i++){
+					keypadarr[i-1] = keypadarr[i];
+				}
+				keypadarr[keypadlength-1] = num;
+				keypaditerator--;
+			}
+			//Allow first number after decimal place with one leading number
+			else if(keypaditerator == 2 && keypadarr[4] == '.'){
+				//shift in new entry
+				for(int i = 1; i < keypadlength; i++){
+					keypadarr[i-1] = keypadarr[i];
+				}
+				keypadarr[keypadlength-1] = num;
+				keypaditerator--;
+			}
+			//Allow second number after decimal place with one leading number
+			else if(keypaditerator == 1 && keypadarr[3] == '.'){
+				//shift in new entry
+				for(int i = 1; i < keypadlength; i++){
+					keypadarr[i-1] = keypadarr[i];
+				}
+				keypadarr[keypadlength-1] = num;
+				keypaditerator--;
+			}
+			//Allow first number after decimal place with two leading numbers
+			else if(keypaditerator == 1 && keypadarr[4] == '.'){
+				//shift in new entry
+				for(int i = 1; i < keypadlength; i++){
+					keypadarr[i-1] = keypadarr[i];
+				}
+				keypadarr[keypadlength-1] = num;
+				keypaditerator--;
+			}
+			//Allow second number after decimal place with two leading numbers
+			else if(keypaditerator == 0 && keypadarr[3] == '.'){
 				//shift in new entry
 				for(int i = 1; i < keypadlength; i++){
 					keypadarr[i-1] = keypadarr[i];
@@ -1516,28 +1562,76 @@ void update_keypad(char num){
 				keypaditerator--;
 			}
 		}
-		//Allow numbers after decimal place
-		else if(keypaditerator > 0 && keypaddecimal == 1){
-			//shift in new entry
-			for(int i = 1; i < keypadlength; i++){
-				keypadarr[i-1] = keypadarr[i];
+		//Amperage allows x.xxx
+		else if(kpenum == A1 || kpenum == A2){
+			//Allow entries if no number has been entered
+			if(keypaditerator > 3){
+				//shift in new entry
+				for(int i = 1; i < keypadlength; i++){
+					keypadarr[i-1] = keypadarr[i];
+				}
+				keypadarr[keypadlength-1] = num;
+				keypaditerator--;
 			}
-			keypadarr[keypadlength-1] = num;
-			keypaditerator--;
-		}
-		//Allow second decimal place when num > 10
-		else if(keypaditerator >= 0 && keypaddecimal == 1 && translate_keypad() >= 10.0){
-			//shift in new entry
-			for(int i = 1; i < keypadlength; i++){
-				keypadarr[i-1] = keypadarr[i];
+			//Allow first number after decimal place with no leading number
+			else if(keypaditerator == 3 && keypadarr[4] == '.'){
+				//shift in new entry
+				for(int i = 1; i < keypadlength; i++){
+					keypadarr[i-1] = keypadarr[i];
+				}
+				keypadarr[keypadlength-1] = num;
+				keypaditerator--;
 			}
-			keypadarr[keypadlength-1] = num;
-			keypaditerator--;
+			//Allow second number after decimal place with no leading number
+			else if(keypaditerator == 2 && keypadarr[3] == '.'){
+				//shift in new entry
+				for(int i = 1; i < keypadlength; i++){
+					keypadarr[i-1] = keypadarr[i];
+				}
+				keypadarr[keypadlength-1] = num;
+				keypaditerator--;
+			}
+			//Allow third number after decimal place with no leading number
+			else if(keypaditerator == 1 && keypadarr[2] == '.'){
+				//shift in new entry
+				for(int i = 1; i < keypadlength; i++){
+					keypadarr[i-1] = keypadarr[i];
+				}
+				keypadarr[keypadlength-1] = num;
+				keypaditerator--;
+			}
+			//Allow first number after decimal place with one leading number
+			else if(keypaditerator == 2 && keypadarr[4] == '.'){
+				//shift in new entry
+				for(int i = 1; i < keypadlength; i++){
+					keypadarr[i-1] = keypadarr[i];
+				}
+				keypadarr[keypadlength-1] = num;
+				keypaditerator--;
+			}
+			//Allow second number after decimal place with one leading number
+			else if(keypaditerator == 1 && keypadarr[3] == '.'){
+				//shift in new entry
+				for(int i = 1; i < keypadlength; i++){
+					keypadarr[i-1] = keypadarr[i];
+				}
+				keypadarr[keypadlength-1] = num;
+				keypaditerator--;
+			}
+			//Allow third number after decimal place with one leading number
+			else if(keypaditerator == 0 && keypadarr[2] == '.'){
+				//shift in new entry
+				for(int i = 1; i < keypadlength; i++){
+					keypadarr[i-1] = keypadarr[i];
+				}
+				keypadarr[keypadlength-1] = num;
+				keypaditerator--;
+			}
 		}
 	}
 }
 
-void clearkeypad(void){
+void clear_keypad(void){
 	while(keypaditerator < 4){
 		update_keypad('z');
 	}
@@ -1591,239 +1685,902 @@ uint8_t check_keypad(uint8_t which){
 	return (which) ? (temp >= 0 && temp <= 0.8001) : (temp >= 0 && temp <= 12.00);
 }
 
+/*
+ * This function is to be used for the rotary encoder to empty the current keypad and dump the current set voltage or amperage into it
+ * va == 0 -> Dump voltage, va == 1 -> dump amperage because voltage allows xx.xx while amperage allows x.xxx
+ * we take a float num as an input to allow easy but inefficient rotary control
+ */
+void fill_keypad(uint8_t va, float num){
+	//Clear the keypad first
+	clear_keypad();
+	if(va){
+		volatile int temp = (int)(num * 1000);
+		//special case for 0A
+		if(num <= 0.0001){
+			keypadarr[0] = '0';
+			keypadarr[1] = '.';
+			keypadarr[2] = '0';
+			keypadarr[3] = '0';
+			keypadarr[4] = '0';
+			keypaditerator = -1;
+		}
+		else{
+			while(temp != 0 && keypaditerator >= 0){
+				keypadarr[keypaditerator] = (temp % 10) + (int)'0';
+				temp = temp / 10;
+				keypaditerator--;
+				//add decimal
+				if(keypaditerator == 1){
+					keypadarr[keypaditerator] = '.';
+					keypaditerator--;
+				}
+			}
+			//include leading 0
+			if(keypaditerator >= 0 && num <= 0.999999){
+				keypadarr[keypaditerator] = '0';
+				keypaditerator--;
+			}
+		}
+	}
+	else{
+		volatile int temp = (int)(num * 100);
+		//special case for 0V
+		if(num <= 0.001){
+			keypadarr[0] = '0';
+			keypadarr[1] = '0';
+			keypadarr[2] = '.';
+			keypadarr[3] = '0';
+			keypadarr[4] = '0';
+			keypaditerator = -1;
+		}
+		else{
+			while(temp != 0 && keypaditerator >= 0){
+				keypadarr[keypaditerator] = (temp % 10) + (int)'0';
+				temp = temp / 10;
+				keypaditerator--;
+				//add decimal
+				if(keypaditerator == 2){
+					keypadarr[keypaditerator] = '.';
+					keypaditerator--;
+				}
+			}
+			//include leading 0
+			if(keypaditerator >= 0 && num <= 9.999999){
+				keypadarr[keypaditerator] = '0';
+				keypaditerator--;
+			}
+			//include second leading 0
+			if(keypaditerator >= 0 && num <= 0.999999){
+				keypadarr[keypaditerator] = '0';
+				keypaditerator--;
+			}
+		}
+	}
+}
+
 void keypad_sm(char num){
 	//A=V1;B=A1;C=V2;D=A2;
 	if(kpenum == WAIT){
 		//While in wait we only listen to letters for channel number and type
 		if(num == 'A'){
 			kpenum = V1;
-			clearkeypad();
+			clear_keypad();
 		}
 		else if(num == 'B'){
 			kpenum = A1;
-			clearkeypad();
+			clear_keypad();
 		}
 		else if(num == 'C'){
 			kpenum = V2;
-			clearkeypad();
+			clear_keypad();
 		}
 		else if(num == 'D'){
 			kpenum = A2;
-			clearkeypad();
+			clear_keypad();
 		}
 		else if(num == '*'){
+			//Disable channel output for second mcu if second MCU claims to be active
 			if(chstat_aux_rx){
 				chstat_aux_tx = 0;
 			}
+			//Enable channel output for second mcu if second MCU claims to be inactive
 			else{
 				chstat_aux_tx = 1;
 			}
 		}
 		else if(num == '/'){
+			//Disable channel output if active
 			if(chstat_main){
 				chstat_main = 0;
 			}
+			//Enable channel output if inactive
 			else{
 				chstat_main = 1;
 			}
 		}
 	}
 	else if(kpenum == V1){
-		//While in channel listen to numbers/decimal and letters for ENTER
-		if(num == 'A'){
-			uint8_t test = check_keypad(0);
-			if(test){
-				//Only update the value if valid
-				volt_set_aux = translate_keypad();
+		//Stop listening to keypad in encoder mode
+		if(encmode){
+			if(num == 'A'){
+				uint8_t test = check_keypad(0);
+				if(test){
+					//Only update the value if valid
+					volt_set_aux = translate_keypad();
+				}
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
 			}
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == 'B'){
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == 'C'){
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == 'D'){
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == '.'){
-			//It "should" be impossible to pass in a bad decimal and we can ignore bad calls
-			update_keypad(num);
-		}
-		else if(num >= '0' && num <= '9'){
-			//It "should" be impossible to overfill the array but we could do additional checks here for valid numbers
-			update_keypad(num);
-		}
-		else if(num == '#'){
-			update_keypad('z');
-		}
-		else if(num == '+'){
-			uint8_t test = check_keypad(0);
-			if(test){
-				//Only update the value if valid
-				volt_set_aux = translate_keypad();
+			else if(num == 'B'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
 			}
-			kpenum = WAIT;
-			clearkeypad();
+			else if(num == 'C'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == 'D'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '.'){
+				//If a keypad entry key is pressed forget what we were doing and go back to keypad entry
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num >= '0' && num <= '9'){
+				//If a keypad entry key is pressed forget what we were doing and go back to keypad entry
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '#'){
+				//If a keypad entry key is pressed forget what we were doing and go back to keypad entry
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '+'){
+				uint8_t test = check_keypad(0);
+				if(test){
+					//Only update the value if valid
+					volt_set_aux = translate_keypad();
+				}
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '-'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == 's'){
+				//skip decimal
+				if(encpos == 1){
+					encpos++;
+					encpos++;
+				}
+				else if(encpos < 4){
+					encpos++;
+				}
+				else{
+					encpos = 0;
+				}
+			}
+			else if(num == '['){
+				float temp = translate_keypad();
+				if(encpos == 0){
+					temp = temp - 10;
+				}
+				else if(encpos == 1){
+					temp = temp - 1;
+				}
+				else if(encpos == 3){
+					temp = temp - 0.1;
+				}
+				else if(encpos == 4){
+					temp = temp - 0.01;
+				}
+				if(temp >= 0.0000 && temp <= 12.0000){
+					fill_keypad(0,temp);
+				}
+				else if(temp < 0.0000){
+					fill_keypad(0,0);
+				}
+				else if(temp > 12.0000){
+					fill_keypad(0,12);
+				}
+			}
+			else if(num == ']'){
+				float temp = translate_keypad();
+				if(encpos == 0){
+					temp = temp + 10;
+				}
+				else if(encpos == 1){
+					temp = temp + 1;
+				}
+				else if(encpos == 3){
+					temp = temp + 0.1;
+				}
+				else if(encpos == 4){
+					temp = temp + 0.01;
+				}
+				if(temp >= 0.0000 && temp <= 12.0000){
+					fill_keypad(0,temp);
+				}
+				else if(temp < 0.0000){
+					fill_keypad(0,0);
+				}
+				else if(temp > 12.0000){
+					fill_keypad(0,12);
+				}
+			}
 		}
-		else if(num == '-'){
-			kpenum = WAIT;
-			clearkeypad();
+		//Default keypad sm
+		else{
+			//While in channel listen to numbers/decimal and letters for ENTER
+			if(num == 'A'){
+				uint8_t test = check_keypad(0);
+				if(test){
+					//Only update the value if valid
+					volt_set_aux = translate_keypad();
+				}
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 'B'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 'C'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 'D'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == '.'){
+				//It "should" be impossible to pass in a bad decimal and we can ignore bad calls
+				update_keypad(num);
+			}
+			else if(num >= '0' && num <= '9'){
+				//It "should" be impossible to overfill the array but we could do additional checks here for valid numbers
+				update_keypad(num);
+			}
+			else if(num == '#'){
+				update_keypad('z');
+			}
+			else if(num == '+'){
+				uint8_t test = check_keypad(0);
+				if(test){
+					//Only update the value if valid
+					volt_set_aux = translate_keypad();
+				}
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == '-'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 's'){
+				fill_keypad(0, volt_set_aux);
+				encmode = 1;
+				encpos = 0;
+			}
+			else if(num == '['){
+				fill_keypad(0, volt_set_aux);
+				encmode = 1;
+				encpos = 0;
+			}
+			else if(num == ']'){
+				fill_keypad(0, volt_set_aux);
+				encmode = 1;
+				encpos = 0;
+			}
 		}
 	}
 	else if(kpenum == A1){
-		//While in channel listen to numbers/decimal and letters for ENTER
-		if(num == 'A'){
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == 'B'){
-			uint8_t test = check_keypad(1);
-			if(test){
-				//Only update the value if valid
-				amp_set_aux = translate_keypad();
+		if(encmode){
+			if(num == 'A'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
 			}
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == 'C'){
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == 'D'){
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == '.'){
-			//It "should" be impossible to pass in a bad decimal and we can ignore bad calls
-			update_keypad(num);
-		}
-		else if(num >= '0' && num <= '9'){
-			//It "should" be impossible to overfill the array but we could do additional checks here for valid numbers
-			update_keypad(num);
-		}
-		else if(num == '#'){
-			update_keypad('z');
-		}
-		else if(num == '+'){
-			uint8_t test = check_keypad(1);
-			if(test){
-				//Only update the value if valid
-				amp_set_aux = translate_keypad();
+			else if(num == 'B'){
+				uint8_t test = check_keypad(0);
+				if(test){
+					//Only update the value if valid
+					amp_set_aux = translate_keypad();
+				}
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
 			}
-			kpenum = WAIT;
-			clearkeypad();
+			else if(num == 'C'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == 'D'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '.'){
+				//If a keypad entry key is pressed forget what we were doing and go back to keypad entry
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num >= '0' && num <= '9'){
+				//If a keypad entry key is pressed forget what we were doing and go back to keypad entry
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '#'){
+				//If a keypad entry key is pressed forget what we were doing and go back to keypad entry
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '+'){
+				uint8_t test = check_keypad(0);
+				if(test){
+					//Only update the value if valid
+					amp_set_aux = translate_keypad();
+				}
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '-'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == 's'){
+				//skip decimal
+				if(encpos == 0){
+					encpos++;
+					encpos++;
+				}
+				else if(encpos < 4){
+					encpos++;
+				}
+				else{
+					encpos = 0;
+				}
+			}
+			else if(num == '['){
+				float temp = translate_keypad();
+				if(encpos == 0){
+					temp = temp - 1;
+				}
+				else if(encpos == 2){
+					temp = temp - 0.1;
+				}
+				else if(encpos == 3){
+					temp = temp - 0.01;
+				}
+				else if(encpos == 4){
+					temp = temp - 0.001;
+				}
+				if(temp >= 0.0000 && temp <= 0.8000){
+					fill_keypad(1,temp);
+				}
+				else if(temp < 0.0000){
+					fill_keypad(1,0);
+				}
+				else if(temp > 0.8000){
+					fill_keypad(1,0.8);
+				}
+			}
+			else if(num == ']'){
+				float temp = translate_keypad();
+				if(encpos == 0){
+					temp = temp + 1;
+				}
+				else if(encpos == 2){
+					temp = temp + 0.1;
+				}
+				else if(encpos == 3){
+					temp = temp + 0.01;
+				}
+				else if(encpos == 4){
+					temp = temp + 0.001;
+				}
+				if(temp >= 0.0000 && temp <= 0.8000){
+					fill_keypad(1,temp);
+				}
+				else if(temp < 0.0000){
+					fill_keypad(1,0);
+				}
+				else if(temp > 0.8000){
+					fill_keypad(1,0.8);
+				}
+			}
 		}
-		else if(num == '-'){
-			kpenum = WAIT;
-			clearkeypad();
+		//Default keypad sm
+		else{
+			//While in channel listen to numbers/decimal and letters for ENTER
+			if(num == 'A'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 'B'){
+				uint8_t test = check_keypad(1);
+				if(test){
+					//Only update the value if valid
+					amp_set_aux = translate_keypad();
+				}
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 'C'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 'D'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == '.'){
+				//It "should" be impossible to pass in a bad decimal and we can ignore bad calls
+				update_keypad(num);
+			}
+			else if(num >= '0' && num <= '9'){
+				//It "should" be impossible to overfill the array but we could do additional checks here for valid numbers
+				update_keypad(num);
+			}
+			else if(num == '#'){
+				update_keypad('z');
+			}
+			else if(num == '+'){
+				uint8_t test = check_keypad(1);
+				if(test){
+					//Only update the value if valid
+					amp_set_aux = translate_keypad();
+				}
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == '-'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 's'){
+				fill_keypad(1, amp_set_aux);
+				encmode = 1;
+				encpos = 0;
+			}
+			else if(num == '['){
+				fill_keypad(1, amp_set_aux);
+				encmode = 1;
+				encpos = 0;
+			}
+			else if(num == ']'){
+				fill_keypad(1, amp_set_aux);
+				encmode = 1;
+				encpos = 0;
+			}
 		}
 	}
 	else if(kpenum == V2){
-		//While in channel listen to numbers/decimal and letters for ENTER
-		if(num == 'A'){
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == 'B'){
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == 'C'){
-			uint8_t test = check_keypad(0);
-			if(test){
-				//Only update the value if valid
-				volt_set_main_old = volt_set_main;
-				volt_set_main = translate_keypad();
+		//Stop listening to keypad in encoder mode
+		if(encmode){
+			if(num == 'A'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
 			}
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == 'D'){
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == '.'){
-			//It "should" be impossible to pass in a bad decimal and we can ignore bad calls
-			update_keypad(num);
-		}
-		else if(num >= '0' && num <= '9'){
-			//It "should" be impossible to overfill the array but we could do additional checks here for valid numbers
-			update_keypad(num);
-		}
-		else if(num == '#'){
-			update_keypad('z');
-		}
-		else if(num == '+'){
-			uint8_t test = check_keypad(0);
-			if(test){
-				//Only update the value if valid
-				volt_set_main_old = volt_set_main;
-				volt_set_main = translate_keypad();
+			else if(num == 'B'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
 			}
-			kpenum = WAIT;
-			clearkeypad();
+			else if(num == 'C'){
+				uint8_t test = check_keypad(0);
+				if(test){
+					//Only update the value if valid
+					volt_set_main_old = volt_set_main;
+					volt_set_main = translate_keypad();
+				}
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == 'D'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '.'){
+				//If a keypad entry key is pressed forget what we were doing and go back to keypad entry
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num >= '0' && num <= '9'){
+				//If a keypad entry key is pressed forget what we were doing and go back to keypad entry
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '#'){
+				//If a keypad entry key is pressed forget what we were doing and go back to keypad entry
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '+'){
+				uint8_t test = check_keypad(0);
+				if(test){
+					//Only update the value if valid
+					volt_set_main_old = volt_set_main;
+					volt_set_main = translate_keypad();
+				}
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '-'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == 's'){
+				//skip decimal
+				if(encpos == 1){
+					encpos++;
+					encpos++;
+				}
+				else if(encpos < 4){
+					encpos++;
+				}
+				else{
+					encpos = 0;
+				}
+			}
+			else if(num == '['){
+				float temp = translate_keypad();
+				if(encpos == 0){
+					temp = temp - 10;
+				}
+				else if(encpos == 1){
+					temp = temp - 1;
+				}
+				else if(encpos == 3){
+					temp = temp - 0.1;
+				}
+				else if(encpos == 4){
+					temp = temp - 0.01;
+				}
+				if(temp >= 0.0000 && temp <= 12.0000){
+					fill_keypad(0,temp);
+				}
+				else if(temp < 0.0000){
+					fill_keypad(0,0);
+				}
+				else if(temp > 12.0000){
+					fill_keypad(0,12);
+				}
+			}
+			else if(num == ']'){
+				float temp = translate_keypad();
+				if(encpos == 0){
+					temp = temp + 10;
+				}
+				else if(encpos == 1){
+					temp = temp + 1;
+				}
+				else if(encpos == 3){
+					temp = temp + 0.1;
+				}
+				else if(encpos == 4){
+					temp = temp + 0.01;
+				}
+				if(temp >= 0.0000 && temp <= 12.0000){
+					fill_keypad(0,temp);
+				}
+				else if(temp < 0.0000){
+					fill_keypad(0,0);
+				}
+				else if(temp > 12.0000){
+					fill_keypad(0,12);
+				}
+			}
 		}
-		else if(num == '-'){
-			kpenum = WAIT;
-			clearkeypad();
+		//Default keypad sm
+		else{
+			//While in channel listen to numbers/decimal and letters for ENTER
+			if(num == 'A'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 'B'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 'C'){
+				uint8_t test = check_keypad(0);
+				if(test){
+					//Only update the value if valid
+					volt_set_main_old = volt_set_main;
+					volt_set_main = translate_keypad();
+				}
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 'D'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == '.'){
+				//It "should" be impossible to pass in a bad decimal and we can ignore bad calls
+				update_keypad(num);
+			}
+			else if(num >= '0' && num <= '9'){
+				//It "should" be impossible to overfill the array but we could do additional checks here for valid numbers
+				update_keypad(num);
+			}
+			else if(num == '#'){
+				update_keypad('z');
+			}
+			else if(num == '+'){
+				uint8_t test = check_keypad(0);
+				if(test){
+					//Only update the value if valid
+					volt_set_main_old = volt_set_main;
+					volt_set_main = translate_keypad();
+				}
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == '-'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 's'){
+				fill_keypad(0, volt_set_main);
+				encmode = 1;
+				encpos = 0;
+			}
+			else if(num == '['){
+				fill_keypad(0, volt_set_main);
+				encmode = 1;
+				encpos = 0;
+			}
+			else if(num == ']'){
+				fill_keypad(0, volt_set_main);
+				encmode = 1;
+				encpos = 0;
+			}
 		}
 	}
 	else if(kpenum == A2){
-		//While in channel listen to numbers/decimal and letters for ENTER
-		if(num == 'A'){
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == 'B'){
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == 'C'){
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == 'D'){
-			uint8_t test = check_keypad(1);
-			if(test){
-				//Only update the value if valid
-				amp_set_main_old = amp_set_main;
-				amp_set_main = translate_keypad();
-				update_ADC_watchdog(amp_set_main);
+		if(encmode){
+			if(num == 'A'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
 			}
-			kpenum = WAIT;
-			clearkeypad();
-		}
-		else if(num == '.'){
-			//It "should" be impossible to pass in a bad decimal and we can ignore bad calls
-			update_keypad(num);
-		}
-		else if(num >= '0' && num <= '9'){
-			//It "should" be impossible to overfill the array but we could do additional checks here for valid numbers
-			update_keypad(num);
-		}
-		else if(num == '#'){
-			update_keypad('z');
-		}
-		else if(num == '+'){
-			uint8_t test = check_keypad(1);
-			if(test){
-				//Only update the value if valid
-				amp_set_main_old = amp_set_main;
-				amp_set_main = translate_keypad();
-				update_ADC_watchdog(amp_set_main);
+			else if(num == 'B'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
 			}
-			kpenum = WAIT;
-			clearkeypad();
+			else if(num == 'C'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == 'D'){
+				uint8_t test = check_keypad(0);
+				if(test){
+					//Only update the value if valid
+					amp_set_main_old = amp_set_main;
+					amp_set_main = translate_keypad();
+				}
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '.'){
+				//If a keypad entry key is pressed forget what we were doing and go back to keypad entry
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num >= '0' && num <= '9'){
+				//If a keypad entry key is pressed forget what we were doing and go back to keypad entry
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '#'){
+				//If a keypad entry key is pressed forget what we were doing and go back to keypad entry
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '+'){
+				uint8_t test = check_keypad(0);
+				if(test){
+					//Only update the value if valid
+					amp_set_main_old = amp_set_main;
+					amp_set_aux = translate_keypad();
+				}
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == '-'){
+				kpenum = WAIT;
+				clear_keypad();
+				encmode = 0;
+				encpos = 0;
+			}
+			else if(num == 's'){
+				//skip decimal
+				if(encpos == 0){
+					encpos++;
+					encpos++;
+				}
+				else if(encpos < 4){
+					encpos++;
+				}
+				else{
+					encpos = 0;
+				}
+			}
+			else if(num == '['){
+				float temp = translate_keypad();
+				if(encpos == 0){
+					temp = temp - 1;
+				}
+				else if(encpos == 2){
+					temp = temp - 0.1;
+				}
+				else if(encpos == 3){
+					temp = temp - 0.01;
+				}
+				else if(encpos == 4){
+					temp = temp - 0.001;
+				}
+				if(temp >= 0.0000 && temp <= 0.80001){
+					fill_keypad(1,temp);
+				}
+				else if(temp < 0.0000){
+					fill_keypad(1,0);
+				}
+				else if(temp > 0.8000){
+					fill_keypad(1,0.8);
+				}
+			}
+			else if(num == ']'){
+				float temp = translate_keypad();
+				if(encpos == 0){
+					temp = temp + 1;
+				}
+				else if(encpos == 2){
+					temp = temp + 0.1;
+				}
+				else if(encpos == 3){
+					temp = temp + 0.01;
+				}
+				else if(encpos == 4){
+					temp = temp + 0.001;
+				}
+				if(temp >= 0.0000 && temp <= 0.80001){
+					fill_keypad(1,temp);
+				}
+				else if(temp < 0.0000){
+					fill_keypad(1,0);
+				}
+				else if(temp > 0.8000){
+					fill_keypad(1,0.8);
+				}
+			}
 		}
-		else if(num == '-'){
-			kpenum = WAIT;
-			clearkeypad();
+		//Default keypad sm
+		else{
+			//While in channel listen to numbers/decimal and letters for ENTER
+			if(num == 'A'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 'B'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 'C'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 'D'){
+				uint8_t test = check_keypad(1);
+				if(test){
+					//Only update the value if valid
+					amp_set_main_old = amp_set_main;
+					amp_set_main = translate_keypad();
+					update_ADC_watchdog(amp_set_main);
+				}
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == '.'){
+				//It "should" be impossible to pass in a bad decimal and we can ignore bad calls
+				update_keypad(num);
+			}
+			else if(num >= '0' && num <= '9'){
+				//It "should" be impossible to overfill the array but we could do additional checks here for valid numbers
+				update_keypad(num);
+			}
+			else if(num == '#'){
+				update_keypad('z');
+			}
+			else if(num == '+'){
+				uint8_t test = check_keypad(1);
+				if(test){
+					//Only update the value if valid
+					amp_set_main_old = amp_set_main;
+					amp_set_main = translate_keypad();
+					update_ADC_watchdog(amp_set_main);
+				}
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == '-'){
+				kpenum = WAIT;
+				clear_keypad();
+			}
+			else if(num == 's'){
+				fill_keypad(1, amp_set_main);
+				encmode = 1;
+				encpos = 0;
+			}
+			else if(num == '['){
+				fill_keypad(1, amp_set_main);
+				encmode = 1;
+				encpos = 0;
+			}
+			else if(num == ']'){
+				fill_keypad(1, amp_set_main);
+				encmode = 1;
+				encpos = 0;
+			}
 		}
 	}
 }
@@ -1863,16 +2620,16 @@ void row_input(void){
 	HAL_GPIO_WritePin(Col_1_GPIO_Port, Col_1_Pin|Col_2_Pin|Col_3_Pin|Col_4_Pin, GPIO_PIN_RESET);
 
 	//Reenable interrupts
-	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+	HAL_NVIC_SetPriority(Row_1_EXTI_IRQn, 12, 0);
+	HAL_NVIC_EnableIRQ(Row_1_EXTI_IRQn);
 }
 
 void column_input(void){
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	//Disable interrupts
-	//HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-	HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
+	//HAL_NVIC_SetPriority(Row_1_EXTI_IRQn, 12, 0);
+	HAL_NVIC_DisableIRQ(Row_1_EXTI_IRQn);
 
 	//Deinit
 	HAL_GPIO_DeInit(Row_1_GPIO_Port, Row_1_Pin);
@@ -1935,20 +2692,31 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 			}
 		}
 	}
-	else if (GPIO_Pin == Rot_CLK_Pin) {
-		if (Rot_State == NOTURN) {
-			HAL_NVIC_DisableIRQ(Rot_CLK_EXTI_IRQn);
-			//Rot_State = (HAL_GPIO_ReadPin(Rot_CLK_GPIO_Port, Rot_CLK_Pin) == HAL_GPIO_ReadPin(Rot_DT_GPIO_Port, Rot_DT_Pin)) ? CWTURN : CCWTURN;
-			Rot_State = (HAL_GPIO_ReadPin(Rot_DT_GPIO_Port, Rot_DT_Pin)) ? CWTURN : CCWTURN;
-			HAL_TIM_Base_Start_IT(&htim9);
+	else if(GPIO_Pin == Rot_SW_Pin){
+		//Falling edge
+		if(HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin) == 0){
+			//Make sure we didn't interrupt on falling edge already
+			if(swedge != 0){
+				swedge = 0;
+				//start debounce
+				HAL_NVIC_DisableIRQ(Rot_SW_EXTI_IRQn);
+				HAL_TIM_Base_Start_IT(&htim9);
+			}
+		}
+		//Rising edge
+		else{
+			//Make sure we didn't interrupt on rising edge already
+			if(swedge != 1){
+				swedge = 1;
+			}
 		}
 	}
-	else if (GPIO_Pin == Rot_SW_Pin) {
-		//HAL_NVIC_DisableIRQ(Rot_SW_EXTI_IRQn);
-		//Rot_SW_State = HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin);
-		//HAL_TIM_Base_Start_IT(&htim10);
-		HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
-		HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
+	else if(GPIO_Pin == Rot_CLK_Pin){
+		if (rotenum == NOTURN) {
+			HAL_NVIC_DisableIRQ(Rot_CLK_EXTI_IRQn);
+			rotenum = (HAL_GPIO_ReadPin(Rot_CLK_GPIO_Port, Rot_CLK_Pin) == HAL_GPIO_ReadPin(Rot_DT_GPIO_Port, Rot_DT_Pin)) ? CWTURN : CCWTURN;
+			HAL_TIM_Base_Start_IT(&htim10);
+		}
 	}
 }
 
@@ -1983,51 +2751,28 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		//Start timer again
 		HAL_TIM_Base_Start_IT(&htim3);
 	}
-	else if(htim == &htim9) {
+	else if(htim == &htim9){
 		//Disable timer now that we're in its interrupt
 		HAL_TIM_Base_Stop_IT(&htim9);
-		if (Rot_State != NOTURN) {
-			switch (Rot_State) {
-			case NOTURN:
-				// Error
-				break;
-			case CWTURN:
-				// This is where to put code to execute on a CW turn
-				HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
-				break;
-			case CCWTURN:
-				// This is where to put code to execute on a CCW turn
-				HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
-				break;
-			default:
-				// Error
-				break;
-			}
-		}
-		HAL_NVIC_EnableIRQ(Rot_CLK_EXTI_IRQn);
-		Rot_State = NOTURN;
+		//haha keypad_sm go brrrr
+		keypad_sm('s');//s for switch
+		HAL_NVIC_SetPriority(Rot_SW_EXTI_IRQn, 11, 0);
+		HAL_NVIC_EnableIRQ(Rot_SW_EXTI_IRQn);
 	}
-	else if(htim == &htim10) {
+	else if(htim == &htim10){
 		//Disable timer now that we're in its interrupt
 		HAL_TIM_Base_Stop_IT(&htim10);
-		if (HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin) == Rot_SW_State) {
-			switch (Rot_SW_State) {
-			case GPIO_PIN_RESET:
-				// This is where to put code to execute on a button press
-				HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
-				HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
-				break;
-			case GPIO_PIN_SET:
-				// This is where to put code to execute on a button release
-				break;
-			default:
-				// Error
-				break;
-			}
-		} else {
-			HAL_GPIO_EXTI_Callback(Rot_SW_Pin);
+		if(rotenum == CWTURN){
+			//haha keypad_sm go brrrr
+			keypad_sm(']');//right bracket for CW
 		}
-		HAL_NVIC_EnableIRQ(Rot_SW_EXTI_IRQn);
+		else if(rotenum == CCWTURN){
+			//haha keypad_sm go brrrr
+			keypad_sm('[');//left bracket for CCW
+		}
+		rotenum = NOTURN;
+		HAL_NVIC_SetPriority(Rot_CLK_EXTI_IRQn, 13, 0);
+		HAL_NVIC_EnableIRQ(Rot_CLK_EXTI_IRQn);
 	}
 	else if(htim == &htim11){
 		//Disable timer now that we're in its interrupt
@@ -2035,45 +2780,43 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		if(chstat_main == 0){
 			//Since we have a delay in updating the LED for channel 1 from UART, lets introduce a dumb fake delay on channel 2
 			if(!timercounter){
-				HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_RESET);
 			}
 			timercounter++;
 			if(timercounter >= 7){
 				timercounter = 0;
 			}
-			blink = 1;
+			blink = 0;
 		}
 		else if(chstat_main == 1){
 			if(!timercounter){
-				HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_SET);
 			}
 			timercounter++;
 			if(timercounter >= 7){
 				timercounter = 0;
 			}
-			blink = 1;
+			blink = 0;
 		}
 		else if(chstat_main == 2){
-			if(!timercounter){
-				HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
-			}
 			if(blink){
-				timercounter++;
+				HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
 			}
+			timercounter++;
 			if(timercounter >= 7){
 				timercounter = 0;
-				blink = 0;
+				blink = 1;
 			}
 		}
 
 		if(chstat_aux_rx == 0){
-			HAL_GPIO_WritePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_RESET);
 		}
 		else if(chstat_aux_rx == 1){
-			HAL_GPIO_WritePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin, GPIO_PIN_SET);
 		}
 		else if(chstat_aux_rx == 2){
-			HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
+			HAL_GPIO_TogglePin(Status_LED_1_GPIO_Port, Status_LED_1_Pin);
 		}
 		HAL_TIM_Base_Start_IT(&htim11);
 	}
@@ -2094,8 +2837,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc)
 {
 	if(chstat_main == 1){
-		chstat_main = 2;
 		HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
+		chstat_main = 2;
 	}
 }
 

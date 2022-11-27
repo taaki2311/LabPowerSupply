@@ -59,10 +59,10 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define Channel_Shutdown_Pin GPIO_PIN_6
 #define Channel_Shutdown_GPIO_Port GPIOA
-#define Status_LED_2_Pin GPIO_PIN_4
-#define Status_LED_2_GPIO_Port GPIOC
-#define Status_LED_1_Pin GPIO_PIN_5
+#define Status_LED_1_Pin GPIO_PIN_4
 #define Status_LED_1_GPIO_Port GPIOC
+#define Status_LED_2_Pin GPIO_PIN_5
+#define Status_LED_2_GPIO_Port GPIOC
 #define Rot_CLK_Pin GPIO_PIN_0
 #define Rot_CLK_GPIO_Port GPIOB
 #define Rot_CLK_EXTI_IRQn EXTI0_IRQn

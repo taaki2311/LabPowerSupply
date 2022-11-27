@@ -5,10 +5,10 @@
 ../Core/Src/main.c:627:6:update_ADC_watchdog	24	static
 ../Core/Src/main.c:643:6:HAL_ADC_ConvHalfCpltCallback	0	static
 ../Core/Src/main.c:649:6:HAL_ADC_ConvCpltCallback	0	static
-../Core/Src/main.c:655:6:HAL_ADC_LevelOutOfWindowCallback	0	static
-../Core/Src/main.c:664:6:HAL_UART_TxHalfCpltCallback	8	static
-../Core/Src/main.c:675:6:HAL_UART_TxCpltCallback	40	static
-../Core/Src/main.c:687:6:HAL_UART_RxHalfCpltCallback	0	static
-../Core/Src/main.c:691:6:HAL_UART_RxCpltCallback	72	static
-../Core/Src/main.c:779:6:HAL_UART_ErrorCallback	0	static
-../Core/Src/main.c:790:6:Error_Handler	0	static,ignoring_inline_asm
+../Core/Src/main.c:655:6:HAL_ADC_LevelOutOfWindowCallback	8	static
+../Core/Src/main.c:665:6:HAL_UART_TxHalfCpltCallback	8	static
+../Core/Src/main.c:676:6:HAL_UART_TxCpltCallback	40	static
+../Core/Src/main.c:688:6:HAL_UART_RxHalfCpltCallback	0	static
+../Core/Src/main.c:692:6:HAL_UART_RxCpltCallback	72	static
+../Core/Src/main.c:780:6:HAL_UART_ErrorCallback	0	static
+../Core/Src/main.c:791:6:Error_Handler	0	static,ignoring_inline_asm
