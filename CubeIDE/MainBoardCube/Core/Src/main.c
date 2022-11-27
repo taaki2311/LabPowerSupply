@@ -118,7 +118,7 @@ enum KEYPAD_ENUM kpenum = WAIT;
 enum ROTARY_STATE {NOTURN, CWTURN, CCWTURN};
 enum ROTARY_STATE rotenum = NOTURN;
 volatile uint8_t encmode = 0;
-volatile uint8_t encpos = 0;
+volatile int8_t encpos = 0;
 
 //static GPIO_TypeDef* row_ports[5] = { Row_1_GPIO_Port, Row_2_GPIO_Port, Row_3_GPIO_Port, Row_4_GPIO_Port, Row_5_GPIO_Port };
 static uint16_t row_pins[5] = {Row_1_Pin, Row_2_Pin, Row_3_Pin, Row_4_Pin, Row_5_Pin};
@@ -221,6 +221,10 @@ void fill_keypad(uint8_t va, float num);
 void keypad_sm(char num);
 void row_input(void);
 void column_input(void);
+void inc_arr_v(int8_t pos);
+void inc_arr_a(int8_t pos);
+void dec_arr_v(int8_t pos);
+void dec_arr_a(int8_t pos);
 /* Keypad Section End --------------------------------------------------------*/
 
 /* USER CODE END PFP */
@@ -719,7 +723,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 32000;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 500;
+  htim3.Init.Period = 400;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -764,7 +768,7 @@ static void MX_TIM9_Init(void)
   htim9.Instance = TIM9;
   htim9.Init.Prescaler = 32000;
   htim9.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim9.Init.Period = 100;
+  htim9.Init.Period = 200;
   htim9.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim9.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim9) != HAL_OK)
@@ -808,7 +812,7 @@ static void MX_TIM10_Init(void)
   htim10.Instance = TIM10;
   htim10.Init.Prescaler = 32000;
   htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim10.Init.Period = 10;
+  htim10.Init.Period = 20;
   htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
@@ -908,13 +912,13 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   /* DMA1_Channel4_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 3, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
   /* DMA1_Channel5_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 4, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 
 }
@@ -972,13 +976,13 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(Rot_DT_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 13, 0);
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 11, 0);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI2_IRQn, 11, 0);
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 9, 0);
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 12, 0);
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 7, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
@@ -1758,6 +1762,176 @@ void fill_keypad(uint8_t va, float num){
 	}
 }
 
+/*
+ * The following four recursive functions are meant to mostly replace the above function to improve performance and accuracy
+ * The above function is still needed once we enter encoder mode but it should only be needed once
+ */
+void inc_arr_v(int8_t pos){
+	//We do not allow incrementing past 12.00
+	if( !(pos == 0 && keypadarr[0] == '1' && keypadarr[1] >= '0' && keypadarr[3] >= '0' && keypadarr[4] >= '0') &&
+		!(pos == 0 && keypadarr[0] == '0' && keypadarr[1] > '2' && keypadarr[3] >= '0' && keypadarr[4] >= '0') &&
+		!(pos == 0 && keypadarr[0] == '0' && keypadarr[1] >= '2' && (keypadarr[3] > '0' || keypadarr[4] > '0')) &&
+		!(pos == 1 && keypadarr[0] == '1' && keypadarr[1] == '2' && keypadarr[3] == '0' && keypadarr[4] == '0') &&
+		!(pos == 1 && keypadarr[0] == '1' && keypadarr[1] == '1' && (keypadarr[3] > '0' || keypadarr[4] > '0')) &&
+		!(pos == 3 && keypadarr[0] == '1' && keypadarr[1] == '2' && keypadarr[3] == '0' && keypadarr[4] >= '0') &&
+		!(pos == 3 && keypadarr[0] == '1' && keypadarr[1] == '1' && keypadarr[3] == '9' && keypadarr[4] > '0') &&
+		!(pos == 4 && keypadarr[0] == '1' && keypadarr[1] == '2' && keypadarr[3] == '0' && keypadarr[4] == '0') ){
+		//Position must be positive and we do not want to increment the '.' char located in position 2
+		if(pos >= 0 && pos != 2){
+			//Increment
+			if(keypadarr[pos] < '9'){
+				keypadarr[pos]++;
+			}
+			//Recursively increment
+			else{
+				keypadarr[pos] = '0';
+				inc_arr_v(pos-1);
+			}
+		}
+		//Skip decimal place
+		else if(pos == 2){
+			inc_arr_v(pos-1);
+		}
+	}
+	//If an attempt to pass 12V is made we can just set 12V
+	else{
+		keypadarr[0] = '1';
+		keypadarr[1] = '2';
+		keypadarr[2] = '.';
+		keypadarr[3] = '0';
+		keypadarr[4] = '0';
+	}
+	//update keypad iterator
+	for(int i = 0; i < keypadlength; i++){
+		if(keypadarr[i] != 'z'){
+			keypaditerator = i - 1;
+			break;
+		}
+	}
+}
+
+void inc_arr_a(int8_t pos){
+	//We do not allow incrementing past 0.800
+	if( !(pos == 0) &&//just don't even increment the first digit since our max limit is < 1
+		!(pos == 2 && keypadarr[0] == '0' && keypadarr[2] == '8' && keypadarr[3] == '0' && keypadarr[4] == '0') &&
+		!(pos == 2 && keypadarr[0] == '0' && keypadarr[2] == '7' && (keypadarr[3] > '0' || keypadarr[4] > '0')) &&
+		!(pos == 3 && keypadarr[0] == '0' && keypadarr[2] == '8' && keypadarr[3] == '0' && keypadarr[4] >= '0') &&
+		!(pos == 3 && keypadarr[0] == '0' && keypadarr[2] == '7' && keypadarr[3] == '9' && keypadarr[4] > '0') &&
+		!(pos == 4 && keypadarr[0] == '0' && keypadarr[2] == '8' && keypadarr[3] == '0' && keypadarr[4] == '0') ){
+		//Position must be positive and we do not want to increment the '.' char located in position 1
+		if(pos >= 0 && pos != 1){
+			//Increment
+			if(keypadarr[pos] < '9'){
+				keypadarr[pos]++;
+			}
+			//Recursively increment
+			else{
+				keypadarr[pos] = '0';
+				inc_arr_a(pos-1);
+			}
+		}
+		//Skip decimal place
+		else if(pos == 1){
+			inc_arr_a(pos-1);
+		}
+	}
+	//If an attempt to pass 0.8A is made we can just set 0.8A
+	else{
+		keypadarr[0] = '0';
+		keypadarr[1] = '.';
+		keypadarr[2] = '8';
+		keypadarr[3] = '0';
+		keypadarr[4] = '0';
+	}
+	//update keypad iterator
+	for(int i = 0; i < keypadlength; i++){
+		if(keypadarr[i] != 'z'){
+			keypaditerator = i - 1;
+			break;
+		}
+	}
+}
+
+void dec_arr_v(int8_t pos){
+	//We do not allow decrementing past 00.00
+	if( !(pos == 0 && keypadarr[0] == '0') &&
+		!(pos == 1 && keypadarr[0] == '0' && keypadarr[1] == '0') &&
+		!(pos == 3 && keypadarr[0] == '0' && keypadarr[1] == '0' && keypadarr[3] == '0') &&
+		!(pos == 4 && keypadarr[0] == '0' && keypadarr[1] == '0' && keypadarr[3] == '0' && keypadarr[4] == '0') ){
+		//Position must be positive and we do not want to increment the '.' char located in position 2
+		if(pos <= 4 && pos != 2){
+			//Increment
+			if(keypadarr[pos] > '0'){
+				keypadarr[pos]--;
+			}
+			//Recursively increment
+			else{
+				keypadarr[pos] = '9';
+				dec_arr_v(pos-1);
+			}
+		}
+		//Skip decimal place
+		else if(pos == 2){
+			dec_arr_v(pos-1);
+		}
+	}
+	//If an attempt to pass 0V is made we can just set 0V
+	else{
+		keypadarr[0] = '0';
+		keypadarr[1] = '0';
+		keypadarr[2] = '.';
+		keypadarr[3] = '0';
+		keypadarr[4] = '0';
+	}
+	//update keypad iterator
+	for(int i = 0; i < keypadlength; i++){
+		if(keypadarr[i] != 'z'){
+			keypaditerator = i - 1;
+			break;
+		}
+	}
+}
+
+void dec_arr_a(int8_t pos){
+	//We do not allow decrementing past 0.000
+	if( !(pos == 0 && keypadarr[0] == '0') &&
+		!(pos == 1 && keypadarr[0] == '0' && keypadarr[2] == '0') &&
+		!(pos == 3 && keypadarr[0] == '0' && keypadarr[2] == '0' && keypadarr[3] == '0') &&
+		!(pos == 4 && keypadarr[0] == '0' && keypadarr[2] == '0' && keypadarr[3] == '0' && keypadarr[4] == '0') ){
+		//Position must be positive and we do not want to increment the '.' char located in position 2
+		if(pos <= 4 && pos != 1){
+			//Increment
+			if(keypadarr[pos] > '0'){
+				keypadarr[pos]--;
+			}
+			//Recursively increment
+			else{
+				keypadarr[pos] = '9';
+				dec_arr_a(pos-1);
+			}
+		}
+		//Skip decimal place
+		else if(pos == 1){
+			dec_arr_a(pos-1);
+		}
+	}
+	//If an attempt to pass 0A is made we can just set 0A
+	else{
+		keypadarr[0] = '0';
+		keypadarr[1] = '.';
+		keypadarr[2] = '0';
+		keypadarr[3] = '0';
+		keypadarr[4] = '0';
+	}
+	//update keypad iterator
+	for(int i = 0; i < keypadlength; i++){
+		if(keypadarr[i] != 'z'){
+			keypaditerator = i - 1;
+			break;
+		}
+	}
+}
+
 void keypad_sm(char num){
 	//A=V1;B=A1;C=V2;D=A2;
 	if(kpenum == WAIT){
@@ -1880,52 +2054,10 @@ void keypad_sm(char num){
 				}
 			}
 			else if(num == '['){
-				float temp = translate_keypad();
-				if(encpos == 0){
-					temp = temp - 10;
-				}
-				else if(encpos == 1){
-					temp = temp - 1;
-				}
-				else if(encpos == 3){
-					temp = temp - 0.1;
-				}
-				else if(encpos == 4){
-					temp = temp - 0.01;
-				}
-				if(temp >= 0.0000 && temp <= 12.0000){
-					fill_keypad(0,temp);
-				}
-				else if(temp < 0.0000){
-					fill_keypad(0,0);
-				}
-				else if(temp > 12.0000){
-					fill_keypad(0,12);
-				}
+				dec_arr_v(encpos);
 			}
 			else if(num == ']'){
-				float temp = translate_keypad();
-				if(encpos == 0){
-					temp = temp + 10;
-				}
-				else if(encpos == 1){
-					temp = temp + 1;
-				}
-				else if(encpos == 3){
-					temp = temp + 0.1;
-				}
-				else if(encpos == 4){
-					temp = temp + 0.01;
-				}
-				if(temp >= 0.0000 && temp <= 12.0000){
-					fill_keypad(0,temp);
-				}
-				else if(temp < 0.0000){
-					fill_keypad(0,0);
-				}
-				else if(temp > 12.0000){
-					fill_keypad(0,12);
-				}
+				inc_arr_v(encpos);
 			}
 		}
 		//Default keypad sm
@@ -2073,52 +2205,10 @@ void keypad_sm(char num){
 				}
 			}
 			else if(num == '['){
-				float temp = translate_keypad();
-				if(encpos == 0){
-					temp = temp - 1;
-				}
-				else if(encpos == 2){
-					temp = temp - 0.1;
-				}
-				else if(encpos == 3){
-					temp = temp - 0.01;
-				}
-				else if(encpos == 4){
-					temp = temp - 0.001;
-				}
-				if(temp >= 0.0000 && temp <= 0.8000){
-					fill_keypad(1,temp);
-				}
-				else if(temp < 0.0000){
-					fill_keypad(1,0);
-				}
-				else if(temp > 0.8000){
-					fill_keypad(1,0.8);
-				}
+				dec_arr_a(encpos);
 			}
 			else if(num == ']'){
-				float temp = translate_keypad();
-				if(encpos == 0){
-					temp = temp + 1;
-				}
-				else if(encpos == 2){
-					temp = temp + 0.1;
-				}
-				else if(encpos == 3){
-					temp = temp + 0.01;
-				}
-				else if(encpos == 4){
-					temp = temp + 0.001;
-				}
-				if(temp >= 0.0000 && temp <= 0.8000){
-					fill_keypad(1,temp);
-				}
-				else if(temp < 0.0000){
-					fill_keypad(1,0);
-				}
-				else if(temp > 0.8000){
-					fill_keypad(1,0.8);
-				}
+				inc_arr_a(encpos);
 			}
 		}
 		//Default keypad sm
@@ -2269,52 +2359,10 @@ void keypad_sm(char num){
 				}
 			}
 			else if(num == '['){
-				float temp = translate_keypad();
-				if(encpos == 0){
-					temp = temp - 10;
-				}
-				else if(encpos == 1){
-					temp = temp - 1;
-				}
-				else if(encpos == 3){
-					temp = temp - 0.1;
-				}
-				else if(encpos == 4){
-					temp = temp - 0.01;
-				}
-				if(temp >= 0.0000 && temp <= 12.0000){
-					fill_keypad(0,temp);
-				}
-				else if(temp < 0.0000){
-					fill_keypad(0,0);
-				}
-				else if(temp > 12.0000){
-					fill_keypad(0,12);
-				}
+				dec_arr_v(encpos);
 			}
 			else if(num == ']'){
-				float temp = translate_keypad();
-				if(encpos == 0){
-					temp = temp + 10;
-				}
-				else if(encpos == 1){
-					temp = temp + 1;
-				}
-				else if(encpos == 3){
-					temp = temp + 0.1;
-				}
-				else if(encpos == 4){
-					temp = temp + 0.01;
-				}
-				if(temp >= 0.0000 && temp <= 12.0000){
-					fill_keypad(0,temp);
-				}
-				else if(temp < 0.0000){
-					fill_keypad(0,0);
-				}
-				else if(temp > 12.0000){
-					fill_keypad(0,12);
-				}
+				inc_arr_v(encpos);
 			}
 		}
 		//Default keypad sm
@@ -2466,52 +2514,10 @@ void keypad_sm(char num){
 				}
 			}
 			else if(num == '['){
-				float temp = translate_keypad();
-				if(encpos == 0){
-					temp = temp - 1;
-				}
-				else if(encpos == 2){
-					temp = temp - 0.1;
-				}
-				else if(encpos == 3){
-					temp = temp - 0.01;
-				}
-				else if(encpos == 4){
-					temp = temp - 0.001;
-				}
-				if(temp >= 0.0000 && temp <= 0.80001){
-					fill_keypad(1,temp);
-				}
-				else if(temp < 0.0000){
-					fill_keypad(1,0);
-				}
-				else if(temp > 0.8000){
-					fill_keypad(1,0.8);
-				}
+				dec_arr_a(encpos);
 			}
 			else if(num == ']'){
-				float temp = translate_keypad();
-				if(encpos == 0){
-					temp = temp + 1;
-				}
-				else if(encpos == 2){
-					temp = temp + 0.1;
-				}
-				else if(encpos == 3){
-					temp = temp + 0.01;
-				}
-				else if(encpos == 4){
-					temp = temp + 0.001;
-				}
-				if(temp >= 0.0000 && temp <= 0.80001){
-					fill_keypad(1,temp);
-				}
-				else if(temp < 0.0000){
-					fill_keypad(1,0);
-				}
-				else if(temp > 0.8000){
-					fill_keypad(1,0.8);
-				}
+				inc_arr_a(encpos);
 			}
 		}
 		//Default keypad sm
@@ -2620,7 +2626,7 @@ void row_input(void){
 	HAL_GPIO_WritePin(Col_1_GPIO_Port, Col_1_Pin|Col_2_Pin|Col_3_Pin|Col_4_Pin, GPIO_PIN_RESET);
 
 	//Reenable interrupts
-	HAL_NVIC_SetPriority(Row_1_EXTI_IRQn, 12, 0);
+	HAL_NVIC_SetPriority(Row_1_EXTI_IRQn, 7, 0);
 	HAL_NVIC_EnableIRQ(Row_1_EXTI_IRQn);
 }
 
@@ -2628,7 +2634,7 @@ void column_input(void){
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	//Disable interrupts
-	//HAL_NVIC_SetPriority(Row_1_EXTI_IRQn, 12, 0);
+	//HAL_NVIC_SetPriority(Row_1_EXTI_IRQn, 7, 0);
 	HAL_NVIC_DisableIRQ(Row_1_EXTI_IRQn);
 
 	//Deinit
@@ -2756,7 +2762,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		HAL_TIM_Base_Stop_IT(&htim9);
 		//haha keypad_sm go brrrr
 		keypad_sm('s');//s for switch
-		HAL_NVIC_SetPriority(Rot_SW_EXTI_IRQn, 11, 0);
+		HAL_NVIC_SetPriority(Rot_SW_EXTI_IRQn, 9, 0);
 		HAL_NVIC_EnableIRQ(Rot_SW_EXTI_IRQn);
 	}
 	else if(htim == &htim10){
@@ -2771,7 +2777,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			keypad_sm('[');//left bracket for CCW
 		}
 		rotenum = NOTURN;
-		HAL_NVIC_SetPriority(Rot_CLK_EXTI_IRQn, 13, 0);
+		HAL_NVIC_SetPriority(Rot_CLK_EXTI_IRQn, 11, 0);
 		HAL_NVIC_EnableIRQ(Rot_CLK_EXTI_IRQn);
 	}
 	else if(htim == &htim11){
