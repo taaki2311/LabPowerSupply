@@ -83,6 +83,7 @@ I2C_HandleTypeDef hi2c1;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim9;
 TIM_HandleTypeDef htim10;
 TIM_HandleTypeDef htim11;
@@ -167,6 +168,7 @@ volatile uint16_t v2;//dac channel 2 is switching
 
 volatile uint8_t timercounter = 0;
 volatile uint8_t blink = 0;
+volatile uint8_t startmessage = 0;
 
 /* USER CODE END PV */
 
@@ -183,6 +185,7 @@ static void MX_TIM3_Init(void);
 static void MX_TIM11_Init(void);
 static void MX_TIM9_Init(void);
 static void MX_TIM10_Init(void);
+static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 
 void ourInit(void);//Runs several Inits
@@ -210,6 +213,7 @@ void lcd_psu_init(void);
 void lcd_update_voltage(uint8_t channel, float num);
 void lcd_update_amperage(uint8_t channel, float num);
 void lcd_psu_update(void);
+void lcd_psu_welcome(void);
 /* LCD Section End -----------------------------------------------------------*/
 
 /* Keypad Section Begin ------------------------------------------------------*/
@@ -273,6 +277,7 @@ int main(void)
   MX_TIM11_Init();
   MX_TIM9_Init();
   MX_TIM10_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   ourInit();
   volatile float error = 0;
@@ -331,15 +336,15 @@ int main(void)
 			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
 	  }
-	  //if we are inactive watch the opamp output
+	  //if we are inactive watch the opamp output, remove half a volt because it's better to undershoot than overshoot
 	  else{
-		  if(op_num > volt_set_main + margin){
+		  if(op_num > (volt_set_main - 0.5) + margin){
 			  if(v1 >= 1){
 				  v1--;
 			  }
 			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
-		  else if(op_num < volt_set_main - margin){
+		  else if(op_num < (volt_set_main - 0.5) - margin){
 			  if(v1 <= 4094){
 				  v1++;
 			  }
@@ -678,7 +683,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 32000;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 10;
+  htim2.Init.Period = 20;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -723,7 +728,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 32000;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 400;
+  htim3.Init.Period = 500;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -744,6 +749,51 @@ static void MX_TIM3_Init(void)
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
+
+}
+
+/**
+  * @brief TIM4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM4_Init(void)
+{
+
+  /* USER CODE BEGIN TIM4_Init 0 */
+
+  /* USER CODE END TIM4_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM4_Init 1 */
+
+  /* USER CODE END TIM4_Init 1 */
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 32000;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 2500;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM4_Init 2 */
+
+  /* USER CODE END TIM4_Init 2 */
 
 }
 
@@ -812,7 +862,7 @@ static void MX_TIM10_Init(void)
   htim10.Instance = TIM10;
   htim10.Init.Prescaler = 32000;
   htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim10.Init.Period = 20;
+  htim10.Init.Period = 10;
   htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
@@ -912,13 +962,13 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 1, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   /* DMA1_Channel4_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 4, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
   /* DMA1_Channel5_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 5, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 
 }
@@ -933,10 +983,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
@@ -945,12 +996,28 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, Status_LED_1_Pin|Status_LED_2_Pin|Col_1_Pin|Col_2_Pin
                           |Col_3_Pin|Col_4_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pins : Unused_Pin_1_Pin Unused_Pin_2_Pin Unused_Pin_3_Pin Unused_Pin_4_Pin
+                           Unused_Pin_5_Pin Unused_Pin_6_Pin Unused_Pin_7_Pin Unused_Pin_12_Pin
+                           Unused_Pin_13_Pin Unused_Pin_14_Pin */
+  GPIO_InitStruct.Pin = Unused_Pin_1_Pin|Unused_Pin_2_Pin|Unused_Pin_3_Pin|Unused_Pin_4_Pin
+                          |Unused_Pin_5_Pin|Unused_Pin_6_Pin|Unused_Pin_7_Pin|Unused_Pin_12_Pin
+                          |Unused_Pin_13_Pin|Unused_Pin_14_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
   /*Configure GPIO pin : Channel_Shutdown_Pin */
   GPIO_InitStruct.Pin = Channel_Shutdown_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(Channel_Shutdown_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Unused_Pin_8_Pin Unused_Pin_10_Pin Unused_Pin_11_Pin */
+  GPIO_InitStruct.Pin = Unused_Pin_8_Pin|Unused_Pin_10_Pin|Unused_Pin_11_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : Status_LED_1_Pin Status_LED_2_Pin Col_1_Pin Col_2_Pin
                            Col_3_Pin Col_4_Pin */
@@ -975,14 +1042,28 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(Rot_DT_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : Unused_Pin_9_Pin Unused_Pin_16_Pin Unused_Pin_17_Pin Unused_Pin_18_Pin
+                           Unused_Pin_19_Pin Unused_Pin_20_Pin */
+  GPIO_InitStruct.Pin = Unused_Pin_9_Pin|Unused_Pin_16_Pin|Unused_Pin_17_Pin|Unused_Pin_18_Pin
+                          |Unused_Pin_19_Pin|Unused_Pin_20_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Unused_Pin_15_Pin */
+  GPIO_InitStruct.Pin = Unused_Pin_15_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(Unused_Pin_15_GPIO_Port, &GPIO_InitStruct);
+
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 11, 0);
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI2_IRQn, 9, 0);
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 7, 0);
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
@@ -1011,13 +1092,6 @@ void ourInit(void){
 	//Ensure keypad columns output 0 by default
 	HAL_GPIO_WritePin(Col_1_GPIO_Port, Col_1_Pin|Col_2_Pin|Col_3_Pin|Col_4_Pin, GPIO_PIN_RESET);
 
-	//LCD Init
-	lcd_psu_init();
-	//Start display timer
-	HAL_TIM_Base_Start_IT(&htim3);
-	//Start LED timer
-	HAL_TIM_Base_Start_IT(&htim11);
-
 	memset (usbbuffer, '\0', 128);  // clear the buffer
 	memset (txbuffer, '\0', 64);  // clear the buffer
 	memset (txbuffer_cpy, '\0', 64);  // clear the buffer
@@ -1027,6 +1101,17 @@ void ourInit(void){
 
 	snprintf((char*)txbuffer, 32, "*STRT,%05.2f,%5.3f,%d,FNSH!", volt_set_aux, amp_set_aux, chstat_aux_tx);
 	HAL_UART_Transmit_DMA(&huart1, txbuffer, 64);
+
+	//LCD Init
+	//lcd_psu_init();
+	lcd_psu_welcome();
+
+	//Start LED timer
+	HAL_TIM_Base_Start_IT(&htim11);
+
+	//Start display timer
+	HAL_TIM_Base_Start_IT(&htim4);
+
 }
 
 /* USB Section Begin ---------------------------------------------------------*/
@@ -1203,7 +1288,7 @@ void lcd_createChar(void)
 }
 
 void lcd_psu_init(void){
-	lcd_init();
+	//lcd_init();
 
 	lcd_put_cur(0, 0);
 	lcd_send_string("V1:0.00V ");
@@ -1234,7 +1319,20 @@ void lcd_psu_init(void){
 	lcd_send_string(":0.000A");
 }
 
+void lcd_psu_welcome(void){
+	lcd_init();
+
+	lcd_put_cur(1, 0);
+	lcd_send_string("493 Lab Power Supply");
+	lcd_put_cur(2, 0);
+	lcd_send_string("   Please Wait...   ");
+}
+
 void lcd_psu_update(void){
+	if(startmessage){
+		startmessage = 0;
+		lcd_psu_init();
+	}
 	LCD_CursorBlinkOnOff(0,0);
 	if(kpenum == WAIT){
 		lcd_update_voltage(1,volt_set_aux);
@@ -2458,6 +2556,7 @@ void keypad_sm(char num){
 					//Only update the value if valid
 					amp_set_main_old = amp_set_main;
 					amp_set_main = translate_keypad();
+					update_ADC_watchdog(amp_set_main);
 				}
 				kpenum = WAIT;
 				clear_keypad();
@@ -2487,7 +2586,8 @@ void keypad_sm(char num){
 				if(test){
 					//Only update the value if valid
 					amp_set_main_old = amp_set_main;
-					amp_set_aux = translate_keypad();
+					amp_set_main = translate_keypad();
+					update_ADC_watchdog(amp_set_main);
 				}
 				kpenum = WAIT;
 				clear_keypad();
@@ -2626,7 +2726,7 @@ void row_input(void){
 	HAL_GPIO_WritePin(Col_1_GPIO_Port, Col_1_Pin|Col_2_Pin|Col_3_Pin|Col_4_Pin, GPIO_PIN_RESET);
 
 	//Reenable interrupts
-	HAL_NVIC_SetPriority(Row_1_EXTI_IRQn, 7, 0);
+	HAL_NVIC_SetPriority(Row_1_EXTI_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(Row_1_EXTI_IRQn);
 }
 
@@ -2634,7 +2734,7 @@ void column_input(void){
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	//Disable interrupts
-	//HAL_NVIC_SetPriority(Row_1_EXTI_IRQn, 7, 0);
+	//HAL_NVIC_SetPriority(Row_1_EXTI_IRQn, 0, 0);
 	HAL_NVIC_DisableIRQ(Row_1_EXTI_IRQn);
 
 	//Deinit
@@ -2757,12 +2857,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		//Start timer again
 		HAL_TIM_Base_Start_IT(&htim3);
 	}
+	else if(htim == &htim4){
+		//Disable timer now that we're in its interrupt
+		HAL_TIM_Base_Stop_IT(&htim4);
+		if(!startmessage){
+			startmessage = 1;
+			HAL_TIM_Base_Start_IT(&htim4);
+		}
+		else{
+			//Start display
+			HAL_TIM_Base_Start_IT(&htim3);
+		}
+	}
 	else if(htim == &htim9){
 		//Disable timer now that we're in its interrupt
 		HAL_TIM_Base_Stop_IT(&htim9);
 		//haha keypad_sm go brrrr
 		keypad_sm('s');//s for switch
-		HAL_NVIC_SetPriority(Rot_SW_EXTI_IRQn, 9, 0);
+		HAL_NVIC_SetPriority(Rot_SW_EXTI_IRQn, 0, 0);
 		HAL_NVIC_EnableIRQ(Rot_SW_EXTI_IRQn);
 	}
 	else if(htim == &htim10){
@@ -2777,7 +2889,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			keypad_sm('[');//left bracket for CCW
 		}
 		rotenum = NOTURN;
-		HAL_NVIC_SetPriority(Rot_CLK_EXTI_IRQn, 11, 0);
+		HAL_NVIC_SetPriority(Rot_CLK_EXTI_IRQn, 0, 0);
 		HAL_NVIC_EnableIRQ(Rot_CLK_EXTI_IRQn);
 	}
 	else if(htim == &htim11){

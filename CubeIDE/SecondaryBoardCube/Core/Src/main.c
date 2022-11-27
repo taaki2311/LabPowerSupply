@@ -210,15 +210,15 @@ int main(void)
 			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
 	  }
-	  //if we are inactive watch the opamp output
+	  //if we are inactive watch the opamp output, remove half a volt because it's better to undershoot than overshoot
 	  else{
-		  if(op_num > volt_set_main + margin){
+		  if(op_num > (volt_set_main - 0.5) + margin){
 			  if(v1 >= 1){
 				  v1--;
 			  }
 			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
-		  else if(op_num < volt_set_main - margin){
+		  else if(op_num < (volt_set_main - 0.5) - margin){
 			  if(v1 <= 4094){
 				  v1++;
 			  }
@@ -566,11 +566,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pins : Unused_Pin_1_Pin Unused_Pin_2_Pin Unused_Pin_3_Pin */
+  GPIO_InitStruct.Pin = Unused_Pin_1_Pin|Unused_Pin_2_Pin|Unused_Pin_3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : Channel_Shutdown_Pin */
   GPIO_InitStruct.Pin = Channel_Shutdown_Pin;
@@ -578,6 +586,26 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(Channel_Shutdown_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Unused_Pin_4_Pin Unused_Pin_14_Pin Unused_Pin_15_Pin Unused_Pin_16_Pin
+                           Unused_Pin_17_Pin */
+  GPIO_InitStruct.Pin = Unused_Pin_4_Pin|Unused_Pin_14_Pin|Unused_Pin_15_Pin|Unused_Pin_16_Pin
+                          |Unused_Pin_17_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Unused_Pin_5_Pin Unused_Pin_6_Pin Unused_Pin_7_Pin Unused_Pin_8_Pin
+                           Unused_Pin_9_Pin Unused_Pin_10_Pin Unused_Pin_11_Pin Unused_Pin_12_Pin
+                           Unused_Pin_13_Pin Unused_Pin_18_Pin Unused_Pin_19_Pin Unused_Pin_20_Pin
+                           Unused_Pin_21_Pin Unused_Pin_22_Pin Unused_Pin_23_Pin Unused_Pin_24_Pin */
+  GPIO_InitStruct.Pin = Unused_Pin_5_Pin|Unused_Pin_6_Pin|Unused_Pin_7_Pin|Unused_Pin_8_Pin
+                          |Unused_Pin_9_Pin|Unused_Pin_10_Pin|Unused_Pin_11_Pin|Unused_Pin_12_Pin
+                          |Unused_Pin_13_Pin|Unused_Pin_18_Pin|Unused_Pin_19_Pin|Unused_Pin_20_Pin
+                          |Unused_Pin_21_Pin|Unused_Pin_22_Pin|Unused_Pin_23_Pin|Unused_Pin_24_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
 
