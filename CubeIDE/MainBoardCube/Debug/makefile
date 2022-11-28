@@ -64,8 +64,8 @@ all: main-build
 main-build: MainBoardCube.elf secondary-outputs
 
 # Tool invocations
-MainBoardCube.elf MainBoardCube.map: $(OBJS) $(USER_OBJS) C:\Users\Krotain\STM32CubeIDE\workspace_1.10.1\MainBoardCube\STM32L152RBTXA_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "MainBoardCube.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\Krotain\STM32CubeIDE\workspace_1.10.1\MainBoardCube\STM32L152RBTXA_FLASH.ld" --specs=nosys.specs -Wl,-Map="MainBoardCube.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+MainBoardCube.elf MainBoardCube.map: $(OBJS) $(USER_OBJS) C:\Users\taaki\Documents\Fall\ 2022\ECE\ 493\ece_492-3_topic_1\CubeIDE\MainBoardCube\STM32L152RBTXA_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "MainBoardCube.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\taaki\Documents\Fall 2022\ECE 493\ece_492-3_topic_1\CubeIDE\MainBoardCube\STM32L152RBTXA_FLASH.ld" --specs=nosys.specs -Wl,-Map="MainBoardCube.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

@@ -62,9 +62,9 @@ const uint8_t customChar[64] = {
 /* ADC Section End -----------------------------------------------------------*/
 
 /* PID Control for the Linear Voltage Regulator ------------------------------*/
-#define P 0.1
-#define I 0.1
-#define D 0.1
+#define P 0.15
+#define I 0.15
+#define D 0.2
 /* PID Linear Section End ----------------------------------------------------*/
 
 /* USER CODE END PD */
@@ -147,32 +147,32 @@ static const char keypad_labels[5][4] = {
 /* Keypad Section End --------------------------------------------------------*/
 
 //Channel numbers
-volatile float volt_set_main = 0.0;
-volatile float amp_set_main = 0.0;
-volatile float volt_set_aux = 0.0;
-volatile float amp_set_aux = 0.0;
+float volt_set_main = 0.0;
+float amp_set_main = 0.8;
+float volt_set_aux = 0.0;
+float amp_set_aux = 0.8;
 
 volatile float volt_set_main_old = 0.0;
-volatile float amp_set_main_old = 0.0;
+volatile float amp_set_main_old = 0.8;
 //volatile float volt_set_aux_old = 0.0;
 //volatile float amp_set_aux_old = 0.0;
 
 //Array for the adc values and vars to hold them
 volatile uint16_t adc_values[6];
-volatile uint16_t adc_values_cpy[6];
+uint16_t adc_values_cpy[6];
 uint16_t* vrefptr = ((uint16_t*)VREFINT_CAL_ADDR_CMSIS);
 int8_t chstat_main = 0;
 int8_t chstat_aux_tx = 0;
 int8_t chstat_aux_rx = 0;
 
 //Globals for adc values
-volatile float lin_num = 0;
-volatile float cur_num = 0;
-volatile float op_num = 0;
-volatile float swi_num = 0;
+float lin_num = 0;
+float cur_num = 0;
+float op_num = 0;
+float swi_num = 0;
 
-volatile float lin_num_aux = 0;
-volatile float cur_num_aux = 0;
+float lin_num_aux = 0;
+float cur_num_aux = 0;
 
 //Global for dac value
 uint16_t v1;//dac channel 1 is linear
@@ -298,6 +298,7 @@ int main(void)
   float error_previous = 0;
   float correction = 0;
   float corrected_volt_set_main;
+  float tmpv1;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -559,6 +560,7 @@ int main(void)
 	  swi_num  = (swi_num_temp >= 0.0000) ? swi_num_temp : 0.0000;
 
 
+//	  /*
 	  // Bang-Bang Controller
 	  //Try really hard to get the voltage right
 	  const float margin = 0.002;
@@ -592,29 +594,50 @@ int main(void)
 			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
 	  }
+//	  */
 
-
-/*
+	  /*
 	  //PID
-	  error = lin_num - volt_set_main;
-	  integral += error;
-	  if (integral > (float)4095.0) {
-		  integral = 4095;
-	  } else if (integral < (float)(-4095.0)) {
-		  integral = (float)(-4095.0);
+	  if (chstat_main) {
+		  error = lin_num - volt_set_main;
+		  integral += error;
+		  if (integral > (float)4095.0) {
+			  integral = 4095;
+		  } else if (integral < (float)(-4095.0)) {
+			  integral = (float)(-4095.0);
+		  }
+		  derivative = error - error_previous;
+		  error_previous = error;
+		  correction = P * error + I * integral + D * derivative;
+		  corrected_volt_set_main = volt_set_main - correction;
+		  if (corrected_volt_set_main > 12.0) {
+			  corrected_volt_set_main = 12.0;
+		  }
+		  else if(corrected_volt_set_main < 0.0) {
+			  corrected_volt_set_main = 0.0;
+		  }
+		  tmpv1 = (((((float)corrected_volt_set_main / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
+		  if (tmpv1 > 4095) {
+			  tmpv1 = 4095;
+		  } else if (tmpv1 < 0) {
+			  tmpv1 = 0;
+		  }
+		  v1 = (uint16_t) tmpv1;
+	  } else {
+		  if(op_num > (volt_set_main - 1)){
+			  if(v1 >= 1){
+				  v1--;
+			  }
+			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+		  }
+		  else if(op_num < (volt_set_main - 1)){
+			  if(v1 <= 4094){
+				  v1++;
+			  }
+			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+		  }
 	  }
-	  derivative = error - error_previous;
-	  error_previous = error;
-	  correction = P * error + I * integral + D * derivative;
-	  corrected_volt_set_main = volt_set_main - correction;
-	  if (corrected_volt_set_main > 12.0) {
-		  corrected_volt_set_main = 12.0;
-	  }
-	  else if(corrected_volt_set_main < 0.0) {
-		  corrected_volt_set_main = 0.0;
-	  }
-	  v1 = (uint16_t)(((((float)corrected_volt_set_main / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
-*/
+//	  */
 
 	  /*
 	   * The calculation we do to determine what we need to set the dac for the switching regulator to is determined by the following formula
@@ -623,7 +646,7 @@ int main(void)
 	   * Vdac = 4.001400 - 0.240000*Vout
 	   */
 
-	  float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.5))) * (float)4095 / (float)vddcalc);
+	  float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.75))) * (float)4095 / (float)vddcalc);
 	  if(temp <= 0){
 		  v2 = 0;
 	  }
@@ -660,7 +683,6 @@ int main(void)
 	  //Keep the watchdog threshold up to date with changes to vdd
 	  update_ADC_watchdog(amp_set_main);
 
-	  HAL_Delay(1);
   }
   /* USER CODE END 3 */
 }
@@ -1391,13 +1413,16 @@ void update_ADC_watchdog(float val){
 
 	uint16_t vrefvalue = (uint16_t) *vrefptr;
 	float vddcalc = (float)3.0 * ((float)vrefvalue / (float)ADC_VREF);
-	uint16_t amp = (uint16_t)( ((float)val * (float)0.15 * (float)20.0) * (float)4095 / (float)vddcalc);
+	float amp = ( ((float)val * (float)0.15 * (float)20.0) * (float)4095 / (float)vddcalc);
 
-	if(amp >= 4095){
+	if(amp >= 4095.0){
 		ADC1->HTR = 4095;
 	}
+	else if (amp <= 0.0) {
+		ADC1->HTR = 0;
+	}
 	else{
-		ADC1->HTR = amp;
+		ADC1->HTR = (uint16_t) amp;
 	}
 }
 /* ADC Section End -----------------------------------------------------------*/
