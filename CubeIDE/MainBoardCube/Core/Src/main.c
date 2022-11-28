@@ -280,12 +280,12 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   ourInit();
-  volatile float error = 0;
-  volatile float derivative = 0;
-  volatile float integral = 0;
-  volatile float error_previous = 0;
-  volatile float correction = 0;
-  volatile float corrected_volt_set_main;
+  float error = 0;
+  float derivative = 0;
+  float integral = 0;
+  float error_previous = 0;
+  float correction = 0;
+  float corrected_volt_set_main;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -358,9 +358,9 @@ int main(void)
 	  error = lin_num - volt_set_main;
 	  integral += error;
 	  if (integral > (float)4095.0) {
-		  integral = (float)4095;
-	  } else if (integral < (float)-4095.0) {
-		  integral = (float)-4095.0;
+		  integral = 4095;
+	  } else if (integral < (float)(-4095.0)) {
+		  integral = (float)(-4095.0);
 	  }
 	  derivative = error - error_previous;
 	  error_previous = error;
