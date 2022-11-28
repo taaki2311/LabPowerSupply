@@ -25,6 +25,7 @@
 #include "usbd_cdc_if.h"
 #include "string.h"
 #include "stdio.h"
+#include "stdlib.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -96,7 +97,18 @@ DMA_HandleTypeDef hdma_usart1_tx;
 
 /* USB Section Begin ---------------------------------------------------------*/
 EXTI_HandleTypeDef hexti1;
-uint8_t usbbuffer[128];//Usb buffer
+uint8_t usbbuffer[64];//Usb buffer
+/*
+ * We need to be able to store USB commands and process them later because we may receive them too fast
+ * We really only need to be able to store up to two commands, one for the write, and one for the read
+ * We have enough ram left for a slightly bigger buffer though
+ * A circular buffer would make sense for this but I'm lazy so here's your circular buffer
+ */
+#define CIRCSIZE 8
+uint8_t notacircbuff[CIRCSIZE][64];
+int8_t headiter = 1;//Start at element 1, we're not going to let the tailiter pass the headiter
+int8_t tailiter = 0;
+uint8_t MSG[64];
 /* USB Section End -----------------------------------------------------------*/
 
 /* UART Section Begin --------------------------------------------------------*/
@@ -106,20 +118,20 @@ uint8_t rxbuffer[64];//Uart RX Buffer
 /* UART Section End ----------------------------------------------------------*/
 
 /* Keypad Section Begin ------------------------------------------------------*/
-volatile int rowpin = -1;
-volatile uint8_t kpedge = 1;	//0 == falling edge 1 == rising edge
-volatile uint8_t swedge = 1;	//0 == falling edge 1 == rising edge
+int rowpin = -1;
+uint8_t kpedge = 1;	//0 == falling edge 1 == rising edge
+uint8_t swedge = 1;	//0 == falling edge 1 == rising edge
 
 const uint8_t keypadlength = 5;
-volatile char keypadarr[5] = {'z','z','z','z','z'};//z is null
-volatile int8_t keypaditerator = 4;
-volatile uint8_t keypaddecimal = 0;
+char keypadarr[5] = {'z','z','z','z','z'};//z is null
+int8_t keypaditerator = 4;
+uint8_t keypaddecimal = 0;
 enum KEYPAD_ENUM {WAIT, V1, A1, V2, A2};
 enum KEYPAD_ENUM kpenum = WAIT;
 enum ROTARY_STATE {NOTURN, CWTURN, CCWTURN};
 enum ROTARY_STATE rotenum = NOTURN;
-volatile uint8_t encmode = 0;
-volatile int8_t encpos = 0;
+uint8_t encmode = 0;
+int8_t encpos = 0;
 
 //static GPIO_TypeDef* row_ports[5] = { Row_1_GPIO_Port, Row_2_GPIO_Port, Row_3_GPIO_Port, Row_4_GPIO_Port, Row_5_GPIO_Port };
 static uint16_t row_pins[5] = {Row_1_Pin, Row_2_Pin, Row_3_Pin, Row_4_Pin, Row_5_Pin};
@@ -149,9 +161,9 @@ volatile float amp_set_main_old = 0.0;
 volatile uint16_t adc_values[6];
 volatile uint16_t adc_values_cpy[6];
 uint16_t* vrefptr = ((uint16_t*)VREFINT_CAL_ADDR_CMSIS);
-volatile int8_t chstat_main = 0;
-volatile int8_t chstat_aux_tx = 0;
-volatile int8_t chstat_aux_rx = 0;
+int8_t chstat_main = 0;
+int8_t chstat_aux_tx = 0;
+int8_t chstat_aux_rx = 0;
 
 //Globals for adc values
 volatile float lin_num = 0;
@@ -163,12 +175,12 @@ volatile float lin_num_aux = 0;
 volatile float cur_num_aux = 0;
 
 //Global for dac value
-volatile uint16_t v1;//dac channel 1 is linear
-volatile uint16_t v2;//dac channel 2 is switching
+uint16_t v1;//dac channel 1 is linear
+uint16_t v2;//dac channel 2 is switching
 
-volatile uint8_t timercounter = 0;
-volatile uint8_t blink = 0;
-volatile uint8_t startmessage = 0;
+uint8_t timercounter = 0;
+uint8_t blink = 0;
+uint8_t startmessage = 0;
 
 /* USER CODE END PV */
 
@@ -280,12 +292,12 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   ourInit();
-  volatile float error = 0;
-  volatile float derivative = 0;
-  volatile float integral = 0;
-  volatile float error_previous = 0;
-  volatile float correction = 0;
-  volatile float corrected_volt_set_main;
+  float error = 0;
+  float derivative = 0;
+  float integral = 0;
+  float error_previous = 0;
+  float correction = 0;
+  float corrected_volt_set_main;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -295,6 +307,235 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	  //Process USB Commands here
+	  int8_t tempiter = tailiter;
+	  tempiter++;
+	  if(tempiter >= CIRCSIZE){
+		  tempiter = 0;
+	  }
+	  //Buffer is not empty
+	  if(tempiter != headiter){
+			// Measure Voltage
+			if ((strncmp("MEAS:VOLT?", (char*)notacircbuff[tempiter], strlen("MEAS:VOLT?")) == 0) ||
+					(strncmp("MEASure:VOLTage:DC?", (char*)notacircbuff[tempiter], strlen("MEASure:VOLTage:DC?")) == 0) ||
+					(strncmp("MEASure:VOLTage?", (char*)notacircbuff[tempiter], strlen("MEASure:VOLTage?")) == 0)){
+				snprintf((char*)MSG, 64, "%.2f, %.2f\n", lin_num_aux, lin_num);
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+			// Measure Current
+			else if ((strncmp("MEAS:CURR?", (char*)notacircbuff[tempiter], strlen("MEAS:CURR?")) == 0) ||
+					(strncmp("MEASure:CURRent:DC?", (char*)notacircbuff[tempiter], strlen("MEASure:CURRent:DC?")) == 0) ||
+					(strncmp("MEASure:CURRent?", (char*)notacircbuff[tempiter], strlen("MEASure:CURRent?")) == 0)){
+				snprintf((char*)MSG, 64, "%.3f, %.3f\n", cur_num_aux, cur_num);
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+			// CH1 Output Status
+			else if ((strncmp("OUTPut:ONE?", (char*)notacircbuff[tempiter], strlen("OUTPut:ONE?")) == 0) ||
+					(strncmp("OUTP:ONE?", (char*)notacircbuff[tempiter], strlen("OUTP:ONE?")) == 0)){
+				snprintf((char*)MSG, 64, "%d\n", chstat_aux_rx);
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+			// CH2 Output Status
+			else if ((strncmp("OUTPut:TWO?", (char*)notacircbuff[tempiter], strlen("OUTPut:TWO?")) == 0) ||
+					(strncmp("OUTP:TWO?", (char*)notacircbuff[tempiter], strlen("OUTP:TWO?")) == 0)){
+				snprintf((char*)MSG, 64, "%d\n", chstat_main);
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+			// CH1 Output ON
+			else if ((strncmp("OUTPUT:ONE:START", (char*)notacircbuff[tempiter], strlen("OUTPUT:ONE:START")) == 0) ||
+					(strncmp("OUTP:ONE:START", (char*)notacircbuff[tempiter], strlen("OUTP:ONE:START")) == 0)){
+				chstat_aux_tx = 1;
+				snprintf((char*)MSG, 64, "\n");
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+			// CH2 Output ON
+			else if ((strncmp("OUTPut:TWO:START", (char*)notacircbuff[tempiter], strlen("OUTPut:TWO:START")) == 0) ||
+					(strncmp("OUTP:TWO:START", (char*)notacircbuff[tempiter], strlen("OUTP:TWO:START")) == 0)){
+				chstat_main = 1;
+				snprintf((char*)MSG, 64, "\n");
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+			// CH1 Output OFF
+			else if ((strncmp("OUTPut:ONE:STOP", (char*)notacircbuff[tempiter], strlen("OUTPut:ONE:STOP")) == 0) ||
+					(strncmp("OUTP:ONE:STOP", (char*)notacircbuff[tempiter], strlen("OUTP:ONE:STOP")) == 0)){
+				chstat_aux_tx = 0;
+				snprintf((char*)MSG, 64, "\n");
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+			// CH2 Output OFF
+			else if ((strncmp("OUTPut:TWO:STOP", (char*)notacircbuff[tempiter], strlen("OUTPut:TWO:STOP")) == 0) ||
+					(strncmp("OUTP:TWO:STOP", (char*)notacircbuff[tempiter], strlen("OUTP:TWO:STOP")) == 0)){
+				chstat_main = 0;
+				snprintf((char*)MSG, 64, "\n");
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+			// CH1 VOLT 1
+			else if ((strncmp("VOLTage:ONE:", (char*)notacircbuff[tempiter], strlen("VOLTage:ONE:")) == 0)){
+				if ((atof((char*)notacircbuff[tempiter] + strlen("VOLTage:ONE:")) >= 0.00) && (atof((char*)notacircbuff[tempiter] + strlen("VOLTage:ONE:")) <= 12.00)){
+					//Truncate voltage inputs to 2 decimal places
+					float temp = (float)atof((char*)notacircbuff[tempiter] + 12);
+					uint8_t tempbuff[8] = {0};
+					snprintf((char*)tempbuff, 8, "%.2f", temp);
+					volt_set_aux = (float)atof((char*)tempbuff);
+					snprintf((char*)MSG, 64, "\n");
+				}
+				else{
+					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
+				}
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+			// CH1 VOLT 2
+			else if ((strncmp("VOLT:ONE:", (char*)notacircbuff[tempiter], strlen("VOLT:ONE:")) == 0)){
+				if ((atof((char*)notacircbuff[tempiter] + strlen("VOLT:ONE:")) >= 0.00) && (atof((char*)notacircbuff[tempiter] + strlen("VOLT:ONE:")) <= 12.00)){
+					//Truncate voltage inputs to 2 decimal places
+					float temp = (float)atof((char*)notacircbuff[tempiter] + 9);
+					uint8_t tempbuff[8] = {0};
+					snprintf((char*)tempbuff, 8, "%.2f", temp);
+					volt_set_aux = (float)atof((char*)tempbuff);
+					snprintf((char*)MSG, 64, "\n");
+				}
+				else{
+					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
+				}
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+			// CH2 VOLT 1
+			else if ((strncmp("VOLTage:TWO:", (char*)notacircbuff[tempiter], strlen("VOLTage:TWO:")) == 0)){
+				if ((atof((char*)notacircbuff[tempiter] + strlen("VOLTage:TWO:")) >= 0.00) && (atof((char*)notacircbuff[tempiter] + strlen("VOLTage:TWO:")) <= 12.00)){
+					//Truncate voltage inputs to 2 decimal places
+					float temp = (float)atof((char*)notacircbuff[tempiter] + 12);
+					uint8_t tempbuff[8] = {0};
+					snprintf((char*)tempbuff, 8, "%.2f", temp);
+					volt_set_main_old = volt_set_main;
+					volt_set_main = (float)atof((char*)tempbuff);
+					snprintf((char*)MSG, 64, "\n");
+				}
+				else{
+					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
+				}
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+
+			// CH2 VOLT 2
+			else if ((strncmp("VOLT:TWO:", (char*)notacircbuff[tempiter], strlen("VOLT:TWO:")) == 0)){
+				if ((atof((char*)notacircbuff[tempiter] + strlen("VOLT:TWO:")) >= 0.00) && (atof((char*)notacircbuff[tempiter] + strlen("VOLT:TWO:")) <= 12.00)){
+					//Truncate voltage inputs to 2 decimal places
+					float temp = (float)atof((char*)notacircbuff[tempiter] + 9);
+					uint8_t tempbuff[8] = {0};
+					snprintf((char*)tempbuff, 8, "%.2f", temp);
+					volt_set_main_old = volt_set_main;
+					volt_set_main = (float)atof((char*)tempbuff);
+					snprintf((char*)MSG, 64, "\n");
+				}
+				else{
+					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
+				}
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+			// CH1 AMP 1
+			else if ((strncmp("CURRent:ONE:", (char*)notacircbuff[tempiter], strlen("CURRent:ONE:")) == 0)){
+				if ((atof((char*)notacircbuff[tempiter] + strlen("CURRent:ONE:")) >= 0.00) && (atof((char*)notacircbuff[tempiter] + strlen("CURRent:ONE:")) <= 0.80)){
+					//Truncate amperage inputs to 3 decimal places
+					float temp = (float)atof((char*)notacircbuff[tempiter] + 12);
+					uint8_t tempbuff[8] = {0};
+					snprintf((char*)tempbuff, 8, "%.3f", temp);
+					amp_set_aux = (float)atof((char*)tempbuff);
+					snprintf((char*)MSG, 64, "\n");
+				}
+				else{
+					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
+				}
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+			// CH1 AMP 2
+			else if ((strncmp("CURR:ONE:", (char*)notacircbuff[tempiter], strlen("CURR:ONE:")) == 0)){
+				if ((atof((char*)notacircbuff[tempiter] + strlen("CURR:ONE:")) >= 0.00) && (atof((char*)notacircbuff[tempiter] + strlen("CURR:ONE:")) <= 0.80)){
+					//Truncate amperage inputs to 3 decimal places
+					float temp = (float)atof((char*)notacircbuff[tempiter] + 9);
+					uint8_t tempbuff[8] = {0};
+					snprintf((char*)tempbuff, 8, "%.3f", temp);
+					amp_set_aux = (float)atof((char*)tempbuff);
+					snprintf((char*)MSG, 64, "\n");
+				}
+				else{
+					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
+				}
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+
+			// CH2 AMP 1
+			else if ((strncmp("CURRent:TWO:", (char*)notacircbuff[tempiter], strlen("CURRent:TWO:")) == 0)){
+				if ((atof((char*)notacircbuff[tempiter] + strlen("CURRent:TWO:")) >= 0.00) && (atof((char*)notacircbuff[tempiter] + strlen("CURRent:TWO:")) <= 0.80)){
+					//Truncate amperage inputs to 3 decimal places
+					float temp = (float)atof((char*)notacircbuff[tempiter] + 12);
+					uint8_t tempbuff[8] = {0};
+					snprintf((char*)tempbuff, 8, "%.3f", temp);
+					amp_set_main_old = amp_set_main;
+					amp_set_main = (float)atof((char*)tempbuff);
+					snprintf((char*)MSG, 64, "\n");
+				}
+				else{
+					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
+				}
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+
+			// CH2 AMP 2
+			else if ((strncmp("CURR:TWO:", (char*)notacircbuff[tempiter], strlen("CURR:TWO:")) == 0)){
+				if ((atof((char*)notacircbuff[tempiter] + strlen("CURR:TWO:")) >= 0.00) && (atof((char*)notacircbuff[tempiter] + strlen("CURR:TWO:")) <= 0.80)){
+					//Truncate amperage inputs to 3 decimal places
+					float temp = (float)atof((char*)notacircbuff[tempiter] + 9);
+					uint8_t tempbuff[8] = {0};
+					snprintf((char*)tempbuff, 8, "%.3f", temp);
+					amp_set_main_old = amp_set_main;
+					amp_set_main = (float)atof((char*)tempbuff);
+					snprintf((char*)MSG, 64, "\n");
+				}
+				else{
+					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
+				}
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+			// Identify
+			else if ((strncmp("*IDN?", (char*)notacircbuff[tempiter], strlen("*IDN?")) == 0)){
+				CDC_Transmit_FS((uint8_t*)"493 Lab Power Supply\n", strlen("493 Lab Power Supply\n"));
+			}
+			//Ignore read, we can add it back later if needed
+			if ((strncmp("READ?", (char*)notacircbuff[tempiter], strlen("READ?")) == 0)){
+				//CDC_Transmit_FS(MSG, strlen((char*)MSG));
+				//memset(MSG,'\0', 64);
+				CDC_Transmit_FS((uint8_t*)"\n", strlen("\n"));
+			}
+			// Invalid input/command not supported
+			else{
+				snprintf((char*)MSG, 64, "ERROR: INVALID COMMAND\n");
+				CDC_Transmit_FS(MSG, 64);
+				memset(MSG,'\0', 64);
+			}
+			memset (notacircbuff[tempiter], '\0', 64); // clear the buffer
+			tailiter++;
+			if(tailiter >= CIRCSIZE){
+				tailiter = 0;
+			}
+	  }
+
 
 	  //Control channel here
 
@@ -382,7 +623,7 @@ int main(void)
 	   * Vdac = 4.001400 - 0.240000*Vout
 	   */
 
-	  volatile float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.5))) * (float)4095 / (float)vddcalc);
+	  float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.5))) * (float)4095 / (float)vddcalc);
 	  if(temp <= 0){
 		  v2 = 0;
 	  }
@@ -1092,7 +1333,8 @@ void ourInit(void){
 	//Ensure keypad columns output 0 by default
 	HAL_GPIO_WritePin(Col_1_GPIO_Port, Col_1_Pin|Col_2_Pin|Col_3_Pin|Col_4_Pin, GPIO_PIN_RESET);
 
-	memset (usbbuffer, '\0', 128);  // clear the buffer
+	memset (usbbuffer, '\0', 64);  // clear the buffer
+	memset (MSG, '\0', 64);  // clear the buffer
 	memset (txbuffer, '\0', 64);  // clear the buffer
 	memset (txbuffer_cpy, '\0', 64);  // clear the buffer
 	memset (rxbuffer, '\0', 64);  // clear the buffer
@@ -1108,6 +1350,11 @@ void ourInit(void){
 
 	//Start LED timer
 	HAL_TIM_Base_Start_IT(&htim11);
+
+	//Init the notacircbuff
+	for(int i = 0; i < CIRCSIZE; i++){
+		memset (notacircbuff[i], '\0', 64);  // clear the buffer
+	}
 
 	//Start display timer
 	HAL_TIM_Base_Start_IT(&htim4);
@@ -1144,7 +1391,7 @@ void update_ADC_watchdog(float val){
 
 	uint16_t vrefvalue = (uint16_t) *vrefptr;
 	float vddcalc = (float)3.0 * ((float)vrefvalue / (float)ADC_VREF);
-	volatile uint16_t amp = (uint16_t)( ((float)val * (float)0.15 * (float)20.0) * (float)4095 / (float)vddcalc);
+	uint16_t amp = (uint16_t)( ((float)val * (float)0.15 * (float)20.0) * (float)4095 / (float)vddcalc);
 
 	if(amp >= 4095){
 		ADC1->HTR = 4095;
@@ -1796,7 +2043,7 @@ void fill_keypad(uint8_t va, float num){
 	//Clear the keypad first
 	clear_keypad();
 	if(va){
-		volatile int temp = (int)(num * 1000);
+		int temp = (int)(num * 1000);
 		//special case for 0A
 		if(num <= 0.0001){
 			keypadarr[0] = '0';
@@ -1825,7 +2072,7 @@ void fill_keypad(uint8_t va, float num){
 		}
 	}
 	else{
-		volatile int temp = (int)(num * 100);
+		int temp = (int)(num * 100);
 		//special case for 0V
 		if(num <= 0.001){
 			keypadarr[0] = '0';
@@ -2773,7 +3020,21 @@ void column_input(void){
 /* Interrupt Callback Section Begin ------------------------------------------*/
 void USB_Interrupt_Callback(void){
 	// Checking USBbuffer
-	memset (usbbuffer, '\0', 128); // clear the buffer
+	int8_t tempiter = headiter;
+	tempiter++;
+	if(tempiter >= CIRCSIZE){
+	  tempiter = 0;
+	}
+	//Buffer is not full
+	if(tempiter != tailiter){
+		memcpy(notacircbuff[headiter], usbbuffer, 64);  // copy the data to the buffer
+		headiter++;
+		if(headiter >= CIRCSIZE){
+			headiter = 0;
+		}
+	}
+	//Ignore commands when buffer full
+	memset (usbbuffer, '\0', 64); // clear the buffer
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
