@@ -147,10 +147,10 @@ static const char keypad_labels[5][4] = {
 /* Keypad Section End --------------------------------------------------------*/
 
 //Channel numbers
-float volt_set_main = 0.0;
-float amp_set_main = 0.8;
-float volt_set_aux = 0.0;
-float amp_set_aux = 0.8;
+volatile float volt_set_main = 0.0;
+volatile float amp_set_main = 0.0;
+volatile float volt_set_aux = 0.0;
+volatile float amp_set_aux = 0.0;
 
 volatile float volt_set_main_old = 0.0;
 volatile float amp_set_main_old = 0.8;
@@ -161,9 +161,9 @@ volatile float amp_set_main_old = 0.8;
 volatile uint16_t adc_values[6];
 uint16_t adc_values_cpy[6];
 uint16_t* vrefptr = ((uint16_t*)VREFINT_CAL_ADDR_CMSIS);
-int8_t chstat_main = 0;
-int8_t chstat_aux_tx = 0;
-int8_t chstat_aux_rx = 0;
+volatile int8_t chstat_main = 0;
+volatile int8_t chstat_aux_tx = 0;
+volatile int8_t chstat_aux_rx = 0;
 
 //Globals for adc values
 float lin_num = 0;
@@ -777,7 +777,7 @@ static void MX_ADC_Init(void)
   AnalogWDGConfig.WatchdogMode = ADC_ANALOGWATCHDOG_SINGLE_REG;
   AnalogWDGConfig.Channel = ADC_CHANNEL_2;
   AnalogWDGConfig.ITMode = ENABLE;
-  AnalogWDGConfig.HighThreshold = 0;
+  AnalogWDGConfig.HighThreshold = 4095;
   AnalogWDGConfig.LowThreshold = 0;
   if (HAL_ADC_AnalogWDGConfig(&hadc, &AnalogWDGConfig) != HAL_OK)
   {
@@ -1415,14 +1415,19 @@ void update_ADC_watchdog(float val){
 	float vddcalc = (float)3.0 * ((float)vrefvalue / (float)ADC_VREF);
 	float amp = ( ((float)val * (float)0.15 * (float)20.0) * (float)4095 / (float)vddcalc);
 
-	if(amp >= 4095.0){
+	//Special case for "unlimited" current
+	if(val == 0.0){
 		ADC1->HTR = 4095;
 	}
-	else if (amp <= 0.0) {
+	else if(amp >= 4095.0){
+		ADC1->HTR = 4095;
+	}
+	else if(amp < 0.0){
+		//How?
 		ADC1->HTR = 0;
 	}
 	else{
-		ADC1->HTR = (uint16_t) amp;
+		ADC1->HTR = amp;
 	}
 }
 /* ADC Section End -----------------------------------------------------------*/
@@ -1560,8 +1565,8 @@ void lcd_createChar(void)
 }
 
 void lcd_psu_init(void){
-	//lcd_init();
-
+	/*
+	lcd_init();
 	lcd_put_cur(0, 0);
 	lcd_send_string("V1:0.00V ");
 	lcd_send_data((uint8_t)1);//Custom Char 1
@@ -1589,6 +1594,42 @@ void lcd_psu_init(void){
 	lcd_send_string("A2");
 	lcd_send_data((uint8_t)0);
 	lcd_send_string(":0.000A");
+	*/
+	lcd_put_cur(0,0);
+	lcd_send_string("V1:");
+	lcd_put_cur(0,9);
+	lcd_send_data((uint8_t)1);
+	lcd_send_string("V1");
+	lcd_put_cur(0,12);
+	lcd_send_data((uint8_t)0);
+	lcd_send_string(":");
+
+	lcd_put_cur(1,0);
+	lcd_send_string("A1:");
+	lcd_put_cur(1,9);
+	lcd_send_data((uint8_t)1);
+	lcd_send_string("A1");
+	lcd_put_cur(1,12);
+	lcd_send_data((uint8_t)0);
+	lcd_send_string(":");
+
+	lcd_put_cur(2,0);
+	lcd_send_string("V2:");
+	lcd_put_cur(2,9);
+	lcd_send_data((uint8_t)1);
+	lcd_send_string("V2");
+	lcd_put_cur(2,12);
+	lcd_send_data((uint8_t)0);
+	lcd_send_string(":");
+
+	lcd_put_cur(3,0);
+	lcd_send_string("A2:");
+	lcd_put_cur(3,9);
+	lcd_send_data((uint8_t)1);
+	lcd_send_string("A2");
+	lcd_put_cur(3,12);
+	lcd_send_data((uint8_t)0);
+	lcd_send_string(":");
 }
 
 void lcd_psu_welcome(void){
@@ -1596,15 +1637,12 @@ void lcd_psu_welcome(void){
 
 	lcd_put_cur(1, 0);
 	lcd_send_string("493 Lab Power Supply");
-	lcd_put_cur(2, 0);
-	lcd_send_string("   Please Wait...   ");
+	//lcd_put_cur(2, 0);
+	//lcd_send_string("   Please Wait...   ");
 }
 
 void lcd_psu_update(void){
-	if(startmessage){
-		startmessage = 0;
-		lcd_psu_init();
-	}
+	lcd_psu_init();
 	LCD_CursorBlinkOnOff(0,0);
 	if(kpenum == WAIT){
 		lcd_update_voltage(1,volt_set_aux);
@@ -2425,9 +2463,31 @@ void keypad_sm(char num){
 			}
 			else if(num == '['){
 				dec_arr_v(encpos);
+				volt_set_aux = translate_keypad();
 			}
 			else if(num == ']'){
 				inc_arr_v(encpos);
+				volt_set_aux = translate_keypad();
+			}
+			else if(num == '*'){
+				//Disable channel output for second mcu if second MCU claims to be active
+				if(chstat_aux_rx){
+					chstat_aux_tx = 0;
+				}
+				//Enable channel output for second mcu if second MCU claims to be inactive
+				else{
+					chstat_aux_tx = 1;
+				}
+			}
+			else if(num == '/'){
+				//Disable channel output if active
+				if(chstat_main){
+					chstat_main = 0;
+				}
+				//Enable channel output if inactive
+				else{
+					chstat_main = 1;
+				}
 			}
 		}
 		//Default keypad sm
@@ -2492,6 +2552,26 @@ void keypad_sm(char num){
 				fill_keypad(0, volt_set_aux);
 				encmode = 1;
 				encpos = 0;
+			}
+			else if(num == '*'){
+				//Disable channel output for second mcu if second MCU claims to be active
+				if(chstat_aux_rx){
+					chstat_aux_tx = 0;
+				}
+				//Enable channel output for second mcu if second MCU claims to be inactive
+				else{
+					chstat_aux_tx = 1;
+				}
+			}
+			else if(num == '/'){
+				//Disable channel output if active
+				if(chstat_main){
+					chstat_main = 0;
+				}
+				//Enable channel output if inactive
+				else{
+					chstat_main = 1;
+				}
 			}
 		}
 	}
@@ -2576,9 +2656,31 @@ void keypad_sm(char num){
 			}
 			else if(num == '['){
 				dec_arr_a(encpos);
+				amp_set_aux = translate_keypad();
 			}
 			else if(num == ']'){
 				inc_arr_a(encpos);
+				amp_set_aux = translate_keypad();
+			}
+			else if(num == '*'){
+				//Disable channel output for second mcu if second MCU claims to be active
+				if(chstat_aux_rx){
+					chstat_aux_tx = 0;
+				}
+				//Enable channel output for second mcu if second MCU claims to be inactive
+				else{
+					chstat_aux_tx = 1;
+				}
+			}
+			else if(num == '/'){
+				//Disable channel output if active
+				if(chstat_main){
+					chstat_main = 0;
+				}
+				//Enable channel output if inactive
+				else{
+					chstat_main = 1;
+				}
 			}
 		}
 		//Default keypad sm
@@ -2643,6 +2745,26 @@ void keypad_sm(char num){
 				fill_keypad(1, amp_set_aux);
 				encmode = 1;
 				encpos = 0;
+			}
+			else if(num == '*'){
+				//Disable channel output for second mcu if second MCU claims to be active
+				if(chstat_aux_rx){
+					chstat_aux_tx = 0;
+				}
+				//Enable channel output for second mcu if second MCU claims to be inactive
+				else{
+					chstat_aux_tx = 1;
+				}
+			}
+			else if(num == '/'){
+				//Disable channel output if active
+				if(chstat_main){
+					chstat_main = 0;
+				}
+				//Enable channel output if inactive
+				else{
+					chstat_main = 1;
+				}
 			}
 		}
 	}
@@ -2730,9 +2852,33 @@ void keypad_sm(char num){
 			}
 			else if(num == '['){
 				dec_arr_v(encpos);
+				volt_set_main_old = volt_set_main;
+				volt_set_main = translate_keypad();
 			}
 			else if(num == ']'){
 				inc_arr_v(encpos);
+				volt_set_main_old = volt_set_main;
+				volt_set_main = translate_keypad();
+			}
+			else if(num == '*'){
+				//Disable channel output for second mcu if second MCU claims to be active
+				if(chstat_aux_rx){
+					chstat_aux_tx = 0;
+				}
+				//Enable channel output for second mcu if second MCU claims to be inactive
+				else{
+					chstat_aux_tx = 1;
+				}
+			}
+			else if(num == '/'){
+				//Disable channel output if active
+				if(chstat_main){
+					chstat_main = 0;
+				}
+				//Enable channel output if inactive
+				else{
+					chstat_main = 1;
+				}
 			}
 		}
 		//Default keypad sm
@@ -2799,6 +2945,26 @@ void keypad_sm(char num){
 				fill_keypad(0, volt_set_main);
 				encmode = 1;
 				encpos = 0;
+			}
+			else if(num == '*'){
+				//Disable channel output for second mcu if second MCU claims to be active
+				if(chstat_aux_rx){
+					chstat_aux_tx = 0;
+				}
+				//Enable channel output for second mcu if second MCU claims to be inactive
+				else{
+					chstat_aux_tx = 1;
+				}
+			}
+			else if(num == '/'){
+				//Disable channel output if active
+				if(chstat_main){
+					chstat_main = 0;
+				}
+				//Enable channel output if inactive
+				else{
+					chstat_main = 1;
+				}
 			}
 		}
 	}
@@ -2887,9 +3053,35 @@ void keypad_sm(char num){
 			}
 			else if(num == '['){
 				dec_arr_a(encpos);
+				amp_set_main_old = amp_set_main;
+				amp_set_main = translate_keypad();
+				update_ADC_watchdog(amp_set_main);
 			}
 			else if(num == ']'){
 				inc_arr_a(encpos);
+				amp_set_main_old = amp_set_main;
+				amp_set_main = translate_keypad();
+				update_ADC_watchdog(amp_set_main);
+			}
+			else if(num == '*'){
+				//Disable channel output for second mcu if second MCU claims to be active
+				if(chstat_aux_rx){
+					chstat_aux_tx = 0;
+				}
+				//Enable channel output for second mcu if second MCU claims to be inactive
+				else{
+					chstat_aux_tx = 1;
+				}
+			}
+			else if(num == '/'){
+				//Disable channel output if active
+				if(chstat_main){
+					chstat_main = 0;
+				}
+				//Enable channel output if inactive
+				else{
+					chstat_main = 1;
+				}
 			}
 		}
 		//Default keypad sm
@@ -2958,6 +3150,26 @@ void keypad_sm(char num){
 				fill_keypad(1, amp_set_main);
 				encmode = 1;
 				encpos = 0;
+			}
+			else if(num == '*'){
+				//Disable channel output for second mcu if second MCU claims to be active
+				if(chstat_aux_rx){
+					chstat_aux_tx = 0;
+				}
+				//Enable channel output for second mcu if second MCU claims to be inactive
+				else{
+					chstat_aux_tx = 1;
+				}
+			}
+			else if(num == '/'){
+				//Disable channel output if active
+				if(chstat_main){
+					chstat_main = 0;
+				}
+				//Enable channel output if inactive
+				else{
+					chstat_main = 1;
+				}
 			}
 		}
 	}
@@ -3240,10 +3452,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 
 void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc)
 {
-	if(chstat_main == 1){
-		HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
-		chstat_main = 2;
-	}
+	HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
+	chstat_main = 2;
 }
 
 /*

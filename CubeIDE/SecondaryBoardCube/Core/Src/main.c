@@ -37,13 +37,14 @@
 #define ADC_CURRENT adc_values_cpy[2]
 #define ADC_SWITCHING adc_values_cpy[3]
 #define ADC_VREF adc_values_cpy[4]
-/* USER CODE END PD */
 
 /* PID Control for the Linear Voltage Regulator ------------------------------*/
-#define P 0.2
-#define I 0.2
+#define P 0.15
+#define I 0.15
 #define D 0.2
-/* PID Linear Section End ----------------------------------------------------*/
+/* PID Linear Section End ----- */
+
+/* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
@@ -68,12 +69,12 @@ uint8_t rxbuffer[64];//Uart RX Buffer
 
 //Channel numbers
 float volt_set_main = 0.0;
-float amp_set_main = 0.8;
+float amp_set_main = 0.0;
 //volatile float volt_set_aux = 0.0;
 //volatile float amp_set_aux = 0.0;
 
 float volt_set_main_old = 0.0;
-float amp_set_main_old = 0.8;
+float amp_set_main_old = 0.0;
 //volatile float volt_set_aux_old = 0.0;
 //volatile float amp_set_aux_old = 0.0;
 
@@ -406,7 +407,7 @@ static void MX_ADC_Init(void)
   AnalogWDGConfig.WatchdogMode = ADC_ANALOGWATCHDOG_SINGLE_REG;
   AnalogWDGConfig.Channel = ADC_CHANNEL_2;
   AnalogWDGConfig.ITMode = ENABLE;
-  AnalogWDGConfig.HighThreshold = 0;
+  AnalogWDGConfig.HighThreshold = 4095;
   AnalogWDGConfig.LowThreshold = 0;
   if (HAL_ADC_AnalogWDGConfig(&hadc, &AnalogWDGConfig) != HAL_OK)
   {
@@ -678,8 +679,16 @@ void update_ADC_watchdog(float val){
 	float vddcalc = (float)3.0 * ((float)vrefvalue / (float)ADC_VREF);
 	volatile uint16_t amp = (uint16_t)( ((float)val * (float)0.15 * (float)20.0) * (float)4095 / (float)vddcalc);
 
-	if(amp >= 4095){
+	//Special case for "unlimited" current
+	if(val == 0.0){
 		ADC1->HTR = 4095;
+	}
+	else if(amp >= 4095.0){
+		ADC1->HTR = 4095;
+	}
+	else if(amp < 0.0){
+		//How?
+		ADC1->HTR = 0;
 	}
 	else{
 		ADC1->HTR = amp;
@@ -701,10 +710,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 
 void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc)
 {
-	if(chstat_main == 1){
-		HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
-		chstat_main = 2;
-	}
+	HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_SET);
+	chstat_main = 2;
 }
 
 /* Interrupt Callback Section Begin ------------------------------------------*/
