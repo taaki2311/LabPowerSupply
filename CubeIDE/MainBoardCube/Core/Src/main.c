@@ -118,7 +118,7 @@ uint8_t rxbuffer[64];//Uart RX Buffer
 /* UART Section End ----------------------------------------------------------*/
 
 /* Keypad Section Begin ------------------------------------------------------*/
-int rowpin = -1;
+volatile int rowpin = -1;
 uint8_t kpedge = 1;	//0 == falling edge 1 == rising edge
 uint8_t swedge = 1;	//0 == falling edge 1 == rising edge
 
@@ -560,7 +560,7 @@ int main(void)
 	  swi_num  = (swi_num_temp >= 0.0000) ? swi_num_temp : 0.0000;
 
 
-//	  /*
+	  /*
 	  // Bang-Bang Controller
 	  //Try really hard to get the voltage right
 	  const float margin = 0.002;
@@ -594,9 +594,8 @@ int main(void)
 			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
 	  }
-//	  */
+	  */
 
-	  /*
 	  //PID
 	  if (chstat_main) {
 		  error = lin_num - volt_set_main;
@@ -610,12 +609,6 @@ int main(void)
 		  error_previous = error;
 		  correction = P * error + I * integral + D * derivative;
 		  corrected_volt_set_main = volt_set_main - correction;
-		  if (corrected_volt_set_main > 12.0) {
-			  corrected_volt_set_main = 12.0;
-		  }
-		  else if(corrected_volt_set_main < 0.0) {
-			  corrected_volt_set_main = 0.0;
-		  }
 		  tmpv1 = (((((float)corrected_volt_set_main / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
 		  if (tmpv1 > 4095) {
 			  tmpv1 = 4095;
@@ -637,7 +630,6 @@ int main(void)
 			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
 	  }
-//	  */
 
 	  /*
 	   * The calculation we do to determine what we need to set the dac for the switching regulator to is determined by the following formula
@@ -646,7 +638,7 @@ int main(void)
 	   * Vdac = 4.001400 - 0.240000*Vout
 	   */
 
-	  float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.75))) * (float)4095 / (float)vddcalc);
+	  float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.5))) * (float)4095 / (float)vddcalc);
 	  if(temp <= 0){
 		  v2 = 0;
 	  }
@@ -1291,19 +1283,25 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Rot_CLK_Pin Rot_SW_Pin Row_1_Pin Row_2_Pin
-                           Row_3_Pin Row_4_Pin Row_5_Pin */
-  GPIO_InitStruct.Pin = Rot_CLK_Pin|Rot_SW_Pin|Row_1_Pin|Row_2_Pin
-                          |Row_3_Pin|Row_4_Pin|Row_5_Pin;
+  /*Configure GPIO pin : Rot_CLK_Pin */
+  GPIO_InitStruct.Pin = Rot_CLK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(Rot_CLK_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : Rot_DT_Pin */
   GPIO_InitStruct.Pin = Rot_DT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(Rot_DT_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Rot_SW_Pin Row_1_Pin Row_2_Pin Row_3_Pin
+                           Row_4_Pin Row_5_Pin */
+  GPIO_InitStruct.Pin = Rot_SW_Pin|Row_1_Pin|Row_2_Pin|Row_3_Pin
+                          |Row_4_Pin|Row_5_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : Unused_Pin_9_Pin Unused_Pin_16_Pin Unused_Pin_17_Pin Unused_Pin_18_Pin
                            Unused_Pin_19_Pin Unused_Pin_20_Pin */
@@ -1565,36 +1563,6 @@ void lcd_createChar(void)
 }
 
 void lcd_psu_init(void){
-	/*
-	lcd_init();
-	lcd_put_cur(0, 0);
-	lcd_send_string("V1:0.00V ");
-	lcd_send_data((uint8_t)1);//Custom Char 1
-	lcd_send_string("V1");
-	lcd_send_data((uint8_t)0);//Custom Char 0
-	lcd_send_string(":0.00V");
-
-	lcd_put_cur(1, 0);
-	lcd_send_string("A1:0.000A");
-	lcd_send_data((uint8_t)1);
-	lcd_send_string("A1");
-	lcd_send_data((uint8_t)0);
-	lcd_send_string(":0.000A");
-
-	lcd_put_cur(2, 0);
-	lcd_send_string("V2:0.00V ");
-	lcd_send_data((uint8_t)1);
-	lcd_send_string("V2");
-	lcd_send_data((uint8_t)0);
-	lcd_send_string(":0.00V");
-
-	lcd_put_cur(3, 0);
-	lcd_send_string("A2:0.000A");
-	lcd_send_data((uint8_t)1);
-	lcd_send_string("A2");
-	lcd_send_data((uint8_t)0);
-	lcd_send_string(":0.000A");
-	*/
 	lcd_put_cur(0,0);
 	lcd_send_string("V1:");
 	lcd_put_cur(0,9);
@@ -1634,11 +1602,8 @@ void lcd_psu_init(void){
 
 void lcd_psu_welcome(void){
 	lcd_init();
-
 	lcd_put_cur(1, 0);
 	lcd_send_string("493 Lab Power Supply");
-	//lcd_put_cur(2, 0);
-	//lcd_send_string("   Please Wait...   ");
 }
 
 void lcd_psu_update(void){
@@ -2361,24 +2326,10 @@ void keypad_sm(char num){
 			clear_keypad();
 		}
 		else if(num == '*'){
-			//Disable channel output for second mcu if second MCU claims to be active
-			if(chstat_aux_rx){
-				chstat_aux_tx = 0;
-			}
-			//Enable channel output for second mcu if second MCU claims to be inactive
-			else{
-				chstat_aux_tx = 1;
-			}
+			chstat_aux_tx = !chstat_aux_rx;
 		}
 		else if(num == '/'){
-			//Disable channel output if active
-			if(chstat_main){
-				chstat_main = 0;
-			}
-			//Enable channel output if inactive
-			else{
-				chstat_main = 1;
-			}
+			chstat_main = !chstat_main;
 		}
 	}
 	else if(kpenum == V1){
@@ -2470,24 +2421,10 @@ void keypad_sm(char num){
 				volt_set_aux = translate_keypad();
 			}
 			else if(num == '*'){
-				//Disable channel output for second mcu if second MCU claims to be active
-				if(chstat_aux_rx){
-					chstat_aux_tx = 0;
-				}
-				//Enable channel output for second mcu if second MCU claims to be inactive
-				else{
-					chstat_aux_tx = 1;
-				}
+				chstat_aux_tx = !chstat_aux_rx;
 			}
 			else if(num == '/'){
-				//Disable channel output if active
-				if(chstat_main){
-					chstat_main = 0;
-				}
-				//Enable channel output if inactive
-				else{
-					chstat_main = 1;
-				}
+				chstat_main = !chstat_main;
 			}
 		}
 		//Default keypad sm
@@ -2544,34 +2481,20 @@ void keypad_sm(char num){
 				encpos = 0;
 			}
 			else if(num == '['){
-				fill_keypad(0, volt_set_aux);
-				encmode = 1;
-				encpos = 0;
+				//fill_keypad(0, volt_set_aux);
+				//encmode = 1;
+				//encpos = 0;
 			}
 			else if(num == ']'){
-				fill_keypad(0, volt_set_aux);
-				encmode = 1;
-				encpos = 0;
+				//fill_keypad(0, volt_set_aux);
+				//encmode = 1;
+				//encpos = 0;
 			}
 			else if(num == '*'){
-				//Disable channel output for second mcu if second MCU claims to be active
-				if(chstat_aux_rx){
-					chstat_aux_tx = 0;
-				}
-				//Enable channel output for second mcu if second MCU claims to be inactive
-				else{
-					chstat_aux_tx = 1;
-				}
+				chstat_aux_tx = !chstat_aux_rx;
 			}
 			else if(num == '/'){
-				//Disable channel output if active
-				if(chstat_main){
-					chstat_main = 0;
-				}
-				//Enable channel output if inactive
-				else{
-					chstat_main = 1;
-				}
+				chstat_main = !chstat_main;
 			}
 		}
 	}
@@ -2663,24 +2586,10 @@ void keypad_sm(char num){
 				amp_set_aux = translate_keypad();
 			}
 			else if(num == '*'){
-				//Disable channel output for second mcu if second MCU claims to be active
-				if(chstat_aux_rx){
-					chstat_aux_tx = 0;
-				}
-				//Enable channel output for second mcu if second MCU claims to be inactive
-				else{
-					chstat_aux_tx = 1;
-				}
+				chstat_aux_tx = !chstat_aux_rx;
 			}
 			else if(num == '/'){
-				//Disable channel output if active
-				if(chstat_main){
-					chstat_main = 0;
-				}
-				//Enable channel output if inactive
-				else{
-					chstat_main = 1;
-				}
+				chstat_main = !chstat_main;
 			}
 		}
 		//Default keypad sm
@@ -2737,34 +2646,20 @@ void keypad_sm(char num){
 				encpos = 0;
 			}
 			else if(num == '['){
-				fill_keypad(1, amp_set_aux);
-				encmode = 1;
-				encpos = 0;
+				//fill_keypad(1, amp_set_aux);
+				//encmode = 1;
+				//encpos = 0;
 			}
 			else if(num == ']'){
-				fill_keypad(1, amp_set_aux);
-				encmode = 1;
-				encpos = 0;
+				//fill_keypad(1, amp_set_aux);
+				//encmode = 1;
+				//encpos = 0;
 			}
 			else if(num == '*'){
-				//Disable channel output for second mcu if second MCU claims to be active
-				if(chstat_aux_rx){
-					chstat_aux_tx = 0;
-				}
-				//Enable channel output for second mcu if second MCU claims to be inactive
-				else{
-					chstat_aux_tx = 1;
-				}
+				chstat_aux_tx = !chstat_aux_rx;
 			}
 			else if(num == '/'){
-				//Disable channel output if active
-				if(chstat_main){
-					chstat_main = 0;
-				}
-				//Enable channel output if inactive
-				else{
-					chstat_main = 1;
-				}
+				chstat_main = !chstat_main;
 			}
 		}
 	}
@@ -2861,24 +2756,10 @@ void keypad_sm(char num){
 				volt_set_main = translate_keypad();
 			}
 			else if(num == '*'){
-				//Disable channel output for second mcu if second MCU claims to be active
-				if(chstat_aux_rx){
-					chstat_aux_tx = 0;
-				}
-				//Enable channel output for second mcu if second MCU claims to be inactive
-				else{
-					chstat_aux_tx = 1;
-				}
+				chstat_aux_tx = !chstat_aux_rx;
 			}
 			else if(num == '/'){
-				//Disable channel output if active
-				if(chstat_main){
-					chstat_main = 0;
-				}
-				//Enable channel output if inactive
-				else{
-					chstat_main = 1;
-				}
+				chstat_main = !chstat_main;
 			}
 		}
 		//Default keypad sm
@@ -2937,34 +2818,20 @@ void keypad_sm(char num){
 				encpos = 0;
 			}
 			else if(num == '['){
-				fill_keypad(0, volt_set_main);
-				encmode = 1;
-				encpos = 0;
+				//fill_keypad(0, volt_set_main);
+				//encmode = 1;
+				//encpos = 0;
 			}
 			else if(num == ']'){
-				fill_keypad(0, volt_set_main);
-				encmode = 1;
-				encpos = 0;
+				//fill_keypad(0, volt_set_main);
+				//encmode = 1;
+				//encpos = 0;
 			}
 			else if(num == '*'){
-				//Disable channel output for second mcu if second MCU claims to be active
-				if(chstat_aux_rx){
-					chstat_aux_tx = 0;
-				}
-				//Enable channel output for second mcu if second MCU claims to be inactive
-				else{
-					chstat_aux_tx = 1;
-				}
+				chstat_aux_tx = !chstat_aux_rx;
 			}
 			else if(num == '/'){
-				//Disable channel output if active
-				if(chstat_main){
-					chstat_main = 0;
-				}
-				//Enable channel output if inactive
-				else{
-					chstat_main = 1;
-				}
+				chstat_main = !chstat_main;
 			}
 		}
 	}
@@ -3064,24 +2931,10 @@ void keypad_sm(char num){
 				update_ADC_watchdog(amp_set_main);
 			}
 			else if(num == '*'){
-				//Disable channel output for second mcu if second MCU claims to be active
-				if(chstat_aux_rx){
-					chstat_aux_tx = 0;
-				}
-				//Enable channel output for second mcu if second MCU claims to be inactive
-				else{
-					chstat_aux_tx = 1;
-				}
+				chstat_aux_tx = !chstat_aux_rx;
 			}
 			else if(num == '/'){
-				//Disable channel output if active
-				if(chstat_main){
-					chstat_main = 0;
-				}
-				//Enable channel output if inactive
-				else{
-					chstat_main = 1;
-				}
+				chstat_main = !chstat_main;
 			}
 		}
 		//Default keypad sm
@@ -3142,34 +2995,20 @@ void keypad_sm(char num){
 				encpos = 0;
 			}
 			else if(num == '['){
-				fill_keypad(1, amp_set_main);
-				encmode = 1;
-				encpos = 0;
+				//fill_keypad(1, amp_set_main);
+				//encmode = 1;
+				//encpos = 0;
 			}
 			else if(num == ']'){
-				fill_keypad(1, amp_set_main);
-				encmode = 1;
-				encpos = 0;
+				//fill_keypad(1, amp_set_main);
+				//encmode = 1;
+				//encpos = 0;
 			}
 			else if(num == '*'){
-				//Disable channel output for second mcu if second MCU claims to be active
-				if(chstat_aux_rx){
-					chstat_aux_tx = 0;
-				}
-				//Enable channel output for second mcu if second MCU claims to be inactive
-				else{
-					chstat_aux_tx = 1;
-				}
+				chstat_aux_tx = !chstat_aux_rx;
 			}
 			else if(num == '/'){
-				//Disable channel output if active
-				if(chstat_main){
-					chstat_main = 0;
-				}
-				//Enable channel output if inactive
-				else{
-					chstat_main = 1;
-				}
+				chstat_main = !chstat_main;
 			}
 		}
 	}
@@ -3202,7 +3041,7 @@ void row_input(void){
 
 	/*Configure GPIO pins : Row1_Pin Row2_Pin Row3_Pin Row4_Pin */
 	GPIO_InitStruct.Pin = Row_1_Pin|Row_2_Pin|Row_3_Pin|Row_4_Pin|Row_5_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
 	GPIO_InitStruct.Pull = GPIO_PULLUP;
 	HAL_GPIO_Init(Row_1_GPIO_Port, &GPIO_InitStruct);
 
@@ -3210,6 +3049,11 @@ void row_input(void){
 	HAL_GPIO_WritePin(Col_1_GPIO_Port, Col_1_Pin|Col_2_Pin|Col_3_Pin|Col_4_Pin, GPIO_PIN_RESET);
 
 	//Reenable interrupts
+	__HAL_GPIO_EXTI_CLEAR_IT(Row_1_Pin);
+	__HAL_GPIO_EXTI_CLEAR_IT(Row_2_Pin);
+	__HAL_GPIO_EXTI_CLEAR_IT(Row_3_Pin);
+	__HAL_GPIO_EXTI_CLEAR_IT(Row_4_Pin);
+	__HAL_GPIO_EXTI_CLEAR_IT(Row_5_Pin);
 	HAL_NVIC_SetPriority(Row_1_EXTI_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(Row_1_EXTI_IRQn);
 }
@@ -3219,7 +3063,7 @@ void column_input(void){
 
 	//Disable interrupts
 	//HAL_NVIC_SetPriority(Row_1_EXTI_IRQn, 0, 0);
-	HAL_NVIC_DisableIRQ(Row_1_EXTI_IRQn);
+	//HAL_NVIC_DisableIRQ(Row_1_EXTI_IRQn);
 
 	//Deinit
 	HAL_GPIO_DeInit(Row_1_GPIO_Port, Row_1_Pin);
@@ -3250,7 +3094,7 @@ void column_input(void){
 	HAL_GPIO_Init(Col_1_GPIO_Port, &GPIO_InitStruct);
 
 	//Write zeros to outputs, should be by default but just in case
-	HAL_GPIO_WritePin(Col_1_GPIO_Port, Row_1_Pin|Row_2_Pin|Row_3_Pin|Row_4_Pin|Row_5_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(Row_1_GPIO_Port, Row_1_Pin|Row_2_Pin|Row_3_Pin|Row_4_Pin|Row_5_Pin, GPIO_PIN_RESET);
 }
 /* Keypad Section End --------------------------------------------------------*/
 
@@ -3277,43 +3121,17 @@ void USB_Interrupt_Callback(void){
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	//Row 1
 	if( (GPIO_Pin == Row_1_Pin) || (GPIO_Pin == Row_2_Pin) || (GPIO_Pin == Row_3_Pin) || (GPIO_Pin == Row_4_Pin) || (GPIO_Pin == Row_5_Pin)){
-		//Falling edge
+		HAL_NVIC_DisableIRQ(Row_1_EXTI_IRQn);
 		if(HAL_GPIO_ReadPin(Row_1_GPIO_Port, GPIO_Pin) == 0){
-			//Make sure we didn't interrupt on falling edge already
-			if(kpedge != 0){
-				kpedge = 0;
-				//Save rowpin
-				rowpin = GPIO_Pin;
-				//start debounce
-				HAL_TIM_Base_Start_IT(&htim2);
-			}
+			//Save rowpin
+			rowpin = GPIO_Pin;
 		}
-		//Rising edge
-		else{
-			//Make sure we didn't interrupt on rising edge already
-			if(kpedge != 1){
-				kpedge = 1;
-			}
-		}
+		//Start debounce
+		HAL_TIM_Base_Start_IT(&htim2);
 	}
 	else if(GPIO_Pin == Rot_SW_Pin){
-		//Falling edge
-		if(HAL_GPIO_ReadPin(Rot_SW_GPIO_Port, Rot_SW_Pin) == 0){
-			//Make sure we didn't interrupt on falling edge already
-			if(swedge != 0){
-				swedge = 0;
-				//start debounce
-				HAL_NVIC_DisableIRQ(Rot_SW_EXTI_IRQn);
-				HAL_TIM_Base_Start_IT(&htim9);
-			}
-		}
-		//Rising edge
-		else{
-			//Make sure we didn't interrupt on rising edge already
-			if(swedge != 1){
-				swedge = 1;
-			}
-		}
+		HAL_NVIC_DisableIRQ(Rot_SW_EXTI_IRQn);
+		HAL_TIM_Base_Start_IT(&htim9);
 	}
 	else if(GPIO_Pin == Rot_CLK_Pin){
 		if (rotenum == NOTURN) {
@@ -3329,23 +3147,34 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if(htim == &htim2){
 		//Disable timer now that we're in its interrupt
 		HAL_TIM_Base_Stop_IT(&htim2);
-		column_input();
-		//Detect which column is held low (pressed)
-		for(int i = 0; i < 4; i++){
-			if(HAL_GPIO_ReadPin(col_ports[i], col_pins[i]) == 0){
-				//Find rowpin value based on array of pins declared globally
-				for(int j = 0; j < 5; j++){
-					if(rowpin == row_pins[j]){
-						//Call keypad state machine based on rowpin and colpin array declared globally
-						keypad_sm(keypad_labels[j][i]);
-						rowpin = -1;
-						break;
+		if(rowpin != -1){
+			column_input();
+			//Detect which column is held low (pressed)
+			for(int i = 0; i < 4; i++){
+				if(HAL_GPIO_ReadPin(col_ports[i], col_pins[i]) == 0){
+					//Find rowpin value based on array of pins declared globally
+					for(int j = 0; j < 5; j++){
+						if(rowpin == row_pins[j]){
+							//Call keypad state machine based on rowpin and colpin array declared globally
+							keypad_sm(keypad_labels[j][i]);
+							break;
+						}
 					}
+					break;
 				}
-				break;
 			}
+			rowpin = -1;
+			row_input();
 		}
-		row_input();
+		else{
+			__HAL_GPIO_EXTI_CLEAR_IT(Row_1_Pin);
+			__HAL_GPIO_EXTI_CLEAR_IT(Row_2_Pin);
+			__HAL_GPIO_EXTI_CLEAR_IT(Row_3_Pin);
+			__HAL_GPIO_EXTI_CLEAR_IT(Row_4_Pin);
+			__HAL_GPIO_EXTI_CLEAR_IT(Row_5_Pin);
+			HAL_NVIC_SetPriority(Row_1_EXTI_IRQn, 0, 0);
+			HAL_NVIC_EnableIRQ(Row_1_EXTI_IRQn);
+		}
 	}
 	else if(htim == &htim3){
 		//Disable timer now that we're in its interrupt
@@ -3370,8 +3199,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	else if(htim == &htim9){
 		//Disable timer now that we're in its interrupt
 		HAL_TIM_Base_Stop_IT(&htim9);
-		//haha keypad_sm go brrrr
 		keypad_sm('s');//s for switch
+		__HAL_GPIO_EXTI_CLEAR_IT(Rot_SW_Pin);
 		HAL_NVIC_SetPriority(Rot_SW_EXTI_IRQn, 0, 0);
 		HAL_NVIC_EnableIRQ(Rot_SW_EXTI_IRQn);
 	}
@@ -3379,14 +3208,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		//Disable timer now that we're in its interrupt
 		HAL_TIM_Base_Stop_IT(&htim10);
 		if(rotenum == CWTURN){
-			//haha keypad_sm go brrrr
 			keypad_sm(']');//right bracket for CW
 		}
 		else if(rotenum == CCWTURN){
-			//haha keypad_sm go brrrr
 			keypad_sm('[');//left bracket for CCW
 		}
 		rotenum = NOTURN;
+		__HAL_GPIO_EXTI_CLEAR_IT(Rot_CLK_Pin);
 		HAL_NVIC_SetPriority(Rot_CLK_EXTI_IRQn, 0, 0);
 		HAL_NVIC_EnableIRQ(Rot_CLK_EXTI_IRQn);
 	}
@@ -3399,7 +3227,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				HAL_GPIO_WritePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_RESET);
 			}
 			timercounter++;
-			if(timercounter >= 7){
+			if(timercounter >= 5){
 				timercounter = 0;
 			}
 			blink = 0;
@@ -3409,7 +3237,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				HAL_GPIO_WritePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_SET);
 			}
 			timercounter++;
-			if(timercounter >= 7){
+			if(timercounter >= 5){
 				timercounter = 0;
 			}
 			blink = 0;
@@ -3419,7 +3247,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
 			}
 			timercounter++;
-			if(timercounter >= 7){
+			if(timercounter >= 5){
 				timercounter = 0;
 				blink = 1;
 			}
