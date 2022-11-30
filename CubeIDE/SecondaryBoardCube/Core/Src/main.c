@@ -39,9 +39,9 @@
 #define ADC_VREF adc_values_cpy[4]
 
 /* PID Control for the Linear Voltage Regulator ------------------------------*/
-#define P 0.15
-#define I 0.15
-#define D 0.2
+#define P 0.1
+#define I 0.1
+#define D 0.1
 /* PID Linear Section End ----- */
 
 /* USER CODE END PD */
@@ -164,6 +164,7 @@ int main(void)
   float correction = 0;
   float corrected_volt_set_main;
   float tmpv1;
+  volatile float tmpv2;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -254,13 +255,13 @@ int main(void)
 		  v1 = (uint16_t) tmpv1;
 	  } else {
 		  if(op_num > (volt_set_main - 1)){
-			  if(v1 >= 1){
+			  if(v1 > 0){
 				  v1--;
 			  }
 			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
 		  else if(op_num < (volt_set_main - 1)){
-			  if(v1 <= 4094){
+			  if(v1 < 4095){
 				  v1++;
 			  }
 			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
@@ -270,22 +271,37 @@ int main(void)
 
 	  /*
 	   * The calculation we do to determine what we need to set the dac for the switching regulator to is determined by the following formula
-	   * 1.235 = (R3*R2*Vout + R1*R2Vdac) / (R3*R2 + R1*R3 + R1*R2) where R1 = 10k, R2 = 1.2k, R3 = 2.4K
+	   * 1.235 = (R3*R2*Vout + R1*R2Vdac) / (R3*R2 + R1*R3 + R1*R2) where R1 = 10k, R2 = 1.2k, R3 = 2K
 	   * This equation would be a little cumbersome to calculate every time we loop so I have simplified it on paper to the following formula
-	   * Vdac = 4.001400 - 0.240000*Vout
+	   * Vdac = 3.5403 - 0.2*Vout
 	   */
 
-	  volatile float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.5))) * (float)4095 / (float)vddcalc);
-	  if(temp <= 0){
-		  v2 = 0;
-	  }
-	  else if(temp >= 4095){
-		  v2 = 4095;
-	  }
-	  else{
-		  v2 = (uint16_t)temp;
+	  if (volt_set_main != volt_set_main_old) {
+		  tmpv2 = ((float)3.5403 - ((float)0.2*((float)volt_set_main + (float)1.0))) * (float)4095 / (float)vddcalc;
+		  if(tmpv2 < 375){
+			  v2 = 375;
+		  }
+		  else if (tmpv2 > 4030) {
+			  v2 = 4030;
+		  }
+		  else {
+			  v2 = (uint16_t)tmpv2;
+		  }
+		  if(volt_set_main > volt_set_main_old){
+			  //If the new voltage is greater than the old voltage set we need to increase the switching regulators voltage first
+			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
+			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+		  }
+		  else if(volt_set_main < volt_set_main_old){
+			  //If the new voltage is lower than the old voltage set we need to decrease the switching regulators voltage last
+			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
+		  }
+	  } else {
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 	  }
 
+	  /*
 	  if(volt_set_main > volt_set_main_old){
 		  //If the new voltage is greater than the old voltage set we need to increase the switching regulators voltage first
 		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
@@ -298,9 +314,28 @@ int main(void)
 	  }
 	  else{
 		  //We shouldn't have to do anything in the case that the old voltage is equal to the new voltage but we can allow PID to keep going
+		  //HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+	  }
+	  */
+
+	  /*
+	  if(volt_set_main > volt_set_main_old){
+		  //If the new voltage is greater than the old voltage set we need to increase the switching regulators voltage first
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+	  }
+	  else if(volt_set_main < volt_set_main_old){
+		  //If the new voltage is lower than the old voltage set we need to decrease the switching regulators voltage last
 		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
 	  }
+	  else{
+		  //We shouldn't have to do anything in the case that the old voltage is equal to the new voltage but we can allow PID to keep going
+		  //HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+	  }
+	  */
 
 	  if(chstat_main == 1 && ADC_OPAMP >= 5){
 		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_RESET);
@@ -312,7 +347,6 @@ int main(void)
 	  //Keep the watchdog threshold up to date with changes to vdd
 	  update_ADC_watchdog(amp_set_main);
 
-	  HAL_Delay(1);
   }
   /* USER CODE END 3 */
 }
@@ -648,7 +682,7 @@ void ourInit(void){
 	HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
 	HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
 	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0);
-	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, 0);
+	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, 375);
 	//USB_EXTIinit();
 	//Ensure keypad columns output 0 by default
 	//HAL_GPIO_WritePin(Col_1_GPIO_Port, Col_1_Pin|Col_2_Pin|Col_3_Pin|Col_4_Pin, GPIO_PIN_RESET);
