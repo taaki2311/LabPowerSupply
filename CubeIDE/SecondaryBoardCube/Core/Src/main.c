@@ -275,7 +275,7 @@ int main(void)
 	   * Vdac = 4.001400 - 0.240000*Vout
 	   */
 
-	  volatile float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.5))) * (float)4095 / (float)vddcalc);
+	  volatile float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.75))) * (float)4095 / (float)vddcalc);
 	  if(temp <= 0){
 		  v2 = 0;
 	  }

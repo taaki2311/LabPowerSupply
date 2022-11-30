@@ -2540,8 +2540,8 @@ void ourInit(void){
  80019ba:	f8cd 8004 	str.w	r8, [sp, #4]
 		  v1 = (uint16_t) tmpv1;
  80019be:	801f      	strh	r7, [r3, #0]
-	  volatile float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.5))) * (float)4095 / (float)vddcalc);
- 80019c0:	f04f 517c 	mov.w	r1, #1056964608	; 0x3f000000
+	  volatile float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.75))) * (float)4095 / (float)vddcalc);
+ 80019c0:	f04f 517d 	mov.w	r1, #1061158912	; 0x3f400000
  80019c4:	4628      	mov	r0, r5
  80019c6:	f7ff f8cd 	bl	8000b64 <__addsf3>
  80019ca:	497d      	ldr	r1, [pc, #500]	; (8001bc0 <main+0x490>)
@@ -2850,7 +2850,7 @@ void ourInit(void){
  8001c84:	881b      	ldrh	r3, [r3, #0]
  8001c86:	4833      	ldr	r0, [pc, #204]	; (8001d54 <main+0x624>)
  8001c88:	f001 f936 	bl	8002ef8 <HAL_DAC_SetValue>
-	  volatile float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.5))) * (float)4095 / (float)vddcalc);
+	  volatile float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.75))) * (float)4095 / (float)vddcalc);
  8001c8c:	4b2f      	ldr	r3, [pc, #188]	; (8001d4c <main+0x61c>)
  8001c8e:	681d      	ldr	r5, [r3, #0]
  8001c90:	e696      	b.n	80019c0 <main+0x290>

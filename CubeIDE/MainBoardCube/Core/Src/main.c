@@ -62,9 +62,9 @@ const uint8_t customChar[64] = {
 /* ADC Section End -----------------------------------------------------------*/
 
 /* PID Control for the Linear Voltage Regulator ------------------------------*/
-#define P 0.15
-#define I 0.15
-#define D 0.2
+//#define P 0.05
+//#define I 0.0
+//#define D 0.0
 /* PID Linear Section End ----------------------------------------------------*/
 
 /* USER CODE END PD */
@@ -153,9 +153,15 @@ volatile float volt_set_aux = 0.0;
 volatile float amp_set_aux = 0.0;
 
 volatile float volt_set_main_old = 0.0;
-volatile float amp_set_main_old = 0.8;
+volatile float amp_set_main_old = 0.0;
 //volatile float volt_set_aux_old = 0.0;
 //volatile float amp_set_aux_old = 0.0;
+
+volatile float op_num_old = 0.0;
+
+float P = 0.1;
+float I = 0.1;
+float D = 0.1;
 
 //Array for the adc values and vars to hold them
 volatile uint16_t adc_values[6];
@@ -164,6 +170,10 @@ uint16_t* vrefptr = ((uint16_t*)VREFINT_CAL_ADDR_CMSIS);
 volatile int8_t chstat_main = 0;
 volatile int8_t chstat_aux_tx = 0;
 volatile int8_t chstat_aux_rx = 0;
+volatile uint8_t toggle_chstat_main = 0;
+volatile uint8_t toggle_chstat_aux = 0;
+volatile uint8_t toggle_chstat_main_tim = 1;
+volatile uint8_t toggle_chstat_aux_tim = 1;
 
 //Globals for adc values
 float lin_num = 0;
@@ -179,8 +189,6 @@ uint16_t v1;//dac channel 1 is linear
 uint16_t v2;//dac channel 2 is switching
 
 uint8_t timercounter = 0;
-uint8_t blink = 0;
-uint8_t startmessage = 0;
 
 /* USER CODE END PV */
 
@@ -322,7 +330,7 @@ int main(void)
 					(strncmp("MEASure:VOLTage:DC?", (char*)notacircbuff[tempiter], strlen("MEASure:VOLTage:DC?")) == 0) ||
 					(strncmp("MEASure:VOLTage?", (char*)notacircbuff[tempiter], strlen("MEASure:VOLTage?")) == 0)){
 				snprintf((char*)MSG, 64, "%.2f, %.2f\n", lin_num_aux, lin_num);
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 			// Measure Current
@@ -330,21 +338,21 @@ int main(void)
 					(strncmp("MEASure:CURRent:DC?", (char*)notacircbuff[tempiter], strlen("MEASure:CURRent:DC?")) == 0) ||
 					(strncmp("MEASure:CURRent?", (char*)notacircbuff[tempiter], strlen("MEASure:CURRent?")) == 0)){
 				snprintf((char*)MSG, 64, "%.3f, %.3f\n", cur_num_aux, cur_num);
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 			// CH1 Output Status
 			else if ((strncmp("OUTPut:ONE?", (char*)notacircbuff[tempiter], strlen("OUTPut:ONE?")) == 0) ||
 					(strncmp("OUTP:ONE?", (char*)notacircbuff[tempiter], strlen("OUTP:ONE?")) == 0)){
 				snprintf((char*)MSG, 64, "%d\n", chstat_aux_rx);
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 			// CH2 Output Status
 			else if ((strncmp("OUTPut:TWO?", (char*)notacircbuff[tempiter], strlen("OUTPut:TWO?")) == 0) ||
 					(strncmp("OUTP:TWO?", (char*)notacircbuff[tempiter], strlen("OUTP:TWO?")) == 0)){
 				snprintf((char*)MSG, 64, "%d\n", chstat_main);
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 			// CH1 Output ON
@@ -352,7 +360,7 @@ int main(void)
 					(strncmp("OUTP:ONE:START", (char*)notacircbuff[tempiter], strlen("OUTP:ONE:START")) == 0)){
 				chstat_aux_tx = 1;
 				snprintf((char*)MSG, 64, "\n");
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 			// CH2 Output ON
@@ -360,7 +368,7 @@ int main(void)
 					(strncmp("OUTP:TWO:START", (char*)notacircbuff[tempiter], strlen("OUTP:TWO:START")) == 0)){
 				chstat_main = 1;
 				snprintf((char*)MSG, 64, "\n");
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 			// CH1 Output OFF
@@ -368,7 +376,7 @@ int main(void)
 					(strncmp("OUTP:ONE:STOP", (char*)notacircbuff[tempiter], strlen("OUTP:ONE:STOP")) == 0)){
 				chstat_aux_tx = 0;
 				snprintf((char*)MSG, 64, "\n");
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 			// CH2 Output OFF
@@ -376,7 +384,7 @@ int main(void)
 					(strncmp("OUTP:TWO:STOP", (char*)notacircbuff[tempiter], strlen("OUTP:TWO:STOP")) == 0)){
 				chstat_main = 0;
 				snprintf((char*)MSG, 64, "\n");
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 			// CH1 VOLT 1
@@ -392,7 +400,7 @@ int main(void)
 				else{
 					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
 				}
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 			// CH1 VOLT 2
@@ -408,7 +416,7 @@ int main(void)
 				else{
 					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
 				}
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 			// CH2 VOLT 1
@@ -425,7 +433,7 @@ int main(void)
 				else{
 					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
 				}
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 
@@ -443,7 +451,7 @@ int main(void)
 				else{
 					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
 				}
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 			// CH1 AMP 1
@@ -459,7 +467,7 @@ int main(void)
 				else{
 					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
 				}
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 			// CH1 AMP 2
@@ -475,7 +483,7 @@ int main(void)
 				else{
 					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
 				}
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 
@@ -493,7 +501,7 @@ int main(void)
 				else{
 					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
 				}
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 
@@ -511,7 +519,7 @@ int main(void)
 				else{
 					snprintf((char*)MSG, 64, "ERROR: INVALID NUMBER\n");
 				}
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 			// Identify
@@ -519,15 +527,42 @@ int main(void)
 				CDC_Transmit_FS((uint8_t*)"493 Lab Power Supply\n", strlen("493 Lab Power Supply\n"));
 			}
 			//Ignore read, we can add it back later if needed
-			if ((strncmp("READ?", (char*)notacircbuff[tempiter], strlen("READ?")) == 0)){
+			else if ((strncmp("READ?", (char*)notacircbuff[tempiter], strlen("READ?")) == 0)){
 				//CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				//memset(MSG,'\0', 64);
 				CDC_Transmit_FS((uint8_t*)"\n", strlen("\n"));
 			}
+			// DBG Set P
+			else if ((strncmp("DBG:SET:P:", (char*)notacircbuff[tempiter], strlen("DBG:SET:P:")) == 0)){
+				P = (float)atof((char*)notacircbuff[tempiter] + 10);
+				snprintf((char*)MSG, 64, "\n");
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
+				memset(MSG,'\0', 64);
+			}
+			// DBG Set I
+			else if ((strncmp("DBG:SET:I:", (char*)notacircbuff[tempiter], strlen("DBG:SET:I:")) == 0)){
+				I = (float)atof((char*)notacircbuff[tempiter] + 10);
+				snprintf((char*)MSG, 64, "\n");
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
+				memset(MSG,'\0', 64);
+			}
+			// DBG Set D
+			else if ((strncmp("DBG:SET:D:", (char*)notacircbuff[tempiter], strlen("DBG:SET:D:")) == 0)){
+				D = (float)atof((char*)notacircbuff[tempiter] + 10);
+				snprintf((char*)MSG, 64, "\n");
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
+				memset(MSG,'\0', 64);
+			}
+			// DBG Read Switching
+			else if ((strncmp("DBG:MEAS:DBG?", (char*)notacircbuff[tempiter], strlen("DBG:MEAS:DBG?")) == 0)){
+				snprintf((char*)MSG, 64, "%.2f, %.2f\n", swi_num, op_num);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
+				memset(MSG,'\0', 64);
+			}
 			// Invalid input/command not supported
 			else{
 				snprintf((char*)MSG, 64, "ERROR: INVALID COMMAND\n");
-				CDC_Transmit_FS(MSG, 64);
+				CDC_Transmit_FS(MSG, strlen((char*)MSG));
 				memset(MSG,'\0', 64);
 			}
 			memset (notacircbuff[tempiter], '\0', 64); // clear the buffer
@@ -539,6 +574,8 @@ int main(void)
 
 
 	  //Control channel here
+
+	  op_num_old = (float)op_num;
 
 	  uint16_t vrefvalue = (uint16_t) *vrefptr;
 	  float vddcalc = (float)3.0 * ((float)vrefvalue / (float)ADC_VREF);
@@ -598,22 +635,22 @@ int main(void)
 
 	  //PID
 	  if (chstat_main) {
-		  error = lin_num - volt_set_main;
-		  integral += error;
+		  error = (float)lin_num - (float)volt_set_main;
+		  integral += (float)error;
 		  if (integral > (float)4095.0) {
-			  integral = 4095;
+			  integral = (float)4095;
 		  } else if (integral < (float)(-4095.0)) {
 			  integral = (float)(-4095.0);
 		  }
-		  derivative = error - error_previous;
-		  error_previous = error;
-		  correction = P * error + I * integral + D * derivative;
-		  corrected_volt_set_main = volt_set_main - correction;
+		  derivative = (float)error - (float)error_previous;
+		  error_previous = (float)error;
+		  correction = ((float)P * (float)error) + ((float)I * (float)integral) + ((float)D * (float)derivative);
+		  corrected_volt_set_main = (float)volt_set_main - (float)correction;
 		  tmpv1 = (((((float)corrected_volt_set_main / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
-		  if (tmpv1 > 4095) {
-			  tmpv1 = 4095;
-		  } else if (tmpv1 < 0) {
-			  tmpv1 = 0;
+		  if (tmpv1 >= 4094) {
+			  tmpv1 = 4094;
+		  } else if (tmpv1 <= 1) {
+			  tmpv1 = 1;
 		  }
 		  v1 = (uint16_t) tmpv1;
 	  } else {
@@ -638,12 +675,12 @@ int main(void)
 	   * Vdac = 4.001400 - 0.240000*Vout
 	   */
 
-	  float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)0.5))) * (float)4095 / (float)vddcalc);
+	  float temp = ( ((float)4.001400 - ((float)0.240000*((float)volt_set_main + (float)1.0))) * (float)4095 / (float)vddcalc);
 	  if(temp <= 0){
 		  v2 = 0;
 	  }
-	  else if(temp >= 4095){
-		  v2 = 4095;
+	  else if(temp >= 4000){
+		  v2 = 4000;
 	  }
 	  else{
 		  v2 = (uint16_t)temp;
@@ -661,8 +698,8 @@ int main(void)
 	  }
 	  else{
 		  //We shouldn't have to do anything in the case that the old voltage is equal to the new voltage but we can allow PID to keep going
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
+		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 	  }
 
 	  if(chstat_main == 1 && ADC_OPAMP >= 5){
@@ -938,7 +975,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 32000;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 20;
+  htim2.Init.Period = 50;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -1028,7 +1065,7 @@ static void MX_TIM4_Init(void)
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = 32000;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 2500;
+  htim4.Init.Period = 500;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
@@ -1377,7 +1414,7 @@ void ourInit(void){
 	}
 
 	//Start display timer
-	HAL_TIM_Base_Start_IT(&htim4);
+	HAL_TIM_Base_Start_IT(&htim3);
 
 }
 
@@ -2327,9 +2364,21 @@ void keypad_sm(char num){
 		}
 		else if(num == '*'){
 			chstat_aux_tx = !chstat_aux_rx;
+			/*
+			if(toggle_chstat_aux_tim){
+				toggle_chstat_aux_tim = 0;
+				toggle_chstat_aux = 1;
+				HAL_TIM_Base_Start_IT(&htim4);
+			}
+			*/
 		}
 		else if(num == '/'){
-			chstat_main = !chstat_main;
+			//chstat_main = !chstat_main;
+			if(toggle_chstat_main_tim){
+				toggle_chstat_main_tim = 0;
+				toggle_chstat_main = 1;
+				HAL_TIM_Base_Start_IT(&htim4);
+			}
 		}
 	}
 	else if(kpenum == V1){
@@ -2422,9 +2471,21 @@ void keypad_sm(char num){
 			}
 			else if(num == '*'){
 				chstat_aux_tx = !chstat_aux_rx;
+				/*
+				if(toggle_chstat_aux_tim){
+					toggle_chstat_aux_tim = 0;
+					toggle_chstat_aux = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
+				*/
 			}
 			else if(num == '/'){
-				chstat_main = !chstat_main;
+				//chstat_main = !chstat_main;
+				if(toggle_chstat_main_tim){
+					toggle_chstat_main_tim = 0;
+					toggle_chstat_main = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
 			}
 		}
 		//Default keypad sm
@@ -2492,9 +2553,21 @@ void keypad_sm(char num){
 			}
 			else if(num == '*'){
 				chstat_aux_tx = !chstat_aux_rx;
+				/*
+				if(toggle_chstat_aux_tim){
+					toggle_chstat_aux_tim = 0;
+					toggle_chstat_aux = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
+				*/
 			}
 			else if(num == '/'){
-				chstat_main = !chstat_main;
+				//chstat_main = !chstat_main;
+				if(toggle_chstat_main_tim){
+					toggle_chstat_main_tim = 0;
+					toggle_chstat_main = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
 			}
 		}
 	}
@@ -2587,9 +2660,21 @@ void keypad_sm(char num){
 			}
 			else if(num == '*'){
 				chstat_aux_tx = !chstat_aux_rx;
+				/*
+				if(toggle_chstat_aux_tim){
+					toggle_chstat_aux_tim = 0;
+					toggle_chstat_aux = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
+				*/
 			}
 			else if(num == '/'){
-				chstat_main = !chstat_main;
+				//chstat_main = !chstat_main;
+				if(toggle_chstat_main_tim){
+					toggle_chstat_main_tim = 0;
+					toggle_chstat_main = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
 			}
 		}
 		//Default keypad sm
@@ -2657,9 +2742,21 @@ void keypad_sm(char num){
 			}
 			else if(num == '*'){
 				chstat_aux_tx = !chstat_aux_rx;
+				/*
+				if(toggle_chstat_aux_tim){
+					toggle_chstat_aux_tim = 0;
+					toggle_chstat_aux = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
+				*/
 			}
 			else if(num == '/'){
-				chstat_main = !chstat_main;
+				//chstat_main = !chstat_main;
+				if(toggle_chstat_main_tim){
+					toggle_chstat_main_tim = 0;
+					toggle_chstat_main = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
 			}
 		}
 	}
@@ -2757,9 +2854,21 @@ void keypad_sm(char num){
 			}
 			else if(num == '*'){
 				chstat_aux_tx = !chstat_aux_rx;
+				/*
+				if(toggle_chstat_aux_tim){
+					toggle_chstat_aux_tim = 0;
+					toggle_chstat_aux = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
+				*/
 			}
 			else if(num == '/'){
-				chstat_main = !chstat_main;
+				//chstat_main = !chstat_main;
+				if(toggle_chstat_main_tim){
+					toggle_chstat_main_tim = 0;
+					toggle_chstat_main = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
 			}
 		}
 		//Default keypad sm
@@ -2829,9 +2938,21 @@ void keypad_sm(char num){
 			}
 			else if(num == '*'){
 				chstat_aux_tx = !chstat_aux_rx;
+				/*
+				if(toggle_chstat_aux_tim){
+					toggle_chstat_aux_tim = 0;
+					toggle_chstat_aux = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
+				*/
 			}
 			else if(num == '/'){
-				chstat_main = !chstat_main;
+				//chstat_main = !chstat_main;
+				if(toggle_chstat_main_tim){
+					toggle_chstat_main_tim = 0;
+					toggle_chstat_main = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
 			}
 		}
 	}
@@ -2932,9 +3053,21 @@ void keypad_sm(char num){
 			}
 			else if(num == '*'){
 				chstat_aux_tx = !chstat_aux_rx;
+				/*
+				if(toggle_chstat_aux_tim){
+					toggle_chstat_aux_tim = 0;
+					toggle_chstat_aux = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
+				*/
 			}
 			else if(num == '/'){
-				chstat_main = !chstat_main;
+				//chstat_main = !chstat_main;
+				if(toggle_chstat_main_tim){
+					toggle_chstat_main_tim = 0;
+					toggle_chstat_main = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
 			}
 		}
 		//Default keypad sm
@@ -3006,9 +3139,21 @@ void keypad_sm(char num){
 			}
 			else if(num == '*'){
 				chstat_aux_tx = !chstat_aux_rx;
+				/*
+				if(toggle_chstat_aux_tim){
+					toggle_chstat_aux_tim = 0;
+					toggle_chstat_aux = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
+				*/
 			}
 			else if(num == '/'){
-				chstat_main = !chstat_main;
+				//chstat_main = !chstat_main;
+				if(toggle_chstat_main_tim){
+					toggle_chstat_main_tim = 0;
+					toggle_chstat_main = 1;
+					HAL_TIM_Base_Start_IT(&htim4);
+				}
 			}
 		}
 	}
@@ -3179,22 +3324,31 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	else if(htim == &htim3){
 		//Disable timer now that we're in its interrupt
 		HAL_TIM_Base_Stop_IT(&htim3);
-		//Update Display
-		lcd_psu_update();
+		if(timercounter < 5){
+			timercounter++;
+		}
+		else{
+			//Update Display
+			lcd_psu_update();
+		}
 		//Start timer again
 		HAL_TIM_Base_Start_IT(&htim3);
 	}
 	else if(htim == &htim4){
 		//Disable timer now that we're in its interrupt
 		HAL_TIM_Base_Stop_IT(&htim4);
-		if(!startmessage){
-			startmessage = 1;
-			HAL_TIM_Base_Start_IT(&htim4);
+		if(toggle_chstat_main){
+			chstat_main = !chstat_main;
+			toggle_chstat_main = 0;
+			toggle_chstat_main_tim = 1;
 		}
-		else{
-			//Start display
-			HAL_TIM_Base_Start_IT(&htim3);
+		/*
+		if(toggle_chstat_aux){
+			chstat_aux_tx = !chstat_aux_rx;
+			toggle_chstat_aux = 0;
+			toggle_chstat_aux_tim = 1;
 		}
+		*/
 	}
 	else if(htim == &htim9){
 		//Disable timer now that we're in its interrupt
@@ -3222,35 +3376,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		//Disable timer now that we're in its interrupt
 		HAL_TIM_Base_Stop_IT(&htim11);
 		if(chstat_main == 0){
-			//Since we have a delay in updating the LED for channel 1 from UART, lets introduce a dumb fake delay on channel 2
-			if(!timercounter){
-				HAL_GPIO_WritePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_RESET);
-			}
-			timercounter++;
-			if(timercounter >= 5){
-				timercounter = 0;
-			}
-			blink = 0;
+			HAL_GPIO_WritePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_RESET);
 		}
 		else if(chstat_main == 1){
-			if(!timercounter){
-				HAL_GPIO_WritePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_SET);
-			}
-			timercounter++;
-			if(timercounter >= 5){
-				timercounter = 0;
-			}
-			blink = 0;
+			HAL_GPIO_WritePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin, GPIO_PIN_SET);
 		}
 		else if(chstat_main == 2){
-			if(blink){
-				HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
-			}
-			timercounter++;
-			if(timercounter >= 5){
-				timercounter = 0;
-				blink = 1;
-			}
+			HAL_GPIO_TogglePin(Status_LED_2_GPIO_Port, Status_LED_2_Pin);
 		}
 
 		if(chstat_aux_rx == 0){
