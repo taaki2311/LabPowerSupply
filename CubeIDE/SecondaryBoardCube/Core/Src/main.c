@@ -39,9 +39,9 @@
 #define ADC_VREF adc_values_cpy[4]
 
 /* PID Control for the Linear Voltage Regulator ------------------------------*/
-#define P 0.1
-#define I 0.1
-#define D 0.1
+#define P 0.01
+#define I 0.01
+#define D 0
 /* PID Linear Section End ----- */
 
 /* USER CODE END PD */
@@ -94,10 +94,6 @@ float swi_num = 0;
 
 //volatile float lin_num_aux = 0;
 //volatile float cur_num_aux = 0;
-
-//Global for dac value
-uint16_t v1;//dac channel 1 is linear
-//uint16_t v2;//dac channel 2 is switching
 
 /* USER CODE END PV */
 
@@ -158,13 +154,21 @@ int main(void)
   /* USER CODE BEGIN 2 */
   ourInit();
   float error = 0;
-  volatile float derivative = 0;
+  float derivative = 0;
   float integral = 0;
   float error_previous = 0;
   float correction = 0;
   float corrected_volt_set_main;
+  uint16_t v1 = 0; // dac channel 1 is linear
+  //uint16_t v2 = 375; // dac channel 2 is switching
   float tmpv1;
-  // float tmpv2;
+  //float tmpv2;
+  float error_shutdown = 0;
+  float derivative_shutdown = 0;
+  float integral_shutdown = 0;
+  float error_previous_shutdown = 0;
+  float correction_shutdown = 0;
+  float corrected_volt_set_main_shutdown;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -254,19 +258,38 @@ int main(void)
 		  }
 		  v1 = (uint16_t) tmpv1;
 	  } else {
+		  /*
 		  if(op_num > (volt_set_main - 1)){
 			  if(v1 > 0){
 				  v1--;
 			  }
-			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
 		  else if(op_num < (volt_set_main - 1)){
 			  if(v1 < 4095){
 				  v1++;
 			  }
-			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
+		  */
+		  error_shutdown = op_num; // - volt_set_main;
+		  integral_shutdown += error_shutdown;
+		  if (integral_shutdown > (float)4095.0) {
+			  integral_shutdown = (float)4095;
+		  } else if (integral_shutdown < (float)-4095.0) {
+			  integral_shutdown = (float)-4095.0;
+		  }
+		  derivative_shutdown = error_shutdown - error_previous_shutdown;
+		  error_previous_shutdown = error_shutdown;
+		  correction_shutdown = P * error_shutdown + I * integral_shutdown + D * derivative_shutdown;
+		  corrected_volt_set_main_shutdown = volt_set_main - correction_shutdown;
+		  tmpv1 = (((((float)corrected_volt_set_main_shutdown / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
+		  if (tmpv1 > 4095) {
+			  tmpv1 = 4095;
+		  } else if (tmpv1 < 0) {
+			  tmpv1 = 0;
+		  }
+		  v1 = (uint16_t) tmpv1;
 	  }
+	  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 //	*/
 
 	  /*
@@ -276,9 +299,9 @@ int main(void)
 	   * Vdac = 3.5403 - 0.2*Vout
 	   */
 
-	 /*
+	  /*
 	  if (volt_set_main != volt_set_main_old) {
-		  tmpv2 = ((float)3.5403 - ((float)0.2*((float)volt_set_main + (float)1.0))) * (float)4095 / (float)vddcalc;
+		  tmpv2 = ((float)3.5403333 - ((float)0.2*((float)volt_set_main + (float)5.0))) * (float)4095 / (float)vddcalc;
 		  if(tmpv2 < 375){
 			  v2 = 375;
 		  }
@@ -302,6 +325,7 @@ int main(void)
 		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 	  }
 	  */
+
 
 	  /*
 	  if(volt_set_main > volt_set_main_old){

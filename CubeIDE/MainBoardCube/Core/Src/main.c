@@ -30,7 +30,8 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+typedef enum ROTARY_STATE {NOTURN, CWTURN, CCWTURN} ROTARY_STATE;
+typedef enum KEYPAD_ENUM {WAIT, V1, A1, V2, A2} KEYPAD_ENUM;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -126,10 +127,8 @@ const uint8_t keypadlength = 5;
 char keypadarr[5] = {'z','z','z','z','z'};//z is null
 int8_t keypaditerator = 4;
 uint8_t keypaddecimal = 0;
-enum KEYPAD_ENUM {WAIT, V1, A1, V2, A2};
-enum KEYPAD_ENUM kpenum = WAIT;
-enum ROTARY_STATE {NOTURN, CWTURN, CCWTURN};
-enum ROTARY_STATE rotenum = NOTURN;
+KEYPAD_ENUM kpenum = WAIT;
+ROTARY_STATE rotenum = NOTURN;
 uint8_t encmode = 0;
 int8_t encpos = 0;
 
@@ -159,9 +158,9 @@ volatile float amp_set_main_old = 0.0;
 
 volatile float op_num_old = 0.0;
 
-float P = 0.1;
-float I = 0.1;
-float D = 0.1;
+float P = 0.01;
+float I = 0.01;
+float D = 0;
 
 //Array for the adc values and vars to hold them
 volatile uint16_t adc_values[6];
@@ -183,10 +182,6 @@ float swi_num = 0;
 
 float lin_num_aux = 0;
 float cur_num_aux = 0;
-
-//Global for dac value
-uint16_t v1;//dac channel 1 is linear
-//uint16_t v2;//dac channel 2 is switching
 
 uint8_t timercounter = 0;
 
@@ -306,8 +301,16 @@ int main(void)
   float error_previous = 0;
   float correction = 0;
   float corrected_volt_set_main;
+  uint16_t v1 = 0; // DAC channel 1 is linear
+  //uint16_t v2 = 375; // DAC channel 2 is switching
   float tmpv1;
   //float tmpv2;
+  float error_shutdown = 0;
+  float derivative_shutdown = 0;
+  float integral_shutdown = 0;
+  float error_previous_shutdown = 0;
+  float correction_shutdown = 0;
+  float corrected_volt_set_main_shutdown;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -650,35 +653,54 @@ int main(void)
 		  tmpv1 = ((((float)corrected_volt_set_main / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc;
 		  if (tmpv1 >= 4094) {
 			  tmpv1 = 4094;
-		  } else if (tmpv1 <= 1) {
+		  } else if (tmpv1 < 0) {
 			  tmpv1 = 1;
 		  }
 		  v1 = (uint16_t) tmpv1;
 	  } else {
+		  /*
 		  if(op_num > (volt_set_main - 1)){
-			  if(v1 >= 1){
+			  if(v1 > 0){
 				  v1--;
 			  }
-			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
 		  else if(op_num < (volt_set_main - 1)){
-			  if(v1 <= 4094){
+			  if(v1 < 4095){
 				  v1++;
 			  }
-			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 		  }
+		  */
+		  error_shutdown = op_num; // - volt_set_main;
+		  integral_shutdown += error_shutdown;
+		  if (integral_shutdown > (float)4095.0) {
+			  integral_shutdown = (float)4095;
+		  } else if (integral_shutdown < (float)-4095.0) {
+			  integral_shutdown = (float)-4095.0;
+		  }
+		  derivative_shutdown = error_shutdown - error_previous_shutdown;
+		  error_previous_shutdown = error_shutdown;
+		  correction_shutdown = P * error_shutdown + I * integral_shutdown + D * derivative_shutdown;
+		  corrected_volt_set_main_shutdown = volt_set_main - correction_shutdown;
+		  tmpv1 = (((((float)corrected_volt_set_main_shutdown / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
+		  if (tmpv1 > 4095) {
+			  tmpv1 = 4095;
+		  } else if (tmpv1 < 0) {
+			  tmpv1 = 0;
+		  }
+		  v1 = (uint16_t) tmpv1;
 	  }
+	  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 
 	  /*
 	   * The calculation we do to determine what we need to set the dac for the switching regulator to is determined by the following formula
 	   * 1.235 = (R3*R2*Vout + R1*R2Vdac) / (R3*R2 + R1*R3 + R1*R2) where R1 = 10k, R2 = 1.2k, R3 = 2K
 	   * This equation would be a little cumbersome to calculate every time we loop so I have simplified it on paper to the following formula
-	   * Vdac = 3.5403 - 0.2*Vout
+	   * Vdac = 3.5403 - 0.2*Vout; ) 46.5183 = Vout + 5Vdac
 	   */
 
 	  /*
 	  if (volt_set_main != volt_set_main_old) {
-		  tmpv2 = ((float)3.5403 - ((float)0.2*((float)volt_set_main + (float)1.0))) * (float)4095 / (float)vddcalc;
+		  tmpv2 = ((float)3.5403333 - ((float)0.2*((float)volt_set_main + (float)5.0))) * (float)4095 / (float)vddcalc;
 		  if(tmpv2 < 375){
 			  v2 = 375;
 		  }
@@ -702,6 +724,7 @@ int main(void)
 		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 	  }
 	  */
+
 
 	  /*
 	  if(volt_set_main > volt_set_main_old){
