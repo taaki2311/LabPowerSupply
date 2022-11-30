@@ -186,7 +186,7 @@ float cur_num_aux = 0;
 
 //Global for dac value
 uint16_t v1;//dac channel 1 is linear
-uint16_t v2;//dac channel 2 is switching
+//uint16_t v2;//dac channel 2 is switching
 
 uint8_t timercounter = 0;
 
@@ -307,7 +307,7 @@ int main(void)
   float correction = 0;
   float corrected_volt_set_main;
   float tmpv1;
-  volatile float tmpv2;
+  //float tmpv2;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -676,6 +676,7 @@ int main(void)
 	   * Vdac = 3.5403 - 0.2*Vout
 	   */
 
+	  /*
 	  if (volt_set_main != volt_set_main_old) {
 		  tmpv2 = ((float)3.5403 - ((float)0.2*((float)volt_set_main + (float)1.0))) * (float)4095 / (float)vddcalc;
 		  if(tmpv2 < 375){
@@ -700,6 +701,7 @@ int main(void)
 	  } else {
 		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 	  }
+	  */
 
 	  /*
 	  if(volt_set_main > volt_set_main_old){
