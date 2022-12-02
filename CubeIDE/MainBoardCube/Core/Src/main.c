@@ -63,9 +63,9 @@ const uint8_t customChar[64] = {
 /* ADC Section End -----------------------------------------------------------*/
 
 /* PID Control for the Linear Voltage Regulator ------------------------------*/
-//#define P 0.05
-//#define I 0.0
-//#define D 0.0
+#define P 0.01
+#define I 0.01
+#define D 0.0
 /* PID Linear Section End ----------------------------------------------------*/
 
 /* USER CODE END PD */
@@ -157,10 +157,6 @@ volatile float amp_set_main_old = 0.0;
 //volatile float amp_set_aux_old = 0.0;
 
 volatile float op_num_old = 0.0;
-
-float P = 0.01;
-float I = 0.01;
-float D = 0;
 
 //Array for the adc values and vars to hold them
 volatile uint16_t adc_values[6];
@@ -302,15 +298,17 @@ int main(void)
   float correction = 0;
   float corrected_volt_set_main;
   uint16_t v1 = 0; // DAC channel 1 is linear
-  //uint16_t v2 = 375; // DAC channel 2 is switching
+  uint16_t v2 = 375; // DAC channel 2 is switching
   float tmpv1;
-  //float tmpv2;
+  float tmpv2;
   float error_shutdown = 0;
   float derivative_shutdown = 0;
   float integral_shutdown = 0;
   float error_previous_shutdown = 0;
   float correction_shutdown = 0;
   float corrected_volt_set_main_shutdown;
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -536,33 +534,6 @@ int main(void)
 				//memset(MSG,'\0', 64);
 				CDC_Transmit_FS((uint8_t*)"\n", strlen("\n"));
 			}
-			// DBG Set P
-			else if ((strncmp("DBG:SET:P:", (char*)notacircbuff[tempiter], strlen("DBG:SET:P:")) == 0)){
-				P = (float)atof((char*)notacircbuff[tempiter] + 10);
-				snprintf((char*)MSG, 64, "\n");
-				CDC_Transmit_FS(MSG, strlen((char*)MSG));
-				memset(MSG,'\0', 64);
-			}
-			// DBG Set I
-			else if ((strncmp("DBG:SET:I:", (char*)notacircbuff[tempiter], strlen("DBG:SET:I:")) == 0)){
-				I = (float)atof((char*)notacircbuff[tempiter] + 10);
-				snprintf((char*)MSG, 64, "\n");
-				CDC_Transmit_FS(MSG, strlen((char*)MSG));
-				memset(MSG,'\0', 64);
-			}
-			// DBG Set D
-			else if ((strncmp("DBG:SET:D:", (char*)notacircbuff[tempiter], strlen("DBG:SET:D:")) == 0)){
-				D = (float)atof((char*)notacircbuff[tempiter] + 10);
-				snprintf((char*)MSG, 64, "\n");
-				CDC_Transmit_FS(MSG, strlen((char*)MSG));
-				memset(MSG,'\0', 64);
-			}
-			// DBG Read Switching
-			else if ((strncmp("DBG:MEAS:DBG?", (char*)notacircbuff[tempiter], strlen("DBG:MEAS:DBG?")) == 0)){
-				snprintf((char*)MSG, 64, "%.2f, %.2f\n", swi_num, op_num);
-				CDC_Transmit_FS(MSG, strlen((char*)MSG));
-				memset(MSG,'\0', 64);
-			}
 			// Invalid input/command not supported
 			else{
 				snprintf((char*)MSG, 64, "ERROR: INVALID COMMAND\n");
@@ -587,55 +558,14 @@ int main(void)
 	  float cur_num_temp = ((((float)3.0 * (float)ADC_CURRENT * (float)vrefvalue)/((float)ADC_VREF * (float)4095) / (float)20) / (float)0.15);
 	  cur_num  = (cur_num_temp >= 0.0000) ? cur_num_temp : 0.0000;
 
-
-	  //float cur_num = (((float)vddcalc * (float)*ADC_CURRENT * (float)4095) / (float)20) / (float)0.3;
 	  float op_num_temp = ((float)3.0 * ((float)ADC_OPAMP * (float)4.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095) - ((float)cur_num * (float)0.35);
 	  op_num  = (op_num_temp >= 0.0000) ? op_num_temp : 0.0000;
-
 
 	  float lin_num_temp = ((float)3.0 * ((float)ADC_LINEAR * (float)4.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095) - ((float)cur_num * (float)0.35);
 	  lin_num  = (lin_num_temp >= 0.0000) ? lin_num_temp : 0.0000;
 
-	  //float lin_num = ((float)vddcalc * (float)*ADC_LINEAR * (float)4095) * (float)4;
 	  float swi_num_temp = ((float)3.0 * ((float)ADC_SWITCHING * (float)5.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095);
 	  swi_num  = (swi_num_temp >= 0.0000) ? swi_num_temp : 0.0000;
-
-
-	  /*
-	  // Bang-Bang Controller
-	  //Try really hard to get the voltage right
-	  const float margin = 0.002;
-	  //If we are active watch the output adc
-	  if(chstat_main == 1){
-		  if(lin_num > volt_set_main + margin){
-			  if(v1 >= 1){
-				  v1--;
-			  }
-			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  }
-		  else if(lin_num < volt_set_main - margin){
-			  if(v1 <= 4094){
-				  v1++;
-			  }
-			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  }
-	  }
-	  //if we are inactive watch the opamp output, remove half a volt because it's better to undershoot than overshoot
-	  else{
-		  if(op_num > (volt_set_main - 0.5) + margin){
-			  if(v1 >= 1){
-				  v1--;
-			  }
-			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  }
-		  else if(op_num < (volt_set_main - 0.5) - margin){
-			  if(v1 <= 4094){
-				  v1++;
-			  }
-			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  }
-	  }
-	  */
 
 	  //PID
 	  if (chstat_main) {
@@ -650,7 +580,7 @@ int main(void)
 		  error_previous = (float)error;
 		  correction = ((float)P * (float)error) + ((float)I * (float)integral) + ((float)D * (float)derivative);
 		  corrected_volt_set_main = (float)volt_set_main - (float)correction;
-		  tmpv1 = ((((float)corrected_volt_set_main / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc;
+		  tmpv1 = ((((float)corrected_volt_set_main / (float)4.0) + ((float)1.0 / (float)4.0)) * (float)4095) / (float)vddcalc;
 		  if (tmpv1 >= 4094) {
 			  tmpv1 = 4094;
 		  } else if (tmpv1 < 0) {
@@ -658,19 +588,7 @@ int main(void)
 		  }
 		  v1 = (uint16_t) tmpv1;
 	  } else {
-		  /*
-		  if(op_num > (volt_set_main - 1)){
-			  if(v1 > 0){
-				  v1--;
-			  }
-		  }
-		  else if(op_num < (volt_set_main - 1)){
-			  if(v1 < 4095){
-				  v1++;
-			  }
-		  }
-		  */
-		  error_shutdown = op_num; // - volt_set_main;
+		  error_shutdown = op_num - volt_set_main;
 		  integral_shutdown += error_shutdown;
 		  if (integral_shutdown > (float)4095.0) {
 			  integral_shutdown = (float)4095;
@@ -681,7 +599,7 @@ int main(void)
 		  error_previous_shutdown = error_shutdown;
 		  correction_shutdown = P * error_shutdown + I * integral_shutdown + D * derivative_shutdown;
 		  corrected_volt_set_main_shutdown = volt_set_main - correction_shutdown;
-		  tmpv1 = (((((float)corrected_volt_set_main_shutdown / (float)4.0) + ((float)0.446974063 / (float)4.0)) * (float)4095) / (float)vddcalc);
+		  tmpv1 = (((((float)corrected_volt_set_main_shutdown / (float)4.0) + ((float)1.0 / (float)4.0)) * (float)4095) / (float)vddcalc);
 		  if (tmpv1 > 4095) {
 			  tmpv1 = 4095;
 		  } else if (tmpv1 < 0) {
@@ -690,6 +608,7 @@ int main(void)
 		  v1 = (uint16_t) tmpv1;
 	  }
 	  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
+//	  */
 
 	  /*
 	   * The calculation we do to determine what we need to set the dac for the switching regulator to is determined by the following formula
@@ -698,7 +617,6 @@ int main(void)
 	   * Vdac = 3.5403 - 0.2*Vout; ) 46.5183 = Vout + 5Vdac
 	   */
 
-	  /*
 	  if (volt_set_main != volt_set_main_old) {
 		  tmpv2 = ((float)3.5403333 - ((float)0.2*((float)volt_set_main + (float)5.0))) * (float)4095 / (float)vddcalc;
 		  if(tmpv2 < 375){
@@ -723,26 +641,6 @@ int main(void)
 	  } else {
 		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 	  }
-	  */
-
-
-	  /*
-	  if(volt_set_main > volt_set_main_old){
-		  //If the new voltage is greater than the old voltage set we need to increase the switching regulators voltage first
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-	  }
-	  else if(volt_set_main < volt_set_main_old){
-		  //If the new voltage is lower than the old voltage set we need to decrease the switching regulators voltage last
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
-	  }
-	  else{
-		  //We shouldn't have to do anything in the case that the old voltage is equal to the new voltage but we can allow PID to keep going
-		  //HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-	  }
-	  */
 
 	  if(chstat_main == 1 && ADC_OPAMP >= 5){
 		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_RESET);

@@ -160,9 +160,9 @@ int main(void)
   float correction = 0;
   float corrected_volt_set_main;
   uint16_t v1 = 0; // dac channel 1 is linear
-  //uint16_t v2 = 375; // dac channel 2 is switching
+  uint16_t v2 = 375; // dac channel 2 is switching
   float tmpv1;
-  //float tmpv2;
+  float tmpv2;
   float error_shutdown = 0;
   float derivative_shutdown = 0;
   float integral_shutdown = 0;
@@ -187,56 +187,15 @@ int main(void)
 	  float cur_num_temp = ((((float)3.0 * (float)ADC_CURRENT * (float)vrefvalue)/((float)ADC_VREF * (float)4095) / (float)20) / (float)0.15);
 	  cur_num  = (cur_num_temp >= 0.0000) ? cur_num_temp : 0.0000;
 
-
-	  //float cur_num = (((float)vddcalc * (float)*ADC_CURRENT * (float)4095) / (float)20) / (float)0.3;
 	  float op_num_temp = ((float)3.0 * ((float)ADC_OPAMP * (float)4.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095) - ((float)cur_num * (float)0.35);
 	  op_num  = (op_num_temp >= 0.0000) ? op_num_temp : 0.0000;
-
 
 	  float lin_num_temp = ((float)3.0 * ((float)ADC_LINEAR * (float)4.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095) - ((float)cur_num * (float)0.35);
 	  lin_num  = (lin_num_temp >= 0.0000) ? lin_num_temp : 0.0000;
 
-	  //float lin_num = ((float)vddcalc * (float)*ADC_LINEAR * (float)4095) * (float)4;
 	  float swi_num_temp = ((float)3.0 * ((float)ADC_SWITCHING * (float)5.0) * (float)vrefvalue)/((float)ADC_VREF * (float)4095);
 	  swi_num  = (swi_num_temp >= 0.0000) ? swi_num_temp : 0.0000;
 
-	  /*
-	  // Bang-Bang Controller
-	  //Try really hard to get the voltage right
-	  const float margin = 0.002;
-	  //If we are active watch the output adc
-	  if(chstat_main == 1){
-		  if(lin_num > volt_set_main + margin){
-			  if(v1 >= 1){
-				  v1--;
-			  }
-			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  }
-		  else if(lin_num < volt_set_main - margin){
-			  if(v1 <= 4094){
-				  v1++;
-			  }
-			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  }
-	  }
-	  //if we are inactive watch the opamp output, remove half a volt because it's better to undershoot than overshoot
-	  else{
-		  if(op_num > (volt_set_main - 0.5) + margin){
-			  if(v1 >= 1){
-				  v1--;
-			  }
-			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  }
-		  else if(op_num < (volt_set_main - 0.5) - margin){
-			  if(v1 <= 4094){
-				  v1++;
-			  }
-			  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  }
-	  }
-	   */
-
-//	  /*
 	  //PID
 	  if (chstat_main) {
 		  error = lin_num - volt_set_main;
@@ -258,19 +217,7 @@ int main(void)
 		  }
 		  v1 = (uint16_t) tmpv1;
 	  } else {
-		  /*
-		  if(op_num > (volt_set_main - 1)){
-			  if(v1 > 0){
-				  v1--;
-			  }
-		  }
-		  else if(op_num < (volt_set_main - 1)){
-			  if(v1 < 4095){
-				  v1++;
-			  }
-		  }
-		  */
-		  error_shutdown = op_num; // - volt_set_main;
+		  error_shutdown = op_num - volt_set_main;
 		  integral_shutdown += error_shutdown;
 		  if (integral_shutdown > (float)4095.0) {
 			  integral_shutdown = (float)4095;
@@ -290,7 +237,6 @@ int main(void)
 		  v1 = (uint16_t) tmpv1;
 	  }
 	  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-//	*/
 
 	  /*
 	   * The calculation we do to determine what we need to set the dac for the switching regulator to is determined by the following formula
@@ -299,7 +245,6 @@ int main(void)
 	   * Vdac = 3.5403 - 0.2*Vout
 	   */
 
-	  /*
 	  if (volt_set_main != volt_set_main_old) {
 		  tmpv2 = ((float)3.5403333 - ((float)0.2*((float)volt_set_main + (float)5.0))) * (float)4095 / (float)vddcalc;
 		  if(tmpv2 < 375){
@@ -324,44 +269,6 @@ int main(void)
 	  } else {
 		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
 	  }
-	  */
-
-
-	  /*
-	  if(volt_set_main > volt_set_main_old){
-		  //If the new voltage is greater than the old voltage set we need to increase the switching regulators voltage first
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-	  }
-	  else if(volt_set_main < volt_set_main_old){
-		  //If the new voltage is lower than the old voltage set we need to decrease the switching regulators voltage last
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
-	  }
-	  else{
-		  //We shouldn't have to do anything in the case that the old voltage is equal to the new voltage but we can allow PID to keep going
-		  //HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-	  }
-	  */
-
-	  /*
-	  if(volt_set_main > volt_set_main_old){
-		  //If the new voltage is greater than the old voltage set we need to increase the switching regulators voltage first
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-	  }
-	  else if(volt_set_main < volt_set_main_old){
-		  //If the new voltage is lower than the old voltage set we need to decrease the switching regulators voltage last
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
-	  }
-	  else{
-		  //We shouldn't have to do anything in the case that the old voltage is equal to the new voltage but we can allow PID to keep going
-		  //HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, v2);
-		  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, v1);
-	  }
-	  */
 
 	  if(chstat_main == 1 && ADC_OPAMP >= 5){
 		  HAL_GPIO_WritePin(Channel_Shutdown_GPIO_Port, Channel_Shutdown_Pin, GPIO_PIN_RESET);
